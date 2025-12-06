@@ -214,6 +214,11 @@ font-size: 0.9em;
 opacity: 1;
 visibility: visible;
 }
+hr.separator {
+border: 0;
+border-top: 1px solid var(--border-color);
+margin: 10px 0;
+}
 </style>
 </head>
 <body>
@@ -226,26 +231,46 @@ visibility: visible;
 </div>
 <div id="help-modal" class="modal">
 <button id="help-modal-close-btn" class="modal-close-btn" aria-label="Close">×</button>
-<h1 id="help-main-title"></h1>
-<h2 id="help-title"></h2>
-<ul id="help-list"></ul>
+<h1 id="help-main-title">Minimalist Code Editor designed for building Single-File Web Apps using HTML, CSS, and JavaScript. (c) 2025 Johnny Heggelund.</h1>
+<h2 id="help-title">Shortcuts</h2>
+<ul id="help-list">
+<li><strong>Ctrl + O</strong> Open File</li>
+<li><strong>Ctrl + S</strong> Save File</li>
+<li><strong>Alt + N</strong> New File</li>
+<hr class="separator">
+<li><strong>Alt + F</strong> Show/Hide Search & Replace</li>
+<li><strong>Alt + P</strong> Preview in New Tab</li>
+<li><strong>Alt + H</strong> Show/Hide Help</li>
+<li><strong>Alt + I</strong> Toggle Line Numbers</li>
+<hr class="separator">
+<li><strong>Alt + W</strong> Check Trailing Whitespace</li>
+<li><strong>Alt + L</strong> Remove Empty Lines</li>
+<hr class="separator">
+<li><strong>Ctrl + Shift + 1</strong> Jump to &lt;style&gt;</li>
+<li><strong>Ctrl + Shift + 2</strong> Jump to &lt;script&gt;</li>
+<li><strong>Ctrl + Shift + 3</strong> Jump to &lt;body&gt;</li>
+<hr class="separator">
+<li><strong>Alt + T</strong> Open in New Tab</li>
+<li><strong>Tab</strong> Indent</li>
+<li><strong>Shift + Tab</strong> Outdent</li>
+</ul>
 </div>
 <div id="search-modal" class="modal">
 <div class="input-group">
 <label for="find-input">
-<span id="find-label-text"></span>
+<span id="find-label-text">Find:</span>
 <span id="match-count"></span>
 </label>
 <input type="text" id="find-input">
 </div>
 <div class="input-group">
-<label for="replace-input" id="replace-label"></label>
+<label for="replace-input" id="replace-label">Replace with:</label>
 <input type="text" id="replace-input">
 </div>
 <div class="button-group">
-<button id="find-next-btn"></button>
-<button id="replace-btn"></button>
-<button id="replace-all-btn"></button>
+<button id="find-next-btn">Find Next</button>
+<button id="replace-btn">Replace</button>
+<button id="replace-all-btn">Replace All</button>
 </div>
 </div>
 <div id="toast-notification"></div>
@@ -267,43 +292,8 @@ lastMatchPosition: 0,
 },
 elements: {},
 debouncedUpdateLineNumbers: null,
-lang: {
-title: "Coder",
-untitled: "Untitled",
-mainTitle: "Minimalist Code Editor designed for building Single-File Web Apps using HTML, CSS, and JavaScript. (c) 2025 Johnny Heggelund.",
-helpTitle: "Shortcuts",
-helpOpenFile: "Open File",
-helpSaveFile: "Save File",
-helpNewFile: "New File",
-helpSearchReplace: "Show/Hide Search & Replace",
-helpToggleHelp: "Show/Hide Help",
-helpCheckWhitespace: "Check Trailing Whitespace",
-helpRemoveEmptyLines: "Remove Empty Lines",
-helpPreview: "Preview in New Tab",
-helpIndent: "Indent",
-helpOutdent: "Outdent",
-helpNewTab: "Open in New Tab",
-helpJumpStyle: "Jump to &lt;style&gt;",
-helpJumpScript: "Jump to &lt;script&gt;",
-helpJumpBody: "Jump to &lt;body&gt;",
-helpToggleLineNumbers: "Toggle Line Numbers",
-searchTitle: "Search & Replace",
-findLabel: "Find:",
-replaceLabel: "Replace with:",
-findNext: "Find Next",
-replace: "Replace",
-replaceAll: "Replace All",
-matches: "matches",
-unsavedChanges: "You have unsaved changes. Are you sure?",
-unsavedChangesLost: "You have unsaved changes that will be lost. Are you sure?",
-unsupportedApi: "Your browser does not support the modern File System API.",
-userAbortedOpen: "User aborted file opening.",
-userAbortedSave: "User aborted the save dialog.",
-saveError: "Error: Could not save the file."
-},
 init() {
 this.cacheDOMElements();
-this.updateStaticUIText();
 this.bindEventListeners();
 this.debouncedUpdateLineNumbers = this.utils.debounce(this.updateLineNumbers.bind(this), this.config.debounceDelay);
 this.updateLineNumbers();
@@ -328,11 +318,6 @@ findNextBtn: document.getElementById('find-next-btn'),
 replaceBtn: document.getElementById('replace-btn'),
 replaceAllBtn: document.getElementById('replace-all-btn'),
 matchCountSpan: document.getElementById('match-count'),
-helpMainTitle: document.getElementById('help-main-title'),
-helpTitle: document.getElementById('help-title'),
-helpList: document.getElementById('help-list'),
-findLabelText: document.getElementById('find-label-text'),
-replaceLabel: document.getElementById('replace-label'),
 toast: document.getElementById('toast-notification'),
 };
 },
@@ -463,8 +448,8 @@ this.showToast("Popup blocked! Please allow popups.");
 }
 },
 async openFile() {
-if (this.state.hasUnsavedChanges && !confirm(this.lang.unsavedChangesLost)) return;
-if (!('showOpenFilePicker' in window)) return alert(this.lang.unsupportedApi);
+if (this.state.hasUnsavedChanges && !confirm("You have unsaved changes that will be lost. Are you sure?")) return;
+if (!('showOpenFilePicker' in window)) return alert("Your browser does not support the modern File System API.");
 try {
 const [fileHandle] = await window.showOpenFilePicker();
 this.state.fileHandle = fileHandle;
@@ -477,16 +462,16 @@ this.highlight();
 this.elements.editor.scrollTop = 0;
 this.elements.editor.setSelectionRange(0, 0);
 } catch (err) {
-if (err.name !== 'AbortError') console.warn(this.lang.userAbortedOpen, err);
+if (err.name !== 'AbortError') console.warn("User aborted file opening.", err);
 } finally {
 setTimeout(() => this.elements.editor.focus(), 0);
 }
 },
 newFile() {
-if (this.state.hasUnsavedChanges && !confirm(this.lang.unsavedChanges)) return;
+if (this.state.hasUnsavedChanges && !confirm("You have unsaved changes. Are you sure?")) return;
 this.elements.editor.value = '';
 this.state.fileHandle = null;
-this.state.fileName = this.lang.untitled;
+this.state.fileName = "Untitled";
 this.setUnsavedChanges(false);
 this.updateLineNumbers();
 this.highlight();
@@ -507,7 +492,7 @@ accept: {
 });
 this.state.fileName = this.state.fileHandle.name;
 } catch (err) {
-if (err.name !== 'AbortError') console.warn(this.lang.userAbortedSave, err);
+if (err.name !== 'AbortError') console.warn("User aborted the save dialog.", err);
 return;
 }
 }
@@ -519,7 +504,7 @@ this.setUnsavedChanges(false);
 this.showToast(`Saved to ${this.state.fileName}`);
 } catch (err) {
 console.error('Could not save file:', err);
-alert(this.lang.saveError);
+alert("Error: Could not save the file.");
 }
 },
 jumpToSection(tagName) {
@@ -564,7 +549,7 @@ while ((match = regex.exec(this.elements.editor.value)) !== null) {
 this.state.searchResults.indices.push(match.index);
 }
 if (this.state.searchResults.indices.length > 0) {
-this.elements.matchCountSpan.textContent = `${this.state.searchResults.indices.length} ${this.lang.matches}`;
+this.elements.matchCountSpan.textContent = `${this.state.searchResults.indices.length} matches`;
 }
 if (this.state.lastMatchPosition > 0) {
 const nextIndex = this.state.searchResults.indices.findIndex(index => index >= this.state.lastMatchPosition);
@@ -753,42 +738,6 @@ toggleLineNumbers() {
 const container = this.elements.editorContainer;
 container.classList.toggle('line-numbers-hidden');
 localStorage.setItem('lineNumbersHidden', container.classList.contains('line-numbers-hidden'));
-},
-updateStaticUIText() {
-document.title = this.lang.title;
-const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim();
-const shortcuts = [
-{ key: 'Ctrl + O', action: this.lang.helpOpenFile },
-{ key: 'Ctrl + S', action: this.lang.helpSaveFile },
-{ key: 'Alt + N', action: this.lang.helpNewFile },
-{ isSeparator: true },
-{ key: 'Alt + F', action: this.lang.helpSearchReplace },
-{ key: 'Alt + P', action: this.lang.helpPreview },
-{ key: 'Alt + H', action: this.lang.helpToggleHelp },
-{ key: 'Alt + I', action: this.lang.helpToggleLineNumbers },
-{ isSeparator: true },
-{ key: 'Alt + W', action: this.lang.helpCheckWhitespace },
-{ key: 'Alt + L', action: this.lang.helpRemoveEmptyLines },
-{ isSeparator: true },
-{ key: 'Ctrl + Shift + 1', action: this.lang.helpJumpStyle },
-{ key: 'Ctrl + Shift + 2', action: this.lang.helpJumpScript },
-{ key: 'Ctrl + Shift + 3', action: this.lang.helpJumpBody },
-{ isSeparator: true },
-{ key: 'Alt + T', action: this.lang.helpNewTab },
-{ key: 'Tab', action: this.lang.helpIndent },
-{ key: 'Shift + Tab', action: this.lang.helpOutdent },
-];
-this.elements.helpList.innerHTML = shortcuts.map(item => {
-if (item.isSeparator) return `<hr style="border-color: ${borderColor}; margin: 10px 0;">`;
-return `<li><strong>${item.key}</strong> ${item.action}</li>`;
-}).join('');
-this.elements.helpMainTitle.textContent = this.lang.mainTitle;
-this.elements.helpTitle.textContent = this.lang.helpTitle;
-this.elements.findLabelText.textContent = this.lang.findLabel;
-this.elements.replaceLabel.textContent = this.lang.replaceLabel;
-this.elements.findNextBtn.textContent = this.lang.findNext;
-this.elements.replaceBtn.textContent = this.lang.replace;
-this.elements.replaceAllBtn.textContent = this.lang.replaceAll;
 },
 utils: {
 debounce(func, delay) {
