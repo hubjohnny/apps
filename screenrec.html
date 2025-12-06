@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recorder</title>
+<title>WebM Screen Recorder</title>
 <style>
 body {
 margin: 0;
@@ -128,9 +128,14 @@ z-index: 15;
 50% { opacity: 0.5; }
 100% { opacity: 1; }
 }
+h1 {
+margin: 4px;
+text-align: center;
+}
 </style>
 </head>
 <body>
+<h1>WebM Screen Recorder</h1>
 <div id="video-container">
 <video id="preview" autoplay muted></video>
 <div id="timer-display">00:00:00</div>
@@ -166,9 +171,9 @@ let timerInterval;
 let startTime;
 let currentBitrate = 5000000;
 const qualitySettings = {
-"480":  { width: 854,  height: 480,  bitrate: 2000000 },
-"720":  { width: 1280, height: 720,  bitrate: 5000000 },
-"1080": { width: 1920, height: 1080, bitrate: 10000000 }
+"480":  { width: 854,  height: 480,  bitrate: 1000000 },
+"720":  { width: 1280, height: 720,  bitrate: 2500000 },
+"1080": { width: 1920, height: 1080, bitrate: 6000000 }
 };
 startBtn.addEventListener('click', async () => {
 try {

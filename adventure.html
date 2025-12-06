@@ -68,6 +68,7 @@ background-color: rgba(173, 216, 230, 0.6);
 border-radius: 1px;
 animation: fall linear infinite;
 transform-origin: bottom;
+will-change: transform;
 }
 @keyframes fall {
 from {
@@ -164,7 +165,10 @@ font-size: 8vmin;
 font-size: 7vmin;
 }
 .cell.small {
-font-size: 4.5vmin;
+font-size: 2.5vmin;
+display: flex;
+align-items: flex-end;
+padding-bottom: 5px;
 }
 #player,
 .monster-container,

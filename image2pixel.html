@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image to Pixel Art</title>
+<style>
+body {
+background-color: #222;
+color: #eee;
+font-family: 'Courier New', Courier, monospace;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 20px;
+}
+label { display: block; margin-top: 15px; font-weight: bold; }
+input[type="range"], select { width: 100%; margin-top: 5px; }
+select {
+padding: 8px;
+background: #222;
+color: white;
+border: 1px solid #555;
+font-family: inherit;
+}
+.canvas-container {
+display: flex;
+gap: 20px;
+flex-wrap: wrap;
+justify-content: center;
+}
+canvas {
+image-rendering: pixelated;
+border: 4px solid #000;
+box-shadow: 0 0 20px rgba(0,0,0,0.5);
+max-width: 100%;
+height: auto;
+}
+.btn-group {
+display: flex;
+gap: 10px;
+margin-top: 20px;
+}
+button {
+background: #0077aa;
+color: white;
+border: none;
+padding: 12px 20px;
+font-family: inherit;
+cursor: pointer;
+font-size: 1em;
+flex: 1;
+font-weight: bold;
+}
+button.download { background-color: #44aa44; }
+button:hover { filter: brightness(1.2); }
+</style>
+</head>
+<body>
+<div class="controls">
+<label>1. Upload Image</label>
+<input type="file" id="upload" accept="image/*">
+<label>2. Resolution (Width): <span id="resValue">320</span>px</label>
+<input type="range" id="resolution" min="64" max="640" value="320" step="8">
+<small style="color: #aaa;">Low (64-160) = Abstract | High (320+) = Detailed</small>
+<label>3. Color Palette</label>
+<select id="colorCount">
+<option value="16">16 Colors (Retro Console style)</option>
+<option value="32" selected>32 Colors (Arne32 - Balanced)</option>
+<option value="64">64 Colors (Extended - Richer)</option>
+</select>
+<div class="btn-group">
+<button onclick="processImage()">Convert</button>
+<button class="download" onclick="downloadImage()">Download</button>
+</div>
+</div>
+<div class="canvas-container">
+<canvas id="canvas" style="display:none;"></canvas>
+<canvas id="displayCanvas"></canvas>
+</div>
+<script>
+const PALETTE_16 = [
+[0,0,0], [29,43,83], [126,37,83], [0,135,81],
+[171,82,54], [95,87,79], [194,195,199], [255,241,232],
+[255,0,77], [255,163,0], [255,236,39], [0,228,54],
+[41,173,255], [131,118,156], [255,119,168], [255,204,170]
+];
+const PALETTE_32 = [
+[0, 0, 0], [255, 255, 255], [157, 157, 157], [190, 38, 51],
+[224, 111, 139], [73, 60, 43], [164, 100, 34], [235, 137, 49],
+[247, 226, 107], [47, 72, 78], [68, 137, 26], [163, 206, 39],
+[27, 38, 50], [0, 87, 132], [49, 162, 242], [178, 220, 239],
+[52, 42, 151], [101, 109, 113], [204, 204, 204], [115, 41, 48],
+[203, 78, 80], [128, 50, 50], [255, 119, 168], [142, 63, 23],
+[242, 172, 88], [255, 205, 117], [163, 110, 205], [55, 21, 133],
+[81, 18, 124], [146, 35, 137], [228, 70, 207], [0, 135, 81]
+];
+const PALETTE_64 = [
+[6,6,8], [20,16,19], [59,23,37], [115,23,45], [180,23,30], [228,59,68], [244,126,123], [255,214,204],
+[156,156,156], [107,107,107], [57,57,57], [116,63,57], [185,117,99], [232,168,136], [247,211,194], [94,77,69],
+[54,44,38], [26,20,20], [20,38,56], [18,78,137], [38,133,186], [94,188,214], [174,226,227], [139,172,15],
+[75,105,47], [50,60,57], [25,31,29], [32,46,55], [58,80,67], [90,128,96], [147,183,100], [211,230,123],
+[229,184,188], [191,121,118], [142,65,71], [86,21,40], [44,12,24], [32,40,61], [58,68,102], [90,105,136],
+[139,155,180], [194,211,228], [255,255,255], [218,224,232], [159,174,191], [107,118,137], [63,61,86], [32,23,39],
+[25,16,25], [60,32,48], [104,56,108], [162,109,164], [213,170,219], [245,230,245], [20,68,102], [42,109,122],
+[123,178,78], [246,214,59], [237,143,33], [196,73,33], [117,36,56], [223,132,165], [154,79,80], [101,42,76]
+];
+const fileInput = document.getElementById('upload');
+const resInput = document.getElementById('resolution');
+const resValue = document.getElementById('resValue');
+const colorSelect = document.getElementById('colorCount');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const displayCanvas = document.getElementById('displayCanvas');
+const dCtx = displayCanvas.getContext('2d');
+let originalImage = null;
+resInput.addEventListener('input', (e) => {
+resValue.innerText = e.target.value;
+});
+fileInput.addEventListener('change', (e) => {
+const file = e.target.files[0];
+if(!file) return;
+const reader = new FileReader();
+reader.onload = (event) => {
+const img = new Image();
+img.onload = () => {
+originalImage = img;
+processImage();
+};
+img.src = event.target.result;
+};
+reader.readAsDataURL(file);
+});
+function getPalette() {
+const val = colorSelect.value;
+if (val === '16') return PALETTE_16;
+if (val === '64') return PALETTE_64;
+return PALETTE_32;
+}
+function findNearestColor(r, g, b, palette) {
+let minDist = Infinity;
+let color = palette[0];
+for (let i = 0; i < palette.length; i++) {
+const p = palette[i];
+const dist = (r - p[0])**2 + (g - p[1])**2 + (b - p[2])**2;
+if (dist < minDist) {
+minDist = dist;
+color = p;
+}
+}
+return color;
+}
+function processImage() {
+if (!originalImage) {
+alert("Please upload an image first!");
+return;
+}
+const width = parseInt(resInput.value);
+const scaleFactor = originalImage.width / width;
+const height = Math.floor(originalImage.height / scaleFactor);
+const currentPalette = getPalette();
+canvas.width = width;
+canvas.height = height;
+ctx.drawImage(originalImage, 0, 0, width, height);
+const imgData = ctx.getImageData(0, 0, width, height);
+const data = imgData.data;
+for (let i = 0; i < data.length; i += 4) {
+if (data[i+3] < 128) continue;
+const r = data[i];
+const g = data[i + 1];
+const b = data[i + 2];
+const nearest = findNearestColor(r, g, b, currentPalette);
+data[i] = nearest[0];
+data[i + 1] = nearest[1];
+data[i + 2] = nearest[2];
+}
+ctx.putImageData(imgData, 0, 0);
+const scaleDisplay = 4;
+displayCanvas.width = width * scaleDisplay;
+displayCanvas.height = height * scaleDisplay;
+dCtx.imageSmoothingEnabled = false;
+dCtx.drawImage(canvas, 0, 0, displayCanvas.width, displayCanvas.height);
+}
+function downloadImage() {
+if(displayCanvas.width === 0) return;
+const link = document.createElement('a');
+link.download = 'pixel-art.png';
+link.href = displayCanvas.toDataURL();
+link.click();
+}
+</script>
+</body>
+</html>
