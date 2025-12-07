@@ -238,6 +238,17 @@ margin-top: 20px;
 background-color: #007bff;
 font-size: 16px;
 }
+p {
+margin: 0 0 10px 0;
+text-align: center;
+}
+a {
+color: cornflowerblue;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
 </style>
 </head>
 <body>
@@ -269,6 +280,7 @@ title="Volume Booster">
 <div id="toast-notification"></div>
 <div id="shortcuts-modal" class="modal-overlay">
 <div class="modal-box">
+<p><a href="https://hubjohnny.github.io">hubjohnny.github.io</a></p>
 <ul id="shortcuts-list">
 <li>Play / Pause <span>Space</span></li>
 <li>Frame Step Back/Fwd <span>,</span><span>.</span></li>
@@ -289,7 +301,7 @@ title="Volume Booster">
 </div>
 <script>
 const lang = {
-title: "Online Video Player",
+title: "Video Player",
 chooseFiles: "Open files",
 subtitleLabel: "Subtitles",
 noTrackError: "Could not find a text track on the video element.",
