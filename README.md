@@ -6,8 +6,11 @@ Consider following me on [GitHub](https://github.com/hubjohnny). You can also fi
 
 ---
 
-### 💲 Sokoban
+### 💲 Sokoban Puzzle Game
 **[Sokoban](sokoban.html)** is a classic puzzle game where you control a warehouse keeper, represented by the @ symbol, with the goal of pushing all the boxes ($) onto the designated storage spots (.). You must navigate through a maze of walls (#) and carefully plan each move, as you can only push one box at a time and never pull them, meaning it is easy to get stuck if you act without thinking. My version of the game features over 45,000 verified levels, offering a massive variety of logic challenges. Don't forget to check out my **[Sokoban Level Editor & Player](sokobaned.html)**, where you can design and test your own levels, or play from the massive library of levels with more stylized graphics.
+
+### 🟢 Ludo Board Game
+**[Ludo](ludo.html)** is a classic strategy and luck board game for two to four players, designed to be simple and competitive. The main goal is to race your four coloured tokens from your starting area, around the entire track, and into your central 'home' column. Players take turns rolling a single die. To get a token onto the track, you must roll a six. Once a token is moving, you advance it by the number shown on the die. The key element of the game is conflict: if your token lands on a square occupied by an opponent's token, the opponent's token is sent back to its starting area, forcing them to roll a six again to re-enter. The first player to successfully move all four of their tokens into their colour-matched home triangle in the centre of the board wins the game. In my version of the game, you can play against three AI opponents or turn on "Autopilot" to let an AI take over your player and show you how the game is played.
 
 ---
 **Popular Tools:** [Base64](base64.html)🔸[Coder](coder.html)🔸[Emojis](emojis.html)🔸[image2ASCII](image2ascii.html)🔸[image2Pixel](image2pixel.html)🔸[Secret Note](secretnote.html)🔸[Sprite Editor](sprited.html)🔸[video2GIF](video2gif.html)🔸[Video Player](videoplayer.html)
