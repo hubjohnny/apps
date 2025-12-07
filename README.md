@@ -27,3 +27,8 @@ Consider following me on [GitHub](https://github.com/hubjohnny). You can also fi
 
 ### 💄 [Babelinux Terminal Emulator 6.9](babelinux.html)
 **[BabeLinux 6.9](babelinux.html)** is a modern, web-based terminal emulator designed for both utility and entertainment, running directly in your browser. You can manage your workspace efficiently with support for up to five simultaneous tabs, using Alt+T to create a new tab and Alt+X to close the active one. Core commands include clear (cls) for a clean screen and history to recall past commands. For productivity, the nano command opens a simple text editor. For creativity, the pic command launches a basic image editor, allowing you to apply grayscale, sepia, compress, or resize operations to your uploaded images. Media playback is supported via play, allowing you to listen to local audio or watch video files, controlled by pause and stop. And when it's time for a break, simply type snake, sokoban, or tetris to open a classic arcade game in a new tab.
+
+---
+**More Tools:** [Image Compression](imagecomp.html)🔸[Image Editor](imaged.html)🔸[Screen Recorder](screenrec.html)🔸[Soundtracker](soundtracker.html)
+
+---
