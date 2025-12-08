@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Retro Flight Sim - v5.1 Mega Pack</title>
+<title>Retro Flight Sim - v5.6 Impact Fix</title>
 <style>
 * { box-sizing: border-box; }
 body {
@@ -10,11 +10,20 @@ margin: 0; background: #111; color: #eee; font-family: 'Courier New', Courier, m
 overflow: hidden; height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center;
 }
 #game-wrapper {
-width: 1020px; height: 600px; position: relative; background: #000;
-box-shadow: 0 0 50px rgba(0,0,0,0.8); image-rendering: pixelated;
-display: flex; transform-origin: center center;
+width: 1020px; height: 600px;
+position: relative;
+background: #000;
+box-shadow: 0 0 50px rgba(0,0,0,0.8);
+image-rendering: pixelated;
+display: flex;
+transform-origin: center center;
 }
-#game-container { width: 800px; height: 100%; position: relative; border-right: 4px solid #444; }
+#game-container {
+width: 800px; height: 100%;
+position: relative;
+border-right: 4px solid #444;
+overflow: hidden;
+}
 #ui-panel {
 background: #222; border-bottom: 2px solid #111;
 width: 100%; height: 90px; padding: 10px 20px;
@@ -42,11 +51,7 @@ font-family: 'Consolas', monospace; display: grid; grid-template-columns: 1fr 1f
 canvas { background: #87CEEB; display: block; width: 100%; height: 510px; }
 #sidebar { width: 220px; background: #1a1a1a; display: flex; flex-direction: column; border-left: 1px solid #333; }
 .sidebar-header { padding: 15px; background: #222; color: #fff; font-weight: bold; text-align: center; border-bottom: 4px solid #444; font-size: 14px; }
-#route-list {
-flex: 1;
-overflow-y: auto;
-padding: 10px;
-}
+#route-list { flex: 1; overflow-y: auto; padding: 10px; }
 #route-list::-webkit-scrollbar { width: 8px; }
 #route-list::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
 #route-list::-webkit-scrollbar-track { background: #222; }
@@ -59,15 +64,17 @@ padding: 10px;
 .route-check { color: #4caf50; font-weight: bold; visibility: hidden; }
 .high-score { display: block; font-size: 9px; color: #ffeb3b; margin-top: 4px; }
 .overlay-screen {
-position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85);
-display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; color: white; text-align: center;
+position: absolute; top: 0; left: 0;
+width: 800px; height: 600px;
+background: rgba(0,0,0,0.85);
+display: flex; flex-direction: column; justify-content: center; align-items: center;
+z-index: 10; color: white; text-align: center;
 }
 #game-over-screen { display: none; background: rgba(50, 0, 0, 0.9); }
 .btn { margin-top: 20px; padding: 12px 24px; font-size: 20px; background: #ffcc00; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-weight: bold; color: #000; box-shadow: 0 4px 0 #c6a300; }
 .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c6a300; }
 .btn-restart { background: #ff4444; box-shadow: 0 4px 0 #cc0000; color: #fff; }
 @keyframes blink { 50% { opacity: 0; } }
-#brake-alert { display: none; color: red; font-weight: bold; font-size: 10px; margin-left: 5px; animation: blink 0.2s infinite; }
 </style>
 </head>
 <body>
@@ -77,7 +84,9 @@ display: flex; flex-direction: column; justify-content: center; align-items: cen
 <h1 style="font-size: 48px; color: #fff; text-shadow: 0 0 20px #ffcc00;">✈️ SKY LINER</h1>
 <p id="start-route-name" style="font-size: 18px; color: #ccc;">Select a route from the menu</p>
 <div style="margin-top:30px; margin-bottom: 20px; font-size: 14px; color: #888; line-height: 1.6;">
-<b>W / S</b> - Engine | <b>SPACE</b> - Brakes | <b>ARROWS</b> - Pitch
+<b>W / S</b> - Engine | <b>SPACE</b> - Brakes<br>
+<b>ARROW DOWN</b> - Pitch Up (Takeoff)<br>
+<b>ARROW UP</b> - Pitch Down
 </div>
 <button id="start-btn" class="btn">START FLIGHT</button>
 </div>
@@ -108,6 +117,24 @@ display: flex; flex-direction: column; justify-content: center; align-items: cen
 </div>
 </div>
 <script>
+const CONFIG = {
+GRAVITY: 150,
+LIFT_POWER: 0.15,
+BASE_LIFT: 0.05,
+ROTATION_SPEED: 35,
+AUTO_LEVEL_SPEED: 20,
+MAX_LANDING_SPEED: 80,
+CRASH_ANGLE: 20,
+RUNWAY_BUFFER: 2500,
+FUEL_MAX: 8000,
+STORM_START_PCT: 0.40,
+STORM_END_PCT: 0.70,
+STORM_WARN_DIST: 2000,
+STORM_SAFE_ALT: 200,
+STORM_GRACE_TIME: 5.0,
+BIRD_SPAWN_RATE: 0.005,
+BIRD_SPEED: 100
+};
 const BIOME_DATA = {
 'RUNWAY':   { color: '#333',     msg: 'CRASHED ON RUNWAY', isWater: false },
 'FOREST':   { color: '#2d4c1e',  msg: 'CRASHED INTO FOREST', isWater: false },
@@ -120,8 +147,7 @@ const ROUTE_DB = [
 {
 id: 'training',
 name: 'Training: Oslo ✈ Rygge',
-gameDist: 40000,
-realKm: 60,
+gameDist: 40000, realKm: 60,
 map: [
 { at: 0.00, type: 'RUNWAY', name: 'GARDERMOEN' },
 { at: 0.05, type: 'FOREST', name: 'NORDMARKA' },
@@ -134,8 +160,7 @@ map: [
 {
 id: 'alps',
 name: 'Alps: Munich ✈ Milan',
-gameDist: 100000,
-realKm: 350,
+gameDist: 100000, realKm: 350,
 map: [
 { at: 0.00, type: 'RUNWAY', name: 'MUNICH' },
 { at: 0.05, type: 'FOREST', name: 'BAVARIA' },
@@ -149,8 +174,7 @@ map: [
 {
 id: 'canary',
 name: 'Island: Gran Canaria ✈ Tenerife',
-gameDist: 60000,
-realKm: 112,
+gameDist: 60000, realKm: 112,
 map: [
 { at: 0.00, type: 'RUNWAY', name: 'LAS PALMAS' },
 { at: 0.05, type: 'WATER',  name: 'ATLANTIC' },
@@ -162,8 +186,7 @@ map: [
 {
 id: 'transatlantic',
 name: 'Long: London ✈ New York',
-gameDist: 300000,
-realKm: 5585,
+gameDist: 300000, realKm: 5585,
 map: [
 { at: 0.00, type: 'RUNWAY', name: 'HEATHROW' },
 { at: 0.02, type: 'CITY',   name: 'LONDON' },
@@ -178,8 +201,7 @@ map: [
 {
 id: 'svalbard',
 name: 'Arctic: Tromsø ✈ Longyearbyen',
-gameDist: 150000,
-realKm: 950,
+gameDist: 150000, realKm: 950,
 map: [
 { at: 0.00, type: 'RUNWAY', name: 'TROMSØ' },
 { at: 0.10, type: 'WATER',  name: 'BARENTS SEA' },
@@ -192,8 +214,7 @@ map: [
 {
 id: 'amazon',
 name: 'Jungle: Bogota ✈ Manaus',
-gameDist: 180000,
-realKm: 1800,
+gameDist: 180000, realKm: 1800,
 map: [
 { at: 0.00, type: 'RUNWAY', name: 'EL DORADO' },
 { at: 0.05, type: 'MOUNTAIN', name: 'ANDES' },
@@ -206,8 +227,7 @@ map: [
 {
 id: 'dubai',
 name: 'Desert: Cairo ✈ Dubai',
-gameDist: 220000,
-realKm: 2400,
+gameDist: 220000, realKm: 2400,
 map: [
 { at: 0.00, type: 'RUNWAY', name: 'CAIRO' },
 { at: 0.05, type: 'MOUNTAIN', name: 'SINAI' },
@@ -219,18 +239,6 @@ map: [
 ]
 }
 ];
-const CONFIG = {
-RUNWAY_BUFFER: 2500,
-GRAVITY: 150,
-FUEL_MAX: 8000,
-STORM_START_PCT: 0.40,
-STORM_END_PCT: 0.70,
-STORM_WARN_DIST: 2000,
-STORM_SAFE_ALT: 200,
-STORM_GRACE_TIME: 5.0,
-BIRD_SPAWN_RATE: 0.005,
-BIRD_SPEED: 100
-};
 let CURRENT_ROUTE = ROUTE_DB[0];
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -391,16 +399,30 @@ PLANE.fuel -= burn * dt; if (PLANE.fuel < 0) PLANE.fuel = 0;
 } else if (PLANE.fuel <= 0) { PLANE.throttle = 0; }
 let availableThrust = (PLANE.throttle / 100) * engineEfficiency;
 let targetSpeed = availableThrust * 350;
-const groundY = canvas.height - 50; const wheelY = PLANE.y + (PLANE.height/2) + PLANE.wheelDepth; const onGround = wheelY > groundY - 1;
+const groundY = canvas.height - 50; const onGround = (PLANE.y + (PLANE.height/2) + PLANE.wheelDepth) > groundY - 1;
 if (onGround && INPUT[" "]) { PLANE.speed -= 150 * dt; targetSpeed = 0; PLANE.throttle = 0; }
 if (PLANE.speed < targetSpeed) PLANE.speed += 30 * dt; else if (PLANE.speed > targetSpeed) PLANE.speed -= 20 * dt;
 if (PLANE.speed < 0) PLANE.speed = 0;
 PLANE.verticalSpeed += CONFIG.GRAVITY * dt;
-if (PLANE.speed > 60) { let lift = PLANE.speed * 0.58; let angleLift = -PLANE.angle * PLANE.speed * 0.08; PLANE.verticalSpeed -= (lift + angleLift) * dt; }
-if (INPUT.ArrowDown) PLANE.angle -= 30 * dt; if (INPUT.ArrowUp) PLANE.angle += 30 * dt;
-if (!INPUT.ArrowUp && !INPUT.ArrowDown) { if (PLANE.angle < -0.5) PLANE.angle += 20 * dt; else if (PLANE.angle > 0.5) PLANE.angle -= 20 * dt; else PLANE.angle = 0; }
-if (PLANE.angle < -25) PLANE.angle = -25; if (PLANE.angle > 25) PLANE.angle = 25;
-PLANE.y += PLANE.verticalSpeed * dt; GAME.dist += PLANE.speed * dt; GAME.groundScroll += PLANE.speed * 0.016;
+if (PLANE.speed > 50) {
+let baseLift = PLANE.speed * CONFIG.BASE_LIFT;
+let aoaLift = 0;
+if (PLANE.angle < 0) {
+aoaLift = Math.abs(PLANE.angle) * PLANE.speed * CONFIG.LIFT_POWER;
+}
+let totalLift = baseLift + aoaLift;
+PLANE.verticalSpeed -= totalLift * dt;
+}
+if (INPUT.ArrowDown) PLANE.angle -= CONFIG.ROTATION_SPEED * dt;
+if (INPUT.ArrowUp) PLANE.angle += CONFIG.ROTATION_SPEED * dt;
+if (!INPUT.ArrowUp && !INPUT.ArrowDown) {
+if (PLANE.angle < -0.5) PLANE.angle += CONFIG.AUTO_LEVEL_SPEED * dt;
+else if (PLANE.angle > 0.5) PLANE.angle -= CONFIG.AUTO_LEVEL_SPEED * dt;
+else PLANE.angle = 0;
+}
+if (PLANE.angle < -90) PLANE.angle = -90; if (PLANE.angle > 90) PLANE.angle = 90;
+PLANE.y += PLANE.verticalSpeed * dt;
+GAME.dist += PLANE.speed * dt; GAME.groundScroll += PLANE.speed * 0.016;
 }
 function updateStorm(dt) {
 const stormStartDist = CURRENT_ROUTE.gameDist * CONFIG.STORM_START_PCT;
@@ -444,16 +466,26 @@ if (GAME.strikeFlash > 0) GAME.strikeFlash--;
 function checkCollisions() {
 const groundY = canvas.height - 50;
 const wheelY = PLANE.y + (PLANE.height/2) + PLANE.wheelDepth;
+const rad = PLANE.angle * Math.PI / 180;
+const noseY = (PLANE.y + PLANE.height/2) + (Math.sin(rad) * (PLANE.width/2));
 if (PLANE.y < 0) { PLANE.y = 0; PLANE.verticalSpeed = 80; }
-if (wheelY > groundY) {
-const zone = getZoneAt(GAME.dist);
-const biomeInfo = BIOME_DATA[zone.type] || BIOME_DATA['RUNWAY'];
-if (PLANE.verticalSpeed > 80) {
-if (GAME.birdStrikes >= 2) gameOver("TOTAL ENGINE FAILURE - CRASHED");
-else if (biomeInfo.isWater) gameOver("SPLASHDOWN FAILED (Too fast)");
-else gameOver("HARD LANDING! (Descend slower)");
+if (wheelY > groundY || noseY > groundY) {
+if (PLANE.verticalSpeed > CONFIG.MAX_LANDING_SPEED) {
+gameOver("HARD LANDING! (Descend slower)");
 return;
 }
+if (noseY > groundY && PLANE.angle > 10) {
+gameOver("NOSE DIVE CRASH!");
+return;
+}
+if (PLANE.angle < -CONFIG.CRASH_ANGLE || PLANE.angle > CONFIG.CRASH_ANGLE) {
+gameOver("CRASH LANDING! (Keep level)");
+return;
+}
+const zone = getZoneAt(GAME.dist);
+const biomeInfo = BIOME_DATA[zone.type] || BIOME_DATA['RUNWAY'];
+if (GAME.birdStrikes >= 2) { gameOver("TOTAL ENGINE FAILURE - CRASHED"); return; }
+if (biomeInfo.isWater) { gameOver("SPLASHDOWN FAILED"); return; }
 const takeoffLimit = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[1].at;
 const lastZoneIdx = CURRENT_ROUTE.map.length - 1;
 const landingStart = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[lastZoneIdx].at;
@@ -465,7 +497,8 @@ return;
 }
 if (inEnd && PLANE.speed < 2) { if (!GAME.levelComplete) victory(); }
 PLANE.y = groundY - (PLANE.height/2) - PLANE.wheelDepth;
-PLANE.verticalSpeed = 0; PLANE.angle *= 0.9;
+PLANE.verticalSpeed = 0;
+PLANE.angle *= 0.9;
 }
 const takeoffLimit = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[1].at;
 if (wheelY > groundY - 1 && GAME.dist > takeoffLimit && GAME.dist < 5000) gameOver("OVERSHOT RUNWAY (Did not takeoff)");
@@ -595,6 +628,7 @@ const scale = Math.min((window.innerWidth - margin) / 1020, (window.innerHeight 
 wrapper.style.transform = `scale(${scale})`;
 }
 window.addEventListener('resize', resizeGame);
+window.addEventListener('load', resizeGame);
 window.addEventListener('keydown', e => { if(INPUT.hasOwnProperty(e.key)) INPUT[e.key] = true; });
 window.addEventListener('keyup', e => { if(INPUT.hasOwnProperty(e.key)) INPUT[e.key] = false; });
 document.getElementById('start-btn').addEventListener('click', startGame);
