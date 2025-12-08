@@ -580,7 +580,7 @@ const audioTrack = mediaStreamDestination.stream.getAudioTracks()[0];
 const combinedStream = new MediaStream([videoTrack, audioTrack]);
 const options = {
 mimeType: 'video/webm; codecs=vp8,opus',
-videoBitsPerSecond: 4000000,
+videoBitsPerSecond: 6000000,
 audioBitsPerSecond: 128000
 };
 try {
@@ -613,13 +613,20 @@ videoPlayer.currentTime = loopStart;
 if (videoPlayer.paused) {
 videoPlayer.play();
 }
-mediaRecorder.start();
 const loopDuration = (loopEnd - loopStart) * 1000;
+setTimeout(() => {
+try {
+mediaRecorder.start();
 setTimeout(() => {
 if (mediaRecorder && mediaRecorder.state === 'recording') {
 mediaRecorder.stop();
 }
 }, loopDuration);
+} catch (e) {
+console.error("Recording start failed during timeout:", e);
+showToast("🔴 Recording failed. Check console.");
+}
+}, 200);
 }
 function captureFrame() {
 const canvas = document.createElement('canvas');
