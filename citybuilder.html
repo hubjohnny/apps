@@ -1280,15 +1280,16 @@ pollutionGrid[nIndex] = Math.min(255, pollutionGrid[nIndex] + 5);
 }
 }
 world.forEach((cell, index) => {
-if (cell && cell.building?.type === 'park' && cell.building.powered) {
-const cleanRadius = 3;
-const cleanAmount = 3;
-getNeighbors(index, cleanRadius).forEach((nIndex) => {
-if (nIndex >= 0 && nIndex < pollutionGrid.length) {
-pollutionGrid[nIndex] = Math.max(0, pollutionGrid[nIndex] - cleanAmount);
-}
-});
-}
+    // FJERNET sjekken '&& cell.building.powered'
+    if (cell && cell.building?.type === 'park') { 
+        const cleanRadius = 3;
+        const cleanAmount = 3;
+        getNeighbors(index, cleanRadius).forEach((nIndex) => {
+            if (nIndex >= 0 && nIndex < pollutionGrid.length) {
+                pollutionGrid[nIndex] = Math.max(0, pollutionGrid[nIndex] - cleanAmount);
+            }
+        });
+    }
 });
 }
 function getEconomyData(isRecession = false) {
