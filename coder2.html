@@ -1,17 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-55NB91FTK3');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Code Editor for HTML, CSS & JS.</title>
@@ -25,7 +14,7 @@
 --selection-bg: rgba(97, 175, 239, 0.3);
 --font-mono: 'Fira Code', 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
 --font-size: 15px;
---whitespace-color: #FFBF00;
+--whitespace-color: #FFD700;
 }
 html,
 body {
@@ -367,9 +356,9 @@ this.elements.highlightLayer.scrollLeft = scrollLeft;
 highlight() {
 const val = this.elements.editor.value;
 let hlText = val.replace(/[ \t]+$/gm, (match) => {
-return '·'.repeat(match.length);
+return '●'.repeat(match.length);
 });
-hlText = hlText.replace(/[^\n\r·]/g, ' ');
+hlText = hlText.replace(/[^\n\r●]/g, ' ');
 this.elements.highlightLayer.textContent = hlText;
 },
 checkWhitespace() {
@@ -519,7 +508,6 @@ console.error('Could not save file:', err);
 alert("Error: Could not save the file.");
 }
 },
-
 jumpToSection(tagName) {
 const editor = this.elements.editor;
 const tag = `<${tagName}`;
@@ -541,132 +529,76 @@ top: Math.max(0, finalScrollTop),
 behavior: 'smooth'
 });
 },
-
-
 jumpToNextDefinition() {
-  const editor = this.elements.editor;
-  const currentPos = editor.selectionStart;
-  const text = editor.value;
-
-  // Regex forklaring:
-  // 1. (^\s*(async\s+)?\w+\s*\(.*?\)\s*\{)  -> Fanger metoder som "init() {" eller "async saveFile() {"
-  // 2. (function\s+\w+)                   -> Fanger "function minFunksjon"
-  // 3. (class\s+\w+)                      -> Fanger "class MinKlasse"
-  // 4. (const\s+\w+\s*=)                  -> Fanger "const MinVariabel ="
-  const regex = /(^\s*(async\s+)?\w+\s*\(.*?\)\s*\{|function\s+\w+|class\s+\w+|const\s+\w+\s*=)/gm;
-
-  let match;
-  let nextPos = -1;
-  let firstPos = -1;
-
-  // Løp gjennom alle treff i filen
-  while ((match = regex.exec(text)) !== null) {
-    if (firstPos === -1) firstPos = match.index; // Husk det aller første treffet for wrap-around
-
-    // Hvis dette treffet er etter der vi står nå, bingo!
-    if (match.index > currentPos) {
-      nextPos = match.index;
-      break;
-    }
-  }
-
-  // Hvis vi ikke fant noe lenger ned, gå til toppen (wrap around)
-  if (nextPos === -1 && firstPos !== -1) {
-    nextPos = firstPos;
-  }
-
-  // Utfør hoppet hvis vi fant noe
-  if (nextPos !== -1) {
-    editor.focus();
-    editor.setSelectionRange(nextPos, nextPos);
-
-    // Rulle-logikk (sørger for at linjen havner midt på skjermen)
-    const textUpToMatch = text.substring(0, nextPos);
-    const lineNumber = (textUpToMatch.match(/\n/g) || []).length;
-    const totalLines = (text.match(/\n/g) || []).length + 1;
-    const avgLineHeight = editor.scrollHeight / totalLines;
-    const targetScrollTop = (lineNumber * avgLineHeight) - (editor.clientHeight / 3);
-
-    editor.scrollTo({
-      top: Math.max(0, targetScrollTop),
-      behavior: 'smooth'
-    });
-    
-    // Valgfritt: Vis en liten toast for å si hva vi hoppet til (kan være nyttig!)
-    // const matchLine = text.substring(nextPos, text.indexOf('\n', nextPos)).trim();
-    // this.showToast(`Hoppet til: ${matchLine.substring(0, 30)}...`);
-  }
+const editor = this.elements.editor;
+const currentPos = editor.selectionStart;
+const text = editor.value;
+const regex = /(^\s*(async\s+)?\w+\s*\(.*?\)\s*\{|function\s+\w+|class\s+\w+|const\s+\w+\s*=)/gm;
+let match;
+let nextPos = -1;
+let firstPos = -1;
+while ((match = regex.exec(text)) !== null) {
+if (firstPos === -1) firstPos = match.index;
+if (match.index > currentPos) {
+nextPos = match.index;
+break;
+}
+}
+if (nextPos === -1 && firstPos !== -1) {
+nextPos = firstPos;
+}
+if (nextPos !== -1) {
+editor.focus();
+editor.setSelectionRange(nextPos, nextPos);
+const textUpToMatch = text.substring(0, nextPos);
+const lineNumber = (textUpToMatch.match(/\n/g) || []).length;
+const totalLines = (text.match(/\n/g) || []).length + 1;
+const avgLineHeight = editor.scrollHeight / totalLines;
+const targetScrollTop = (lineNumber * avgLineHeight) - (editor.clientHeight / 3);
+editor.scrollTo({
+top: Math.max(0, targetScrollTop),
+behavior: 'smooth'
+});
+}
 },
-
-
-
 jumpToComment() {
-  const editor = this.elements.editor;
-  const currentPos = editor.selectionStart;
-  const text = editor.value;
-
-  // Enklere Regex som virker i alle nettlesere:
-  // 1. // 2. /* CSS/JS blokk */
-  // 3. // JS linje (fanger også https:// foreløpig)
-  const regex = /(|\/\*[\s\S]*?\*\/|\/\/.*)/g;
-
-  let match;
-  let nextPos = -1;
-  let firstPos = -1;
-  let loopSafety = 0;
-
-  while ((match = regex.exec(text)) !== null) {
-    loopSafety++;
-    if (loopSafety > 5000) break; // Nødbrems
-
-    // MANUELL SJEKK: Er dette en URL? (f.eks. https://)
-    // Hvis matchen starter med // og tegnet foran er ':', så er det en URL.
-    if (match[0].startsWith('//')) {
-        const charBefore = text.charAt(match.index - 1);
-        if (charBefore === ':') {
-            continue; // Hopp over denne, det er ikke en kommentar!
-        }
-    }
-
-    // Nå vet vi at det er en ekte kommentar
-    if (firstPos === -1) firstPos = match.index;
-
-    // Finn første gyldige treff ETTER cursoren
-    if (match.index > currentPos) {
-      nextPos = match.index;
-      break;
-    }
-  }
-
-  // Wrap-around
-  if (nextPos === -1 && firstPos !== -1) {
-    nextPos = firstPos;
-    this.showToast("Startet fra toppen ↺");
-  }
-
-  if (nextPos !== -1) {
-    editor.focus();
-    editor.setSelectionRange(nextPos, nextPos);
-
-    // Scroll-logikk
-    const textUpToMatch = text.substring(0, nextPos);
-    const lineNumber = (textUpToMatch.match(/\n/g) || []).length;
-    const totalLines = (text.match(/\n/g) || []).length + 1;
-    const avgLineHeight = editor.scrollHeight / totalLines;
-    const targetScrollTop = (lineNumber * avgLineHeight) - (editor.clientHeight / 3);
-
-    editor.scrollTo({
-      top: Math.max(0, targetScrollTop),
-      behavior: 'smooth'
-    });
-  } else {
-      // Hvis vi havner her, fant den absolutt ingen kommentarer (heller ikke på toppen)
-      this.showToast("Ingen kommentarer funnet");
-  }
+const editor = this.elements.editor;
+const currentPos = editor.selectionStart;
+const text = editor.value;
+const regex = /(^\s*\/\*[\s\S]*?\*\/|^\s*\/\/.*)/gm;
+let match;
+let nextPos = -1;
+let firstPos = -1;
+let loopSafety = 0;
+while ((match = regex.exec(text)) !== null) {
+loopSafety++;
+if (loopSafety > 5000) break;
+if (firstPos === -1) firstPos = match.index;
+if (match.index > currentPos) {
+nextPos = match.index;
+break;
+}
+}
+if (nextPos === -1 && firstPos !== -1) {
+nextPos = firstPos;
+this.showToast("Starting from top ↺");
+}
+if (nextPos !== -1) {
+editor.focus();
+editor.setSelectionRange(nextPos, nextPos);
+const textUpToMatch = text.substring(0, nextPos);
+const lineNumber = (textUpToMatch.match(/\n/g) || []).length;
+const totalLines = (text.match(/\n/g) || []).length + 1;
+const avgLineHeight = editor.scrollHeight / totalLines;
+const targetScrollTop = (lineNumber * avgLineHeight) - (editor.clientHeight / 3);
+editor.scrollTo({
+top: Math.max(0, targetScrollTop),
+behavior: 'smooth'
+});
+} else {
+this.showToast("No comments found");
+}
 },
-
-
-
 setUnsavedChanges(isUnsaved) {
 this.state.hasUnsavedChanges = isUnsaved;
 document.title = isUnsaved ? `* ${this.state.fileName}` : this.state.fileName;
@@ -850,31 +782,20 @@ if (isCtrl) {
 if (key === 'o') { e.preventDefault(); this.openFile(); }
 if (e.shiftKey) {
 if (e.code === 'Digit1') { e.preventDefault(); this.jumpToSection('style'); }
-
-
-if (e.code === 'Digit2') { 
-    e.preventDefault(); 
-    // Hvis vi ikke er inne i en script-tag, hopp til script-taggen først
-    const val = this.elements.editor.value;
-    const scriptTagPos = val.indexOf('<script');
-    
-    // En enkel sjekk: Er vi før script-taggen, eller finnes den ikke?
-    if (scriptTagPos !== -1 && this.elements.editor.selectionStart < scriptTagPos) {
-        this.jumpToSection('script'); 
-    } else {
-        // Hvis vi allerede er i (eller etter) script-starten, hopp til neste definisjon
-        this.jumpToNextDefinition();
-    }
+if (e.code === 'Digit2') {
+e.preventDefault();
+const val = this.elements.editor.value;
+const scriptTagPos = val.indexOf('<script');
+if (scriptTagPos !== -1 && this.elements.editor.selectionStart < scriptTagPos) {
+this.jumpToSection('script');
+} else {
+this.jumpToNextDefinition();
 }
-
-
-if (e.code === 'Digit4') { 
-    e.preventDefault(); 
-    this.jumpToComment(); 
 }
-
-
-
+if (e.code === 'Digit4') {
+e.preventDefault();
+this.jumpToComment();
+}
 if (e.code === 'Digit3') { e.preventDefault(); this.jumpToSection('body'); }
 }
 } else if (e.altKey) {
