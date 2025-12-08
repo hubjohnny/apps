@@ -1,20 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-55NB91FTK3');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free City Builder Simulator Game Online</title>
+<title>City Builder</title>
 <style>
 html {
 box-sizing: border-box;
@@ -1280,16 +1269,16 @@ pollutionGrid[nIndex] = Math.min(255, pollutionGrid[nIndex] + 5);
 }
 }
 world.forEach((cell, index) => {
-    // FJERNET sjekken '&& cell.building.powered'
-    if (cell && cell.building?.type === 'park') { 
-        const cleanRadius = 3;
-        const cleanAmount = 3;
-        getNeighbors(index, cleanRadius).forEach((nIndex) => {
-            if (nIndex >= 0 && nIndex < pollutionGrid.length) {
-                pollutionGrid[nIndex] = Math.max(0, pollutionGrid[nIndex] - cleanAmount);
-            }
-        });
-    }
+// FJERNET sjekken '&& cell.building.powered'
+if (cell && cell.building?.type === 'park') {
+const cleanRadius = 3;
+const cleanAmount = 3;
+getNeighbors(index, cleanRadius).forEach((nIndex) => {
+if (nIndex >= 0 && nIndex < pollutionGrid.length) {
+pollutionGrid[nIndex] = Math.max(0, pollutionGrid[nIndex] - cleanAmount);
+}
+});
+}
 });
 }
 function getEconomyData(isRecession = false) {

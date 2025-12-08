@@ -1,20 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-55NB91FTK3');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free Adventure Survival RPG Online</title>
+<title>Adventure</title>
 <style>
 body,
 html {
@@ -192,9 +181,9 @@ will-change: transform;
 transform-origin: center center;
 text-shadow:
 -2px 0 0 #000,
- 2px 0 0 #000,
- 0 -2px 0 #000,
- 0 2px 0 #000;
+2px 0 0 #000,
+0 -2px 0 #000,
+0 2px 0 #000;
 }
 .player-sprite,
 .monster-sprite,
@@ -2353,17 +2342,6 @@ if (resource) {
 gatherResource(resource, e.target);
 }
 });
-gameWorld.addEventListener('contextmenu', (e) => {
-e.preventDefault();
-const equipped = WEAPONS[gameState.player.equippedWeapon];
-if (equipped && equipped.type === 'ranged' && !gameState.isFighting && !gameState.isGameOver) {
-const worldRect = gameWorld.getBoundingClientRect();
-const mapTransform = new DOMMatrix(getComputedStyle(mapGrid).transform);
-const clickX = e.clientX - worldRect.left - mapTransform.e;
-const clickY = e.clientY - worldRect.top - mapTransform.f;
-shootCrossbow(clickX, clickY);
-}
-});
 }
 function updateVisibleCells(forceRedraw = false) {
 const pPos = gameState.player.pos;
@@ -2388,8 +2366,6 @@ if (x < 0 || x >= WORLD_SIZE.cols || y < 0 || y >= WORLD_SIZE.rows) {
 cell.style.backgroundColor = '#000000';
 cell.textContent = '';
 } else {
-const monsterAtPos = gameState.monsters.find((m) => m.x === x && m.y === y && !m.isDying);
-const npcAtPos = gameState.npcs.find((n) => n.x === x && n.y === y);
 let displayTile = gameState.world[y][x];
 if (gameState.level < 20) {
 if (x === gameState.keyPos.x && y === gameState.keyPos.y && !gameState.player.hasKey) {
@@ -2398,18 +2374,20 @@ displayTile = TILE.KEY;
 displayTile = TILE.DOOR;
 }
 }
+const monsterAtPos = gameState.monsters.find((m) => m.x === x && m.y === y && !m.isDying);
+const npcAtPos = gameState.npcs.find((n) => n.x === x && n.y === y);
 if (monsterAtPos || npcAtPos) {
-displayTile = (gameState.world[y][x] === pathTile) ? pathTile : TILE.EMPTY;
+if (displayTile !== TILE.KEY && displayTile !== TILE.DOOR) {
+displayTile = gameState.world[y][x] === pathTile ? pathTile : TILE.EMPTY;
 }
-if (displayTile === TILE.WATER) {
-displayTile = TILE.EMPTY;
 }
-cell.textContent = displayTile;
 if (gameState.world[y][x] === TILE.WATER) {
 cell.style.backgroundColor = '#42a5f5';
+displayTile = TILE.EMPTY;
 } else {
 cell.style.backgroundColor = 'transparent';
 }
+cell.textContent = displayTile;
 updateCellClass(cell, displayTile);
 }
 mapGrid.appendChild(cell);
@@ -2621,8 +2599,6 @@ gameState.world[y][x] = newTile;
 }
 const cell = visibleCellElements[`cell-${x}-${y}`];
 if (cell) {
-const monsterAtPos = gameState.monsters.find((m) => m.x === x && m.y === y && !m.isDying);
-const npcAtPos = gameState.npcs.find((n) => n.x === x && n.y === y);
 let displayTile = gameState.world[y][x];
 if (gameState.level < 20) {
 if (x === gameState.keyPos.x && y === gameState.keyPos.y && !gameState.player.hasKey) {
@@ -2631,14 +2607,18 @@ displayTile = TILE.KEY;
 displayTile = TILE.DOOR;
 }
 }
-if (monsterAtPos || npcAtPos) {
-displayTile = gameState.world[y][x] === pathTile ? pathTile : TILE.EMPTY;
-}
 if (gameState.world[y][x] === TILE.WATER) {
 cell.style.backgroundColor = '#42a5f5';
 displayTile = TILE.EMPTY;
 } else {
 cell.style.backgroundColor = 'transparent';
+}
+const monsterAtPos = gameState.monsters.find((m) => m.x === x && m.y === y && !m.isDying);
+const npcAtPos = gameState.npcs.find((n) => n.x === x && n.y === y);
+if (monsterAtPos || npcAtPos) {
+if (displayTile !== TILE.KEY && displayTile !== TILE.DOOR && displayTile !== TILE.CAGE) {
+displayTile = gameState.world[y][x] === pathTile ? pathTile : TILE.EMPTY;
+}
 }
 cell.textContent = displayTile;
 updateCellClass(cell, displayTile);
@@ -2963,11 +2943,12 @@ setTimeout(() => {
 monsterEl.remove();
 delete visibleMonsterElements[monster.id];
 gameState.monsters = gameState.monsters.filter((m) => m.id !== monster.id);
+updateVisibleCells();
 }, 2000);
 } else {
 gameState.monsters = gameState.monsters.filter((m) => m.id !== monster.id);
+updateVisibleCells();
 }
-updateCell(monster.x, monster.y, gameState.world[monster.y][monster.x]);
 }
 function checkIfStrengthIncreases() {
 while (gameState.player.xp >= gameState.player.xpForNextStrength) {
@@ -3286,12 +3267,12 @@ entity.targetPixelPos = {
 x: newX * cellSize + cellSize / 2,
 y: newY * cellSize + cellSize / 2
 };
-updateCell(oldX, oldY, gameState.world[oldY][oldX]);
-updateCell(newX, newY, gameState.world[newY][newX]);
+updateVisibleCells();
 }
 });
 if (ghostsToRemove.length > 0) {
 gameState.monsters = gameState.monsters.filter((m) => !ghostsToRemove.includes(m.id));
+updateVisibleCells();
 }
 checkAggro();
 }
@@ -3536,6 +3517,17 @@ visibleMonsterElements = {};
 visibleNpcElements = {};
 updateVisibleCells(true);
 render();
+});
+gameWorld.addEventListener('contextmenu', (e) => {
+e.preventDefault();
+const equipped = WEAPONS[gameState.player.equippedWeapon];
+if (equipped && equipped.type === 'ranged' && !gameState.isFighting && !gameState.isGameOver) {
+const worldRect = gameWorld.getBoundingClientRect();
+const mapTransform = new DOMMatrix(getComputedStyle(mapGrid).transform);
+const clickX = e.clientX - worldRect.left - mapTransform.e;
+const clickY = e.clientY - worldRect.top - mapTransform.f;
+shootCrossbow(clickX, clickY);
+}
 });
 saveGameButton.addEventListener('click', saveGame);
 howToPlayButton.addEventListener('click', showHowToPlay);
