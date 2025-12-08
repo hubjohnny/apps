@@ -533,7 +533,7 @@ jumpToNextDefinition() {
 const editor = this.elements.editor;
 const currentPos = editor.selectionStart;
 const text = editor.value;
-const regex = /(^\s*(async\s+)?\w+\s*\(.*?\)\s*\{|function\s+\w+|class\s+\w+|const\s+\w+\s*=)/gm;
+const regex = /(^\s*(?!if|for|while|switch|catch|constructor|get|set|static)\w+\s*\(.*?\)\s*\{|^\s*function\s+\w+\s*\(.*?\)|\s*=\s*\(.*?\)\s*=>)/gm;
 let match;
 let nextPos = -1;
 let firstPos = -1;
