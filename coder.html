@@ -518,10 +518,14 @@ console.error('Could not save file:', err);
 alert("Error: Could not save the file.");
 }
 },
+
 jumpToSection(tagName) {
 const editor = this.elements.editor;
 const tag = `<${tagName}`;
-const position = editor.value.indexOf(tag);
+let position = editor.value.indexOf(tag, editor.selectionStart + 1);
+if (position === -1) {
+position = editor.value.indexOf(tag, 0);
+}
 if (position === -1) return;
 editor.focus();
 editor.setSelectionRange(position, position);
@@ -536,6 +540,7 @@ top: Math.max(0, finalScrollTop),
 behavior: 'smooth'
 });
 },
+
 setUnsavedChanges(isUnsaved) {
 this.state.hasUnsavedChanges = isUnsaved;
 document.title = isUnsaved ? `* ${this.state.fileName}` : this.state.fileName;
