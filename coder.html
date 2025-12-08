@@ -1,17 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-55NB91FTK3');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Code Editor for HTML, CSS & JS.</title>
@@ -25,7 +14,7 @@
 --selection-bg: rgba(97, 175, 239, 0.3);
 --font-mono: 'Fira Code', 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
 --font-size: 15px;
---whitespace-color: #FFBF00;
+--whitespace-color: #FFD700;
 }
 html,
 body {
@@ -258,8 +247,9 @@ margin: 10px 0;
 <li><strong>Alt + L</strong> Remove Empty Lines</li>
 <hr class="separator">
 <li><strong>Ctrl + Shift + 1</strong> Jump to &lt;style&gt;</li>
-<li><strong>Ctrl + Shift + 2</strong> Jump to &lt;script&gt;</li>
+<li><strong>Ctrl + Shift + 2</strong> Jump to &lt;script&gt; / Logic</li>
 <li><strong>Ctrl + Shift + 3</strong> Jump to &lt;body&gt;</li>
+<li><strong>Ctrl + Shift + 4</strong> Jump to Comments</li>
 <hr class="separator">
 <li><strong>Alt + T</strong> Open in New Tab</li>
 <li><strong>Tab</strong> Indent</li>
@@ -366,9 +356,9 @@ this.elements.highlightLayer.scrollLeft = scrollLeft;
 highlight() {
 const val = this.elements.editor.value;
 let hlText = val.replace(/[ \t]+$/gm, (match) => {
-return '·'.repeat(match.length);
+return '●'.repeat(match.length);
 });
-hlText = hlText.replace(/[^\n\r·]/g, ' ');
+hlText = hlText.replace(/[^\n\r●]/g, ' ');
 this.elements.highlightLayer.textContent = hlText;
 },
 checkWhitespace() {
@@ -518,7 +508,6 @@ console.error('Could not save file:', err);
 alert("Error: Could not save the file.");
 }
 },
-
 jumpToSection(tagName) {
 const editor = this.elements.editor;
 const tag = `<${tagName}`;
@@ -540,7 +529,76 @@ top: Math.max(0, finalScrollTop),
 behavior: 'smooth'
 });
 },
-
+jumpToNextDefinition() {
+const editor = this.elements.editor;
+const currentPos = editor.selectionStart;
+const text = editor.value;
+const regex = /(^\s*(async\s+)?\w+\s*\(.*?\)\s*\{|function\s+\w+|class\s+\w+|const\s+\w+\s*=)/gm;
+let match;
+let nextPos = -1;
+let firstPos = -1;
+while ((match = regex.exec(text)) !== null) {
+if (firstPos === -1) firstPos = match.index;
+if (match.index > currentPos) {
+nextPos = match.index;
+break;
+}
+}
+if (nextPos === -1 && firstPos !== -1) {
+nextPos = firstPos;
+}
+if (nextPos !== -1) {
+editor.focus();
+editor.setSelectionRange(nextPos, nextPos);
+const textUpToMatch = text.substring(0, nextPos);
+const lineNumber = (textUpToMatch.match(/\n/g) || []).length;
+const totalLines = (text.match(/\n/g) || []).length + 1;
+const avgLineHeight = editor.scrollHeight / totalLines;
+const targetScrollTop = (lineNumber * avgLineHeight) - (editor.clientHeight / 3);
+editor.scrollTo({
+top: Math.max(0, targetScrollTop),
+behavior: 'smooth'
+});
+}
+},
+jumpToComment() {
+const editor = this.elements.editor;
+const currentPos = editor.selectionStart;
+const text = editor.value;
+const regex = /(^\s*\/\*[\s\S]*?\*\/|^\s*\/\/.*)/gm;
+let match;
+let nextPos = -1;
+let firstPos = -1;
+let loopSafety = 0;
+while ((match = regex.exec(text)) !== null) {
+loopSafety++;
+if (loopSafety > 5000) break;
+if (firstPos === -1) firstPos = match.index;
+if (match.index > currentPos) {
+nextPos = match.index;
+break;
+}
+}
+if (nextPos === -1 && firstPos !== -1) {
+nextPos = firstPos;
+this.showToast("Starting from top ↺");
+}
+if (nextPos !== -1) {
+editor.focus();
+editor.setSelectionRange(nextPos, nextPos);
+const textUpToMatch = text.substring(0, nextPos);
+const lineNumber = (textUpToMatch.match(/\n/g) || []).length;
+const totalLines = (text.match(/\n/g) || []).length + 1;
+const avgLineHeight = editor.scrollHeight / totalLines;
+const targetScrollTop = (lineNumber * avgLineHeight) - (editor.clientHeight / 3);
+editor.scrollTo({
+top: Math.max(0, targetScrollTop),
+behavior: 'smooth'
+});
+} else {
+this.showToast("No comments found");
+}
+},
 setUnsavedChanges(isUnsaved) {
 this.state.hasUnsavedChanges = isUnsaved;
 document.title = isUnsaved ? `* ${this.state.fileName}` : this.state.fileName;
@@ -724,7 +782,20 @@ if (isCtrl) {
 if (key === 'o') { e.preventDefault(); this.openFile(); }
 if (e.shiftKey) {
 if (e.code === 'Digit1') { e.preventDefault(); this.jumpToSection('style'); }
-if (e.code === 'Digit2') { e.preventDefault(); this.jumpToSection('script'); }
+if (e.code === 'Digit2') {
+e.preventDefault();
+const val = this.elements.editor.value;
+const scriptTagPos = val.indexOf('<script');
+if (scriptTagPos !== -1 && this.elements.editor.selectionStart < scriptTagPos) {
+this.jumpToSection('script');
+} else {
+this.jumpToNextDefinition();
+}
+}
+if (e.code === 'Digit4') {
+e.preventDefault();
+this.jumpToComment();
+}
 if (e.code === 'Digit3') { e.preventDefault(); this.jumpToSection('body'); }
 }
 } else if (e.altKey) {
