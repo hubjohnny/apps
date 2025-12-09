@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Robust WebM Video Clipper (UMD)</title>
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script> 
+    <title>Robust WebM Video Clipper (Final)</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script> 
     <style>
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
         .container { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -50,135 +50,141 @@
 </div>
 
 <script>
-    // Siden vi bruker UMD-versjonen i script-taggen, er FFmpeg tilgjengelig globalt.
-    // Vi setter opp en ventefunksjon for å sikre at den eksterne filen er lastet.
+    // Siden vi nå bruker 'defer', kan vi stole på at den eksterne filen er lastet FØR denne script-blokken kjøres.
     
-    window.onload = function() {
-        if (typeof FFmpeg === 'undefined') {
-            document.getElementById('statusMessage').textContent = "ERROR: Could not load FFmpeg library from CDN. Check the console for 404 errors.";
-            return;
-        }
+    // Sjekk om FFmpeg er tilgjengelig FØR vi prøver å dekonstruere det.
+    if (typeof FFmpeg === 'undefined') {
+        document.getElementById('statusMessage').textContent = "FATAL ERROR: FFmpeg library is missing or blocked. Check network status.";
+        console.error("FFmpeg not defined globally. Check CDN link.");
+    }
+    
+    // Vi definerer variabelen her for å sikre at den er tilgjengelig i funksjonene under.
+    const { createFFmpeg, fetchFile } = FFmpeg || {}; 
+    const coreURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/ffmpeg-core.js";
+    
+    const ffmpeg = createFFmpeg ? createFFmpeg({ log: true }) : null;
 
-        const { createFFmpeg, fetchFile } = FFmpeg; 
-        
-        // Core file must be loaded from the matching version.
-        const coreURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/ffmpeg-core.js";
-        
-        const ffmpeg = createFFmpeg({ log: true });
-        
-        // VARIABLER
-        const fileInput = document.getElementById('fileInput');
-        const startTimeInput = document.getElementById('startTime');
-        const durationTimeInput = document.getElementById('durationTime');
-        const clipButton = document.getElementById('clipButton');
-        const statusMessage = document.getElementById('statusMessage');
-        const logOutput = document.getElementById('log');
+    // Henter elementer
+    const fileInput = document.getElementById('fileInput');
+    const startTimeInput = document.getElementById('startTime');
+    const durationTimeInput = document.getElementById('durationTime');
+    const clipButton = document.getElementById('clipButton');
+    const statusMessage = document.getElementById('statusMessage');
+    const logOutput = document.getElementById('log');
 
-        let inputFileName = "input.webm";
-        let inputFileBlob = null;
-        let isFFmpegLoaded = false;
+    let inputFileName = "input.webm";
+    let inputFileBlob = null;
+    let isFFmpegLoaded = false;
 
-        function log(message) {
-            if(logOutput) {
-                logOutput.innerHTML += `<div>${message}</div>`;
-                logOutput.scrollTop = logOutput.scrollHeight;
-            }
-        }
-
-        function timeToFFmpegFormat(timeString) {
-            return timeString;
-        }
-
-        // Initialize application status
+    // Sørg for at FFmpeg er definert før vi fortsetter
+    if (!ffmpeg) {
+        clipButton.disabled = true;
+        statusMessage.textContent = "Application initialization failed. Please try reloading the page.";
+    } else {
         statusMessage.textContent = "Application loaded. Ready for file selection.";
+    }
 
-        // --- FILE INPUT HANDLER ---
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            
-            if (file && file.type === 'video/webm') {
-                inputFileBlob = file;
-                inputFileName = file.name;
-                statusMessage.textContent = `File selected: ${file.name}. Ready to clip.`;
-                clipButton.disabled = false;
-            } else {
-                inputFileBlob = null;
+
+    function log(message) {
+        if(logOutput) {
+            logOutput.innerHTML += `<div>${message}</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+    }
+
+    function timeToFFmpegFormat(timeString) {
+        return timeString;
+    }
+
+    // --- FILE INPUT HANDLER ---
+    fileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        
+        if (file && file.type === 'video/webm' && ffmpeg) { // Sjekk også for ffmpeg
+            inputFileBlob = file;
+            inputFileName = file.name;
+            statusMessage.textContent = `File selected: ${file.name}. Ready to clip.`;
+            clipButton.disabled = false;
+        } else {
+            inputFileBlob = null;
+            if (ffmpeg) {
                 statusMessage.textContent = "Please select a WebM file.";
-                clipButton.disabled = true;
             }
-        });
-
-        // --- CLIP FUNCTION ---
-        clipButton.addEventListener('click', async () => {
-            if (!inputFileBlob) return;
-
             clipButton.disabled = true;
-            logOutput.innerHTML = ''; 
+        }
+    });
 
-            try {
-                // 1. Load FFmpeg library if not loaded
-                if (!isFFmpegLoaded) {
-                    statusMessage.textContent = "Loading FFmpeg WebAssembly (can take 10-30 seconds on first use)...";
-                    log(`Loading FFmpeg core from: ${coreURL}`);
-                    
-                    ffmpeg.setProgress(({ ratio }) => {
-                        if (ratio > 0) {
-                            const percentage = Math.floor(ratio * 100);
-                            statusMessage.textContent = `Processing video: ${percentage}% complete...`;
-                        }
-                    });
-                    
-                    await ffmpeg.load({ corePath: coreURL }); 
-                    isFFmpegLoaded = true;
-                    log("FFmpeg loaded into memory.");
-                }
+    // --- CLIP FUNCTION ---
+    clipButton.addEventListener('click', async () => {
+        if (!inputFileBlob || !ffmpeg) return;
+
+        clipButton.disabled = true;
+        logOutput.innerHTML = ''; 
+
+        try {
+            // 1. Load FFmpeg library if not loaded
+            if (!isFFmpegLoaded) {
+                statusMessage.textContent = "Loading FFmpeg WebAssembly (can take 10-30 seconds on first use)...";
+                log(`Loading FFmpeg core from: ${coreURL}`);
                 
-                statusMessage.textContent = "Initializing file system and writing data...";
+                ffmpeg.setProgress(({ ratio }) => {
+                    if (ratio > 0) {
+                        const percentage = Math.floor(ratio * 100);
+                        statusMessage.textContent = `Processing video: ${percentage}% complete...`;
+                    }
+                });
                 
-                const data = await fetchFile(inputFileBlob);
-                await ffmpeg.writeFile(inputFileName, data);
-                log(`File "${inputFileName}" written to virtual file system.`);
-
-                const startTime = timeToFFmpegFormat(startTimeInput.value);
-                const durationTime = timeToFFmpegFormat(durationTimeInput.value);
-                const outputFileName = `clipped_${startTime.replace(/:/g, '-')}_${durationTime.replace(/:/g, 'd')}.webm`;
-
-                const command = [
-                    '-i', inputFileName,
-                    '-ss', startTime,
-                    '-t', durationTime,
-                    '-c:v', 'libvpx-vp9',
-                    '-c:a', 'libopus',
-                    outputFileName
-                ];
-
-                statusMessage.textContent = `Starting clip process: ${startTime} for ${durationTime}. This may take some time.`;
-                log(`Command: ffmpeg ${command.join(' ')}`);
-
-                await ffmpeg.run(...command); 
-
-                const fileData = ffmpeg.FS('readFile', outputFileName);
-
-                const blob = new Blob([fileData.buffer], { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = outputFileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                statusMessage.textContent = "✅ Done! File downloaded. Ready for new clip.";
-
-            } catch (error) {
-                statusMessage.textContent = `❌ Error during processing. Check the log.`;
-                log(`FATAL ERROR: ${error.message}`);
-            } finally {
-                clipButton.disabled = false;
+                await ffmpeg.load({ corePath: coreURL }); 
+                isFFmpegLoaded = true;
+                log("FFmpeg loaded into memory.");
             }
-        });
-    }; // End window.onload
+            
+            statusMessage.textContent = "Initializing file system and writing data...";
+            
+            // ... (Resten av FFmpeg-logikken er uendret) ...
+            const data = await fetchFile(inputFileBlob);
+            await ffmpeg.writeFile(inputFileName, data);
+            log(`File "${inputFileName}" written to virtual file system.`);
+
+            const startTime = timeToFFmpegFormat(startTimeInput.value);
+            const durationTime = timeToFFmpegFormat(durationTimeInput.value);
+            const outputFileName = `clipped_${startTime.replace(/:/g, '-')}_${durationTime.replace(/:/g, 'd')}.webm`;
+
+            const command = [
+                '-i', inputFileName,
+                '-ss', startTime,
+                '-t', durationTime,
+                '-c:v', 'libvpx-vp9',
+                '-c:a', 'libopus',
+                outputFileName
+            ];
+
+            statusMessage.textContent = `Starting clip process: ${startTime} for ${durationTime}. This may take some time.`;
+            log(`Command: ffmpeg ${command.join(' ')}`);
+
+            await ffmpeg.run(...command); 
+
+            const fileData = ffmpeg.FS('readFile', outputFileName);
+
+            const blob = new Blob([fileData.buffer], { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = outputFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            statusMessage.textContent = "✅ Done! File downloaded. Ready for new clip.";
+
+        } catch (error) {
+            statusMessage.textContent = `❌ Error during processing. Check the log.`;
+            log(`FATAL ERROR: ${error.message}`);
+        } finally {
+            clipButton.disabled = false;
+        }
+    });
 </script>
 </body>
 </html>
