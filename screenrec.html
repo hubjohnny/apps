@@ -258,7 +258,7 @@ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: fals
 };
 }
 function getBitrate(fps, resStr) {
-let base = (resStr === '1080' || resStr === 'screen') ? 6000000 : 3500000;
+let base = (resStr === '1080' || resStr === 'screen') ? 3500000 : 2000000;
 return Math.floor(base * (fps >= 60 ? 1.8 : 1));
 }
 startBtn.addEventListener('click', async () => {
