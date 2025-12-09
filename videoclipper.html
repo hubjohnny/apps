@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Robust WebM Clipper (FFmpeg.wasm)</title>
-    <script async src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script> 
+    <title>Robust WebM Video Clipper (Module)</title>
     <style>
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
         .container { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -25,7 +24,7 @@
     <h1>✂️ Robust WebM Video Clipper</h1>
 
     <div class="note">
-        **IMPORTANT:** This tool uses FFmpeg WebAssembly. Due to modern browser security policies (required for `SharedArrayBuffer`), this file **must be served from a local web server (e.g., http://localhost:8000)** and not opened directly from your file system.
+        **IMPORTANT:** This tool uses FFmpeg WebAssembly. This file must be served from a local web server (e.g., **http://localhost:8000**) or GitHub Pages to avoid security errors.
     </div>
 
     <input type="file" id="fileInput" accept="video/webm">
@@ -49,17 +48,16 @@
     <div id="log"></div>
 </div>
 
-<script>
-    // Configuration for FFmpeg
-    // The CDN script defines the global FFmpeg object
-    const { createFFmpeg, fetchFile } = FFmpeg; 
-    
-    // Initialize FFmpeg instance.
-    const ffmpeg = createFFmpeg({ log: true });
+<script type="module">
+    // Direct import of the FFmpeg module. This avoids the global FFmpeg variable issue.
+    import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/ffmpeg.js';
     
     // Core file must be loaded from the matching version.
     const coreURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/ffmpeg-core.js";
     
+    const ffmpeg = createFFmpeg({ log: true });
+    
+    // VARIABLER
     const fileInput = document.getElementById('fileInput');
     const startTimeInput = document.getElementById('startTime');
     const durationTimeInput = document.getElementById('durationTime');
@@ -72,13 +70,18 @@
     let isFFmpegLoaded = false;
 
     function log(message) {
-        logOutput.innerHTML += `<div>${message}</div>`;
-        logOutput.scrollTop = logOutput.scrollHeight;
+        if(logOutput) {
+            logOutput.innerHTML += `<div>${message}</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
     }
 
     function timeToFFmpegFormat(timeString) {
         return timeString;
     }
+
+    // Initialize application status
+    statusMessage.textContent = "Application loaded. Ready for file selection.";
 
     // --- FILE INPUT HANDLER ---
     fileInput.addEventListener('change', (event) => {
@@ -88,7 +91,7 @@
             inputFileBlob = file;
             inputFileName = file.name;
             statusMessage.textContent = `File selected: ${file.name}. Ready to clip.`;
-            clipButton.disabled = false; // ACTIVATE BUTTON HERE
+            clipButton.disabled = false;
         } else {
             inputFileBlob = null;
             statusMessage.textContent = "Please select a WebM file.";
@@ -116,7 +119,6 @@
                     }
                 });
                 
-                // Use corePath and load the WebAssembly core
                 await ffmpeg.load({ corePath: coreURL }); 
                 isFFmpegLoaded = true;
                 log("FFmpeg loaded into memory.");
@@ -124,24 +126,22 @@
             
             statusMessage.textContent = "Initializing file system and writing data...";
             
-            // 2. Write file to FFmpeg's virtual file system
+            // ... (Resten av FFmpeg-logikken er uendret) ...
             const data = await fetchFile(inputFileBlob);
             await ffmpeg.writeFile(inputFileName, data);
             log(`File "${inputFileName}" written to virtual file system.`);
 
-            // 3. Set clipping parameters
             const startTime = timeToFFmpegFormat(startTimeInput.value);
             const durationTime = timeToFFmpegFormat(durationTimeInput.value);
             const outputFileName = `clipped_${startTime.replace(/:/g, '-')}_${durationTime.replace(/:/g, 'd')}.webm`;
 
-            // 4. Execute FFmpeg command
             const command = [
                 '-i', inputFileName,
-                '-ss', startTime,    // Start time
-                '-t', durationTime,  // Duration
-                '-c:v', 'libvpx-vp9',// Video Codec (VP9)
-                '-c:a', 'libopus',   // Audio Codec (Opus)
-                outputFileName       // Output file
+                '-ss', startTime,
+                '-t', durationTime,
+                '-c:v', 'libvpx-vp9',
+                '-c:a', 'libopus',
+                outputFileName
             ];
 
             statusMessage.textContent = `Starting clip process: ${startTime} for ${durationTime}. This may take some time.`;
@@ -149,10 +149,8 @@
 
             await ffmpeg.run(...command); 
 
-            // 5. Read the clipped file from the virtual file system
             const fileData = ffmpeg.FS('readFile', outputFileName);
 
-            // 6. Download the file to the user
             const blob = new Blob([fileData.buffer], { type: 'video/webm' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
