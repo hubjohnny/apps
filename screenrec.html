@@ -50,22 +50,27 @@ height: 100%;
 object-fit: contain;
 display: block;
 }
+
 #timer-display {
-display: none;
-position: absolute;
-top: 20px;
-left: 50%;
-transform: translateX(-50%);
-font-size: 32px;
-font-weight: bold;
-color: var(--text);
-background: var(--danger);
-padding: 5px 20px;
-border-radius: 50px;
-box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-z-index: 100;
-font-variant-numeric: tabular-nums;
+    display: none;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--text);      /* Hvit tekst */
+    background: #2ecc71;     /* Pen grønnfarge */
+    padding: 4px 15px;
+    border-radius: 50px;
+    
+    /* Endringen: En mørk, nesten sort skygge (0.8 = 80% sort) */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+    
+    z-index: 100;
+    font-variant-numeric: tabular-nums;
 }
+
 #countdown-overlay {
 position: absolute;
 inset: 0;
@@ -327,14 +332,36 @@ if (autoStopMins > 0) autoStopTimeout = setTimeout(() => { stopRecording(); aler
 stopBtn.addEventListener('click', stopRecording);
 async function stopRecording() {
 if (!mediaRecorder || mediaRecorder.state === "inactive") return;
-clearTimeout(autoStopTimeout); clearInterval(timerInterval);
+clearTimeout(autoStopTimeout);
+clearInterval(timerInterval);
 mediaRecorder.stop();
 if (mixedStream) mixedStream.getTracks().forEach(track => track.stop());
 if (audioContext) audioContext.close();
+recDot.style.animation = "none";
+recDot.style.backgroundColor = "#f1c40f";
+recDot.style.opacity = "1";
+statusText.style.color = "#f1c40f";
+let progress = 0;
+statusText.innerText = `Finalizing: ${progress}%`;
+const progressTimer = setInterval(() => {
+if (progress < 95) {
+progress += Math.floor(Math.random() * 5) + 2;
+if (progress > 95) progress = 95;
+statusText.innerText = `Finalizing: ${progress}%`;
+}
+}, 150);
 if (writableStream) await writableStream.close();
-recDot.style.display = 'none'; stopBtn.style.display = 'none'; startBtn.style.display = 'block';
-timerDisplay.style.display = 'none'; settingsPanel.style.pointerEvents = 'all'; settingsPanel.style.opacity = '1';
-statusText.innerText = "Saved!"; statusText.style.color = "#2ecc71";
+clearInterval(progressTimer);
+statusText.innerText = "Finalizing: 100%";
+await new Promise(r => setTimeout(r, 200));
+recDot.style.display = 'none';
+stopBtn.style.display = 'none';
+startBtn.style.display = 'block';
+timerDisplay.style.display = 'none';
+settingsPanel.style.pointerEvents = 'all';
+settingsPanel.style.opacity = '1';
+statusText.innerText = "Saved!";
+statusText.style.color = "#2ecc71";
 setTimeout(() => location.reload(), 2000);
 }
 function startTimer() {
