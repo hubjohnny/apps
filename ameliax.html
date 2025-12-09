@@ -83,7 +83,7 @@ color: var(--primary-neon);
 margin-top: 0;
 margin-bottom: 15px;
 text-shadow: 0 0 5px var(--primary-neon);
-font-size: clamp(1rem, 1.4vw, 1.4rem);
+font-size: clamp(1rem, 3vw, 3rem);
 }
 #explanationBox h3 {
 color: var(--secondary-neon);
@@ -137,40 +137,9 @@ box-shadow: 0 0 5px var(--primary-neon);
 ::-webkit-scrollbar-thumb:hover {
 background: #fff;
 }
-.sticky-link {
-position: fixed;
-bottom: 15px;
-left: 15px;
-z-index: 19;
-background: #512DA8;
-border: 3px solid #311B92;
-color: #EDE7F6;
-font-family: sans-serif;
-font-size: 0.8rem;
-padding: 6px 6px;
-border-radius: 8px;
-text-decoration: none;
-text-shadow: 0 0 5px rgba(0,0,0,0.7);
-box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-animation: subtle-glow 2s infinite ease-in-out;
-transition: transform 0.2s ease, background-color 0.2s ease;
-}
-.sticky-link:hover {
-transform: scale(1.05);
-background-color: #7E57C2;
-}
-@keyframes subtle-glow {
-0%, 100% {
-box-shadow: 0 0 6px rgba(237, 231, 246, 0.6);
-}
-50% {
-box-shadow: 0 0 10px rgba(237, 231, 246, 0.9);
-}
-}
 </style>
 </head>
 <body>
-<a href="index.html" class="sticky-link">📂 My Apps</a>
 <div id="mainContainer">
 <div id="gameArea">
 <div id="highScoreContainer"></div>
@@ -194,7 +163,7 @@ box-shadow: 0 0 10px rgba(237, 231, 246, 0.9);
 const lang = {
 startButton: "Start Game",
 playAgainButton: "Play Again!",
-title: "Free Endless Runner Game Online",
+title: "Amelia X",
 goalTitle: "Objective",
 goalText: "You've stolen a data core and are escaping a corrupt system. You must travel through the decaying data network and try to survive for as long as you can.",
 controlsTitle: "Controls",
