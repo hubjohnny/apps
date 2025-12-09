@@ -265,9 +265,10 @@ startBtn.addEventListener('click', async () => {
 try {
 const constraints = getConstraints();
 const audioChoice = document.getElementById('opt-audio').value;
+const captureSystemAudio = audioChoice !== 'mic' && audioChoice !== 'none';
 let screenStream = await navigator.mediaDevices.getDisplayMedia({
 video: constraints.video,
-audio: audioChoice !== 'mic' && audioChoice !== 'none'
+audio: captureSystemAudio ? constraints.audio : false
 });
 const videoTrack = screenStream.getVideoTracks()[0];
 if ('contentHint' in videoTrack) videoTrack.contentHint = 'detail';
