@@ -109,7 +109,7 @@ overflow-y: auto;
 top: 50%;
 left: 50%;
 transform: translate(-50%, -50%);
-width: 430px;
+width: 450px;
 }
 #search-modal {
 top: 20px;
@@ -247,7 +247,7 @@ margin: 10px 0;
 <li><strong>Alt + L</strong> Remove Empty Lines</li>
 <hr class="separator">
 <li><strong>Ctrl + Shift + 1</strong> Jump to &lt;style&gt;</li>
-<li><strong>Ctrl + Shift + 2</strong> Jump to &lt;script&gt; / Logic</li>
+<li><strong>Ctrl + Shift + 2</strong> Jump to &lt;script&gt; &#9658; Definition</li>
 <li><strong>Ctrl + Shift + 3</strong> Jump to &lt;body&gt;</li>
 <li><strong>Ctrl + Shift + 4</strong> Jump to Comments</li>
 <hr class="separator">
@@ -737,9 +737,15 @@ return;
 if (e.key === 'Tab') {
 e.preventDefault();
 const indent = this.config.indentUnit;
+let { selectionStart, selectionEnd, value } = this.elements.editor;
+const editor = this.elements.editor;
 if (selectionStart !== selectionEnd) {
 let lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-const affectedText = value.substring(lineStart, selectionEnd);
+let lineEnd = value.indexOf('\n', selectionEnd);
+if (lineEnd === -1 || lineEnd > selectionEnd) {
+lineEnd = selectionEnd;
+}
+const affectedText = value.substring(lineStart, lineEnd);
 let newText;
 if (e.shiftKey) {
 newText = affectedText.split('\n').map(line =>
@@ -748,23 +754,25 @@ line.startsWith(indent) ? line.substring(indent.length) : line
 } else {
 newText = affectedText.split('\n').map(line => indent + line).join('\n');
 }
-this.elements.editor.setSelectionRange(lineStart, selectionEnd);
-document.execCommand('insertText', false, newText);
-this.elements.editor.setSelectionRange(lineStart, lineStart + newText.length);
+editor.setSelectionRange(lineStart, lineEnd);
+editor.setRangeText(newText, lineStart, lineEnd, 'select');
+editor.setSelectionRange(lineStart, lineStart + newText.length);
 } else {
 if (e.shiftKey) {
 let lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
 if (value.substring(lineStart, lineStart + indent.length) === indent) {
-const cursorOffset = Math.max(0, selectionStart - lineStart - indent.length);
-this.elements.editor.setSelectionRange(lineStart, lineStart + indent.length);
-document.execCommand('delete');
-const newCursorPos = lineStart + cursorOffset;
-this.elements.editor.setSelectionRange(newCursorPos, newCursorPos);
+const newCursorPos = selectionStart - indent.length;
+editor.setSelectionRange(lineStart, lineStart + indent.length);
+editor.setRangeText('', lineStart, lineStart + indent.length, 'end');
+editor.setSelectionRange(newCursorPos, newCursorPos);
 }
 } else {
-document.execCommand('insertText', false, indent);
+editor.setRangeText(indent, selectionStart, selectionEnd, 'end');
 }
 }
+this.setUnsavedChanges(true);
+this.highlight();
+return;
 }
 },
 handleGlobalKeyDown(e) {
