@@ -202,9 +202,34 @@ let timerInterval;
 let startTime;
 let currentBitrate = 5000000;
 const qualitySettings = {
+
+/*
+ * * --------------------------------------------------------------------------------------------------
+ * | QUALITY | RESOLUTION | FPS (Best: 24/30) | BITRATE (Nåværende) | ANBEFALT BITRATE-OMRÅDE (bps) |
+ * --------------------------------------------------------------------------------------------------
+ * | 1080p   | 1920x1080  | 30/24             | 6000000             | 4,000,000 - 8,000,000
+ * |         |            |                   |                     | (OBS: Høy belastning for i3)
+ * --------------------------------------------------------------------------------------------------
+ * | 720p    | 1280x720   | 30/24             | 2500000             | 1,800,000 - 3,500,000
+ * |         |            |                   |                     | (ANBEFALES: Best balanse mellom ytelse/kvalitet)
+ * --------------------------------------------------------------------------------------------------
+ * | 480p    | 854x480    | 30/24/15          | 1000000             | 1,200,000 - 2,000,000
+ * |         |            |                   |                     | (Optimalt for bedre skarphet: Prøv 1500000)
+ * --------------------------------------------------------------------------------------------------
+ * * FPS (frameRate):
+ * - 60 FPS: Krever høyest ytelse, best for raske spill eller slow-motion.
+ * - 30 FPS: Standard for nettvide (YouTube), gir jevn video.
+ * - 24 FPS: Filmstandard, sparer litt plass uten å se hakkete ut.
+ * - 15 FPS: Kan brukes på 480p/svake maskiner for å spare MYE plass.
+ * * BITRATE (videoBitsPerSecond):
+ * - Lavere bitrate = Mindre filstørrelse, men dårligere kvalitet (pixelering/uskarphet).
+ * - Høyere bitrate = Større filstørrelse, bedre kvalitet.
+ * */
+
 "480":  { width: 854,  height: 480,  bitrate: 1000000 },
 "720":  { width: 1280, height: 720,  bitrate: 2500000 },
 "1080": { width: 1920, height: 1080, bitrate: 6000000 }
+
 };
 startBtn.addEventListener('click', async () => {
 try {
@@ -215,7 +240,10 @@ const displayMediaOptions = {
 video: {
 width: { ideal: settings.width },
 height: { ideal: settings.height },
-frameRate: { ideal: 30 },
+
+//Setter FPS. Video er 24, til spill eller andre ting sett 30 eller 60.
+frameRate: { ideal: 24 },
+
 cursor: "always"
 },
 audio: {
