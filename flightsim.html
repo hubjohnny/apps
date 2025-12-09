@@ -117,24 +117,26 @@ z-index: 10; color: white; text-align: center;
 </div>
 </div>
 <script>
+
 const CONFIG = {
-GRAVITY: 150,
-LIFT_POWER: 0.15,
-BASE_LIFT: 0.05,
-ROTATION_SPEED: 35,
-AUTO_LEVEL_SPEED: 20,
-MAX_LANDING_SPEED: 80,
-CRASH_ANGLE: 20,
-RUNWAY_BUFFER: 2500,
-FUEL_MAX: 8000,
-STORM_START_PCT: 0.40,
-STORM_END_PCT: 0.70,
-STORM_WARN_DIST: 2000,
-STORM_SAFE_ALT: 200,
-STORM_GRACE_TIME: 5.0,
-BIRD_SPAWN_RATE: 0.005,
-BIRD_SPEED: 100
+    GRAVITY: 18,           // Litt mer tyngde enn sist (100->120) så den ikke føles vektløs
+    LIFT_POWER: 0.01,       // Økt fra 0.10 (så den faktisk orker å løfte nesen)
+    BASE_LIFT: 0.05,        // Økt fra 0.03 (Hjelper deg å flyte oppover når farten øker)
+    ROTATION_SPEED: 10,     // Beholder denne LAV (Originalt 35). Dette gir rolig styring.
+    AUTO_LEVEL_SPEED: 10,   // Rolig oppretting
+    MAX_LANDING_SPEED: 90,  
+    CRASH_ANGLE: 35,        
+    RUNWAY_BUFFER: 2500,
+    FUEL_MAX: 8000,
+    STORM_START_PCT: 0.40,
+    STORM_END_PCT: 0.70,
+    STORM_WARN_DIST: 2000,
+    STORM_SAFE_ALT: 200,
+    STORM_GRACE_TIME: 5.0,
+    BIRD_SPAWN_RATE: 0.001,
+    BIRD_SPEED: 100
 };
+
 const BIOME_DATA = {
 'RUNWAY':   { color: '#333',     msg: 'CRASHED ON RUNWAY', isWater: false },
 'FOREST':   { color: '#2d4c1e',  msg: 'CRASHED INTO FOREST', isWater: false },
@@ -283,7 +285,7 @@ update: function(throttle) {
 if (!this.ctx) return;
 if (this.ctx.state === 'suspended') this.ctx.resume();
 let vol = 0.05 + ((throttle / 100) * 0.15);
-if (PLANE.fuel <= 0 || GAME.gameOver) vol = 0;
+if (PLANE.fuel <= 0 || GAME.gameOver || GAME.birdStrikes >= 2) vol = 0;
 const now = this.ctx.currentTime;
 this.osc.frequency.setTargetAtTime(40 + (throttle * 0.4), now, 0.1);
 this.gain.gain.setTargetAtTime(vol, now, 0.1);
