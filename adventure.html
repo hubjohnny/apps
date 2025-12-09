@@ -180,10 +180,10 @@ z-index: 5;
 will-change: transform;
 transform-origin: center center;
 text-shadow:
--2px 0 0 #000,
-2px 0 0 #000,
-0 -2px 0 #000,
-0 2px 0 #000;
+-1px 0 0 #000,
+1px 0 0 #000,
+0 -1px 0 #000,
+0 1px 0 #000;
 }
 .player-sprite,
 .monster-sprite,
@@ -536,40 +536,9 @@ background: #7E57C2;
 scrollbar-width: thin;
 scrollbar-color: #512DA8 #2a2135;
 }
-.sticky-link {
-position: fixed;
-bottom: 15px;
-left: 15px;
-z-index: 19;
-background: #512DA8;
-border: 3px solid #311B92;
-color: #EDE7F6;
-font-family: sans-serif;
-font-size: 0.8rem;
-padding: 6px 6px;
-border-radius: 8px;
-text-decoration: none;
-text-shadow: 0 0 5px rgba(0,0,0,0.7);
-box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-animation: subtle-glow 2s infinite ease-in-out;
-transition: transform 0.2s ease, background-color 0.2s ease;
-}
-.sticky-link:hover {
-transform: scale(1.05);
-background-color: #7E57C2;
-}
-@keyframes subtle-glow {
-0%, 100% {
-box-shadow: 0 0 6px rgba(237, 231, 246, 0.6);
-}
-50% {
-box-shadow: 0 0 10px rgba(237, 231, 246, 0.9);
-}
-}
 </style>
 </head>
 <body>
-<a href="index.html" class="sticky-link">📂 My Apps</a>
 <div id="game-container">
 <div id="rain-container"></div>
 <div id="lightning-flash"></div>
@@ -1261,9 +1230,9 @@ const STONE_SLEDGE_COST = 80;
 const MIN_FOOD_COUNT = 25;
 const FOOD_RESPAWN_AMOUNT = 20;
 const TILE = {
-PLAYER: '⛄',
+PLAYER: '🧍',
 EMPTY: ' ',
-WALL_1: '🎄',
+WALL_1: '🌲',
 WALL_2: '🌳',
 STONE: '🪨',
 DECOR_1: '🪵',

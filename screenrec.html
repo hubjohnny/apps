@@ -128,45 +128,9 @@ z-index: 15;
 50% { opacity: 0.5; }
 100% { opacity: 1; }
 }
-h1 {
-margin: 4px;
-text-align: center;
-}
-.sticky-link {
-position: fixed;
-bottom: 15px;
-left: 15px;
-z-index: 19;
-background: #512DA8;
-border: 3px solid #311B92;
-color: #EDE7F6;
-font-family: sans-serif;
-font-size: 0.8rem;
-padding: 6px 6px;
-border-radius: 8px;
-text-decoration: none;
-text-shadow: 0 0 5px rgba(0,0,0,0.7);
-box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-animation: subtle-glow 2s infinite ease-in-out;
-transition: transform 0.2s ease, background-color 0.2s ease;
-}
-.sticky-link:hover {
-transform: scale(1.05);
-background-color: #7E57C2;
-}
-@keyframes subtle-glow {
-0%, 100% {
-box-shadow: 0 0 6px rgba(237, 231, 246, 0.6);
-}
-50% {
-box-shadow: 0 0 10px rgba(237, 231, 246, 0.9);
-}
-}
 </style>
 </head>
 <body>
-<a href="index.html" class="sticky-link">📂 My Apps</a>
-<h1>WebM Screen Recorder</h1>
 <div id="video-container">
 <video id="preview" autoplay muted></video>
 <div id="timer-display">00:00:00</div>
@@ -201,6 +165,11 @@ let writableStream;
 let timerInterval;
 let startTime;
 let currentBitrate = 5000000;
+
+// Sett maksimal opptakstid til 2 timer (2 timer * 60 min * 60 sek * 1000 ms)
+const MAX_RECORDING_TIME_MS = 2 * 60 * 60 * 1000;
+let autoStopTimeout; // For å lagre timeout-IDen så vi kan avbryte den
+
 const qualitySettings = {
 
 /*
@@ -289,25 +258,39 @@ beginRecording();
 }
 }, 1000);
 }
+
+
 function beginRecording() {
-const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-? "video/webm;codecs=vp9"
-: "video/webm";
-mediaRecorder = new MediaRecorder(stream, {
-mimeType: mimeType,
-videoBitsPerSecond: currentBitrate,
-audioBitsPerSecond: 128000
-});
-mediaRecorder.ondataavailable = handleDataAvailable;
-mediaRecorder.start(1000);
-preview.pause();
-preview.style.display = 'none';
-timerDisplay.style.display = 'block';
-startTimer();
-stopBtn.style.display = 'block';
-recDot.style.display = 'block';
-console.log(`Recording started at ${qualitySelect.value}p`);
+    const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+        ? "video/webm;codecs=vp9"
+        : "video/webm";
+    
+    mediaRecorder = new MediaRecorder(stream, {
+        mimeType: mimeType,
+        videoBitsPerSecond: currentBitrate,
+        audioBitsPerSecond: 128000
+    });
+    
+    mediaRecorder.ondataavailable = handleDataAvailable;
+    mediaRecorder.start(1000);
+    
+    preview.pause();
+    preview.style.display = 'none';
+    timerDisplay.style.display = 'block';
+    startTimer();
+    stopBtn.style.display = 'block';
+    recDot.style.display = 'block';
+    
+    // **NY FUNKSJONALITET: Automatisk stopp etter 2 timer**
+    autoStopTimeout = setTimeout(() => {
+        alert("Automatisk stopp: Maksimal opptakstid (2 timer) er nådd.");
+        stopRecording();
+    }, MAX_RECORDING_TIME_MS);
+    
+    console.log(`Recording started at ${qualitySelect.value}p`);
 }
+
+
 async function handleDataAvailable(event) {
 if (event.data.size > 0 && writableStream) {
 await writableStream.write(event.data);
@@ -331,24 +314,36 @@ function pad(num) {
 return num.toString().padStart(2, '0');
 }
 stopBtn.addEventListener('click', stopRecording);
+
+
 async function stopRecording() {
-if (!mediaRecorder || mediaRecorder.state === "inactive") return;
-clearInterval(timerInterval);
-timerDisplay.style.display = 'none';
-mediaRecorder.stop();
-stream.getTracks().forEach(track => track.stop());
-if (writableStream) {
-await writableStream.close();
-writableStream = null;
+    if (!mediaRecorder || mediaRecorder.state === "inactive") return;
+    
+    // **NY FUNKSJONALITET: Avbryt automatisk stopp-timer**
+    clearTimeout(autoStopTimeout); 
+    
+    clearInterval(timerInterval);
+    timerDisplay.style.display = 'none';
+    
+    mediaRecorder.stop();
+    stream.getTracks().forEach(track => track.stop());
+    
+    if (writableStream) {
+        await writableStream.close();
+        writableStream = null;
+    }
+    
+    recDot.style.display = 'none';
+    stopBtn.style.display = 'none';
+    startBtn.style.display = 'block';
+    qualitySelect.style.display = 'block';
+    preview.style.display = 'block';
+    
+    alert("Recording saved!");
+    location.reload();
 }
-recDot.style.display = 'none';
-stopBtn.style.display = 'none';
-startBtn.style.display = 'block';
-qualitySelect.style.display = 'block';
-preview.style.display = 'block';
-alert("Recording saved!");
-location.reload();
-}
+
+
 </script>
 </body>
 </html>
