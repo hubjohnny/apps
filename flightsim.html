@@ -40,10 +40,22 @@ width: 100%; height: 14px; background: #000; border: 1px solid #555; border-radi
 #route-fill { height: 100%; background: linear-gradient(90deg, #9C27B0, #E040FB); width: 0%; transition: width 0.2s; }
 #location-indicator { font-size: 14px; color: #4caf50; font-weight: bold; margin-top: 4px; text-shadow: 0 1px 2px #000; }
 #distance-text { font-size: 10px; color: #666; margin-top: 2px; }
+
+/* Vi strammer inn plassen slik at "ft" og "kts" får plass */
 .panel-right {
-background: #111; border: 1px solid #333; padding: 8px; border-radius: 4px; font-size: 12px;
-font-family: 'Consolas', monospace; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 15px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Consolas', monospace;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    
+    /* HER ER ENDRINGENE: */
+    padding: 4px 6px !important;   /* Mindre luft rundt kanten (var 8px) */
+    gap: 2px 5px !important;       /* Mindre avstand mellom kolonnene (var 15px) */
 }
+
 .stat-row { display: flex; justify-content: space-between; align-items: center; }
 .stat-val { color: #fff; font-weight: bold; }
 .mini-bar { width: 40px; height: 6px; background: #333; display: inline-block; margin-left: 5px; }
@@ -75,6 +87,7 @@ z-index: 10; color: white; text-align: center;
 .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c6a300; }
 .btn-restart { background: #ff4444; box-shadow: 0 4px 0 #cc0000; color: #fff; }
 @keyframes blink { 50% { opacity: 0; } }
+
 </style>
 </head>
 <body>
