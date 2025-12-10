@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coder 2.1</title>
+<style>
+:root {
+    /* Editor Base */
+    --bg-color: #1e1e1e;
+    --gutter-bg: #1e1e1e;
+    --text-color: #d4d4d4;
+    --border-color: #333333;
+    --caret-color: #aeafad;
+    --selection-bg: #264f78;
+    --line-number-color: #858585;
+    
+    /* Syntax Palette (VS Code Dark+ Style) */
+    --c-comment: #6a9955;     /* Comments */
+    --c-string: #ce9178;      /* Strings */
+    --c-number: #b5cea8;      /* Numbers, Units */
+    
+    /* HTML / JS specific */
+    --c-tag: #569cd6;         /* HTML Tags, JS Keywords */
+    --c-attr: #9cdcfe;        /* Attributes, JS Variables */
+    --c-func: #dcdcaa;        /* Functions */
+    --c-control: #c586c0;     /* Control flow (return, if, import) */
+    
+    /* CSS specific */
+    --c-selector: #d7ba7d;    /* CSS Classes, IDs (.class, #id) */
+    --c-property: #9cdcfe;    /* CSS Properties (color:, margin:) */
+    --c-at-rule: #c586c0;     /* @media, @import */
+    --c-hex: #ce9178;         /* #ff0000 */
+    --c-punctuation: #d4d4d4; /* : ; { } */
+
+    --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+    --font-size: 14px;
+    --line-height: 1.5;
+}
+
+html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-mono);
+    overflow: hidden;
+}
+
+.editor-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+#line-numbers {
+    background-color: var(--gutter-bg);
+    color: var(--line-number-color);
+    border-right: 1px solid var(--border-color);
+    min-width: 50px;
+    padding: 10px 5px;
+    text-align: right;
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    font-family: var(--font-mono);
+    user-select: none;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.editor-wrapper {
+    position: relative;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+/* Layer Logic */
+.editor-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    padding: 10px;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    font-family: var(--font-mono);
+    white-space: pre;
+    overflow: auto;
+    overflow-wrap: normal;
+}
+
+#highlight-layer {
+    z-index: 1;
+    pointer-events: none;
+    color: var(--text-color);
+}
+
+#editor {
+    z-index: 2;
+    background: transparent;
+    color: transparent;
+    caret-color: var(--caret-color);
+    outline: none;
+    resize: none;
+}
+
+#editor::selection {
+    background-color: var(--selection-bg);
+    color: transparent;
+}
+
+/* Syntax Classes */
+.token.comment { color: var(--c-comment); font-style: italic; }
+.token.string { color: var(--c-string); }
+.token.number { color: var(--c-number); }
+.token.punctuation { color: var(--c-punctuation); }
+
+/* JS/HTML */
+.token.tag { color: var(--c-tag); }
+.token.attr-name { color: var(--c-attr); }
+.token.attr-value { color: var(--c-string); }
+.token.keyword { color: var(--c-tag); }
+.token.control { color: var(--c-control); }
+.token.function { color: var(--c-func); }
+
+/* CSS */
+.token.selector { color: var(--c-selector); }
+.token.property { color: var(--c-property); }
+.token.at-rule { color: var(--c-at-rule); }
+.token.hex { color: var(--c-hex); }
+
+/* UI Elements */
+#toast {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    background: #333;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 100;
+}
+#toast.show { opacity: 1; }
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    padding: 20px;
+    z-index: 50;
+    min-width: 300px;
+}
+.modal h2 { margin-top: 0; color: var(--c-tag); }
+.modal ul { padding-left: 20px; list-style: none; }
+.modal li { margin-bottom: 5px; }
+.key { background: #333; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; color: var(--c-number); }
+
+</style>
+</head>
+<body>
+
+<div class="editor-container">
+    <div id="line-numbers">1</div>
+    <div class="editor-wrapper">
+        <pre id="highlight-layer" class="editor-layer" aria-hidden="true"></pre>
+        <textarea id="editor" class="editor-layer" spellcheck="false" autocomplete="off"></textarea>
+    </div>
+</div>
+
+<div id="help-modal" class="modal">
+    <h2>Shortcuts</h2>
+    <ul>
+        <li><span class="key">Ctrl + S</span> Save</li>
+        <li><span class="key">Ctrl + O</span> Open</li>
+        <li><span class="key">Alt + H</span> Help</li>
+        <li><span class="key">Tab</span> Indent</li>
+    </ul>
+    <button onclick="document.getElementById('help-modal').style.display='none'">Close</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const Editor = {
+    els: {
+        editor: document.getElementById('editor'),
+        highlight: document.getElementById('highlight-layer'),
+        lines: document.getElementById('line-numbers'),
+        toast: document.getElementById('toast'),
+        modal: document.getElementById('help-modal')
+    },
+    state: {
+        text: '',
+        fileHandle: null
+    },
+
+    init() {
+        // Sync Scrolling
+        this.els.editor.addEventListener('scroll', () => {
+            this.els.highlight.scrollTop = this.els.editor.scrollTop;
+            this.els.highlight.scrollLeft = this.els.editor.scrollLeft;
+            this.els.lines.scrollTop = this.els.editor.scrollTop;
+        });
+
+        // Input Handling
+        this.els.editor.addEventListener('input', () => this.update());
+        
+        // Key Handling
+        this.els.editor.addEventListener('keydown', (e) => this.handleKey(e));
+        window.addEventListener('keydown', (e) => this.handleGlobalKey(e));
+
+        // Initial render with example code
+        this.update();
+        if(!this.els.editor.value) {
+            this.els.editor.value = "\n<html>\n  <style>\n    /* This is a comment */\n    body {\n      background-color: #1e1e1e;\n      margin: 0;\n    }\n    .container {\n      width: 100%;\n      color: #ffcc00;\n    }\n    #header:hover {\n      border: 1px solid red;\n    }\n    @media (max-width: 600px) {\n      .text { font-size: 14px; }\n    }\n  </style>\n  <body>\n    <script>\n      const hello = 'world';\n      function test() {\n        return 100;\n      }\n    <\/script>\n  </body>\n</html>";
+            this.update();
+        }
+    },
+
+    update() {
+        const text = this.els.editor.value;
+        if (text === this.state.text) return; 
+        this.state.text = text;
+
+        // 1. Update Line Numbers
+        const lines = text.split('\n').length;
+        this.els.lines.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
+
+        // 2. Syntax Highlight
+        this.els.highlight.innerHTML = this.highlightHTML(text);
+    },
+
+    escapeHTML(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    },
+
+    highlightHTML(code) {
+        let output = this.escapeHTML(code);
+
+        // Highlight HTML Comments
+        output = output.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="token comment">$1</span>');
+
+        // Highlight <script> blocks
+        output = output.replace(/(&lt;script.*?&gt;)([\s\S]*?)(&lt;\/script&gt;)/gi, (match, open, content, close) => {
+            return open + this.highlightJS(content) + close; 
+        });
+
+        // Highlight <style> blocks (New logic applied here)
+        output = output.replace(/(&lt;style.*?&gt;)([\s\S]*?)(&lt;\/style&gt;)/gi, (match, open, content, close) => {
+            return open + this.highlightCSS(content) + close;
+        });
+
+        // Highlight HTML Structure (Tags and Attributes)
+        output = output.replace(/(&lt;\/?)(\w+)([^&]*?)(&gt;)/g, (match, bracket, tagName, attrs, close) => {
+            const styledAttrs = attrs.replace(/([a-zA-Z-]+)(=)(".*?"|'.*?')/g, 
+                '<span class="token attr-name">$1</span><span class="token punctuation">$2</span><span class="token attr-value">$3</span>'
+            );
+            return `<span class="token punctuation">${bracket}</span><span class="token tag">${tagName}</span>${styledAttrs}<span class="token punctuation">${close}</span>`;
+        });
+
+        if (code.endsWith('\n')) output += '\n';
+        return output;
+    },
+
+    highlightJS(code) {
+        // Comments | Strings | Keywords | Numbers | Functions | Punctuation
+        const pattern = /(".*?"|'.*?'|`[\s\S]*?`|\/\/.*|\/\*[\s\S]*?\*\/)|(\b(?:const|let|var|function|return|if|else|for|while|class|new|this|async|await|import|export|from|try|catch)\b)|(\b\d+\.?\d*\b)|(\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\())|([\{\}\(\)\[\]\.\,\;\:])/g;
+
+        return code.replace(pattern, (match, stringOrComment, keyword, number, func, punctuation) => {
+            if (stringOrComment) {
+                if (stringOrComment.startsWith('//') || stringOrComment.startsWith('/*')) return `<span class="token comment">${stringOrComment}</span>`;
+                return `<span class="token string">${stringOrComment}</span>`;
+            }
+            if (keyword) return `<span class="token control">${keyword}</span>`;
+            if (number) return `<span class="token number">${number}</span>`;
+            if (func) return `<span class="token function">${func}</span>`;
+            if (punctuation) return `<span class="token punctuation">${punctuation}</span>`;
+            return match;
+        });
+    },
+
+    highlightCSS(code) {
+        // 1. Comments
+        // 2. Strings
+        // 3. At-rules (@media)
+        // 4. Selectors (.class, #id, :hover, ::before)
+        // 5. Properties (word followed by :)
+        // 6. Hex Colors (#fff)
+        // 7. Numbers and Units (10px, 100%)
+        // 8. Punctuation
+        const pattern = /(\/\*[\s\S]*?\*\/)|("|'(?:\\.|[^\\\n])*?'|")|(@[\w-]+)|([\.#][\w-]+|:[:]?[\w-]+)|([a-zA-Z-]+)(?=:)|(#[0-9a-fA-F]{3,8})|(-?\d*\.?\d+(?:[a-z%]+)?)|([\{\}\(\)\,\;])/g;
+
+        return code.replace(pattern, (match, comment, string, atRule, selector, property, hex, number, punct) => {
+            if (comment) return `<span class="token comment">${comment}</span>`;
+            if (string) return `<span class="token string">${string}</span>`;
+            if (atRule) return `<span class="token at-rule">${atRule}</span>`;
+            if (selector) return `<span class="token selector">${selector}</span>`;
+            if (property) return `<span class="token property">${property}</span>`;
+            if (hex) return `<span class="token hex">${hex}</span>`;
+            if (number) return `<span class="token number">${number}</span>`;
+            if (punct) return `<span class="token punctuation">${punct}</span>`;
+            return match;
+        });
+    },
+
+    // --- Utilities ---
+    handleKey(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            document.execCommand('insertText', false, '  ');
+        }
+        if (e.key === 'Enter') {
+            const cursor = this.els.editor.selectionStart;
+            const currentLine = this.els.editor.value.substr(0, cursor).split('\n').pop();
+            const indentation = currentLine.match(/^\s*/)[0];
+            if (indentation) {
+                e.preventDefault();
+                document.execCommand('insertText', false, '\n' + indentation);
+            }
+        }
+    },
+
+    handleGlobalKey(e) {
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); this.saveFile(); }
+        if (e.ctrlKey && e.key === 'o') { e.preventDefault(); this.openFile(); }
+        if (e.altKey && e.key === 'h') { e.preventDefault(); this.toggleHelp(); }
+    },
+
+    toggleHelp() {
+        const display = this.els.modal.style.display;
+        this.els.modal.style.display = display === 'block' ? 'none' : 'block';
+    },
+
+    showToast(msg) {
+        this.els.toast.textContent = msg;
+        this.els.toast.classList.add('show');
+        setTimeout(() => this.els.toast.classList.remove('show'), 2000);
+    },
+
+    async saveFile() {
+        if (!window.showSaveFilePicker) return alert('Use Chrome/Edge for File API');
+        try {
+            if (!this.state.fileHandle) {
+                this.state.fileHandle = await window.showSaveFilePicker();
+            }
+            const writable = await this.state.fileHandle.createWritable();
+            await writable.write(this.els.editor.value);
+            await writable.close();
+            this.showToast('Saved!');
+        } catch(err) { console.error(err); }
+    },
+
+    async openFile() {
+        if (!window.showOpenFilePicker) return alert('Use Chrome/Edge for File API');
+        try {
+            const [handle] = await window.showOpenFilePicker();
+            this.state.fileHandle = handle;
+            const file = await handle.getFile();
+            this.els.editor.value = await file.text();
+            this.update();
+            this.showToast('Opened ' + file.name);
+        } catch(err) { console.error(err); }
+    }
+};
+
+Editor.init();
+</script>
+</body>
+</html>
