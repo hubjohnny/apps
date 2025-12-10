@@ -321,17 +321,20 @@ if (f) return `<span class="token function">${f}</span>`;
 return m;
 });
 },
+
 highlightCSS(code) {
-const p = /(\/\*[\s\S]*?\*\/)|(".*?"|'.*?')|([\.#][\w-]+)|([a-zA-Z-]+)(?=:)|(@[\w-]+)/g;
-return code.replace(p, (m, c, s, sel, prop, at) => {
+const p = /(\/\*[\s\S]*?\*\/)|(".*?"|'.*?')|((-?\d+\.?\d*|\.\d+)[a-zA-Z%]*)|([\.#][\w-]+)|([a-zA-Z-]+)(?=:)|(@[\w-]+)/g;
+return code.replace(p, (m, c, s, n, sel, prop, at) => {
 if (c) return `<span class="token comment">${c}</span>`;
 if (s) return `<span class="token string">${s}</span>`;
+if (n) return `<span class="token number">${n}</span>`;
 if (sel) return `<span class="token selector">${sel}</span>`;
 if (prop) return `<span class="token property">${prop}</span>`;
 if (at) return `<span class="token keyword">${at}</span>`;
 return m;
 });
 },
+
 checkWhitespace() {
 const lines = this.elements.editor.value.split('\n');
 const regex = /[ \t]+$/;
