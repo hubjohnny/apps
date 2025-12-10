@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Retro Flight Sim - v5.6 Impact Fix</title>
+<title>Sky Liner</title>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
 * { box-sizing: border-box; }
 body {
@@ -40,22 +41,17 @@ width: 100%; height: 14px; background: #000; border: 1px solid #555; border-radi
 #route-fill { height: 100%; background: linear-gradient(90deg, #9C27B0, #E040FB); width: 0%; transition: width 0.2s; }
 #location-indicator { font-size: 14px; color: #4caf50; font-weight: bold; margin-top: 4px; text-shadow: 0 1px 2px #000; }
 #distance-text { font-size: 10px; color: #666; margin-top: 2px; }
-
-/* Vi strammer inn plassen slik at "ft" og "kts" får plass */
 .panel-right {
-    background: #111;
-    border: 1px solid #333;
-    border-radius: 4px;
-    font-size: 12px;
-    font-family: 'Consolas', monospace;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    
-    /* HER ER ENDRINGENE: */
-    padding: 4px 6px !important;   /* Mindre luft rundt kanten (var 8px) */
-    gap: 2px 5px !important;       /* Mindre avstand mellom kolonnene (var 15px) */
+background: #111;
+border: 1px solid #333;
+border-radius: 4px;
+font-size: 12px;
+font-family: 'Consolas', monospace;
+display: grid;
+grid-template-columns: 1fr 1fr;
+padding: 4px 6px !important;
+gap: 2px 5px !important;
 }
-
 .stat-row { display: flex; justify-content: space-between; align-items: center; }
 .stat-val { color: #fff; font-weight: bold; }
 .mini-bar { width: 40px; height: 6px; background: #333; display: inline-block; margin-left: 5px; }
@@ -87,7 +83,6 @@ z-index: 10; color: white; text-align: center;
 .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c6a300; }
 .btn-restart { background: #ff4444; box-shadow: 0 4px 0 #cc0000; color: #fff; }
 @keyframes blink { 50% { opacity: 0; } }
-
 </style>
 </head>
 <body>
@@ -131,23 +126,25 @@ z-index: 10; color: white; text-align: center;
 </div>
 <script>
 
+// innstillinger
+
 const CONFIG = {
-    GRAVITY: 18,           // Litt mer tyngde enn sist (100->120) så den ikke føles vektløs
-    LIFT_POWER: 0.01,       // Økt fra 0.10 (så den faktisk orker å løfte nesen)
-    BASE_LIFT: 0.05,        // Økt fra 0.03 (Hjelper deg å flyte oppover når farten øker)
-    ROTATION_SPEED: 10,     // Beholder denne LAV (Originalt 35). Dette gir rolig styring.
-    AUTO_LEVEL_SPEED: 10,   // Rolig oppretting
-    MAX_LANDING_SPEED: 90,  
-    CRASH_ANGLE: 35,        
-    RUNWAY_BUFFER: 2500,
-    FUEL_MAX: 8000,
-    STORM_START_PCT: 0.40,
-    STORM_END_PCT: 0.70,
-    STORM_WARN_DIST: 2000,
-    STORM_SAFE_ALT: 200,
-    STORM_GRACE_TIME: 5.0,
-    BIRD_SPAWN_RATE: 0.001,
-    BIRD_SPEED: 100
+GRAVITY: 18,
+LIFT_POWER: 0.01,
+BASE_LIFT: 0.05,
+ROTATION_SPEED: 10,
+AUTO_LEVEL_SPEED: 10,
+MAX_LANDING_SPEED: 90,
+CRASH_ANGLE: 35,
+RUNWAY_BUFFER: 2500,
+FUEL_MAX: 8000,
+STORM_START_PCT: 0.40,
+STORM_END_PCT: 0.70,
+STORM_WARN_DIST: 2000,
+STORM_SAFE_ALT: 200,
+STORM_GRACE_TIME: 5.0,
+BIRD_SPAWN_RATE: 0.001,
+BIRD_SPEED: 100
 };
 
 const BIOME_DATA = {
@@ -158,7 +155,11 @@ const BIOME_DATA = {
 'ICE':      { color: '#90A4AE',  msg: 'CRASHED ON GLACIER',  isWater: false },
 'CITY':     { color: '#263238',  msg: 'CRASHED INTO CITY',   isWater: false }
 };
+
+// flyruter
+
 const ROUTE_DB = [
+
 {
 id: 'training',
 name: 'Training: Oslo ✈ Rygge',
@@ -172,6 +173,7 @@ map: [
 { at: 0.95, type: 'RUNWAY', name: 'RYGGE' }
 ]
 },
+
 {
 id: 'alps',
 name: 'Alps: Munich ✈ Milan',
@@ -186,6 +188,7 @@ map: [
 { at: 0.96, type: 'RUNWAY', name: 'MALPENSA' }
 ]
 },
+
 {
 id: 'canary',
 name: 'Island: Gran Canaria ✈ Tenerife',
@@ -198,6 +201,7 @@ map: [
 { at: 0.94, type: 'RUNWAY', name: 'TENERIFE NORTH' }
 ]
 },
+
 {
 id: 'transatlantic',
 name: 'Long: London ✈ New York',
@@ -213,6 +217,7 @@ map: [
 { at: 0.99, type: 'RUNWAY', name: 'JFK' }
 ]
 },
+
 {
 id: 'svalbard',
 name: 'Arctic: Tromsø ✈ Longyearbyen',
@@ -226,6 +231,7 @@ map: [
 { at: 0.97, type: 'RUNWAY', name: 'LONGYEARBYEN' }
 ]
 },
+
 {
 id: 'amazon',
 name: 'Jungle: Bogota ✈ Manaus',
@@ -239,6 +245,7 @@ map: [
 { at: 0.97, type: 'RUNWAY', name: 'MANAUS' }
 ]
 },
+
 {
 id: 'dubai',
 name: 'Desert: Cairo ✈ Dubai',
@@ -253,6 +260,7 @@ map: [
 { at: 0.99, type: 'RUNWAY', name: 'DXB INT' }
 ]
 }
+
 ];
 let CURRENT_ROUTE = ROUTE_DB[0];
 const canvas = document.getElementById('gameCanvas');
