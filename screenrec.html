@@ -599,7 +599,7 @@ z-index: 50;
 .settings-grid {
 display: grid;
 grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-gap: 15px;
+gap: 8px;
 }
 .setting-group {
 display: flex;
@@ -676,6 +676,15 @@ button:active { transform: translateY(0px) scale(0.98); }
 </select>
 </div>
 <div class="setting-group">
+<label>Quality (Bitrate)</label>
+<select id="opt-quality">
+<option value="2000000">Low (Laptop/Slow)</option>
+<option value="4000000" selected>Standard (Balanced)</option>
+<option value="10000000">High (Gaming/Action)</option>
+<option value="25000000">Ultra (Lossless-ish)</option>
+</select>
+</div>
+<div class="setting-group">
 <label>Framerate</label>
 <select id="opt-fps">
 <option value="24" selected>24 FPS</option>
@@ -738,9 +747,10 @@ video: { width: { ideal: width }, height: { ideal: height }, frameRate: { ideal:
 audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, sampleRate: 48000 }
 };
 }
-function getBitrate(fps, resStr) {
-let base = (resStr === '1080' || resStr === 'screen') ? 3500000 : 2000000;
-return Math.floor(base * (fps >= 60 ? 1.8 : 1));
+function getBitrate(fps) {
+const base = parseInt(document.getElementById('opt-quality').value);
+const multiplier = (fps >= 60) ? 1.5 : 1;
+return Math.floor(base * multiplier);
 }
 startBtn.addEventListener('click', async () => {
 try {
@@ -796,7 +806,7 @@ function beginRecording() {
 const fps = document.getElementById('opt-fps').value;
 const res = document.getElementById('opt-resolution').value;
 const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm";
-mediaRecorder = new MediaRecorder(mixedStream, { mimeType: mimeType, videoBitsPerSecond: getBitrate(fps, res) });
+mediaRecorder = new MediaRecorder(mixedStream, { mimeType: mimeType, videoBitsPerSecond: getBitrate(fps) });
 mediaRecorder.ondataavailable = async (e) => { if (e.data.size > 0 && writableStream) await writableStream.write(e.data); };
 mediaRecorder.start(1000);
 stopBtn.style.display = 'block'; recDot.style.display = 'block'; timerDisplay.style.display = 'block';
