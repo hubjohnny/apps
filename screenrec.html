@@ -788,6 +788,7 @@ const filename = `rec_${constraints.video.height.ideal}p_${constraints.video.fra
 fileHandle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'WebM Video', accept: {'video/webm': ['.webm']} }] });
 writableStream = await fileHandle.createWritable();
 preview.srcObject = screenStream;
+preview.muted = true;
 startCountdown();
 } catch (err) { console.error("Startup failed:", err); }
 });
