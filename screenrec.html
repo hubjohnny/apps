@@ -787,7 +787,7 @@ const now = new Date();
 const filename = `rec_${constraints.video.height.ideal}p_${constraints.video.frameRate.ideal}fps_${now.toISOString().slice(0,19).replace(/:/g,"-")}.webm`;
 fileHandle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'WebM Video', accept: {'video/webm': ['.webm']} }] });
 writableStream = await fileHandle.createWritable();
-preview.srcObject = mixedStream;
+preview.srcObject = screenStream;
 startCountdown();
 } catch (err) { console.error("Startup failed:", err); }
 });
