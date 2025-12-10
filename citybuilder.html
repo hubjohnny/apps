@@ -512,6 +512,26 @@ background: #0056b3;
 scrollbar-width: thin;
 scrollbar-color: #007bff #2c2c2c;
 }
+@keyframes pulse-fire {
+0% { transform: scale(1); opacity: 0.8; }
+50% { transform: scale(1.3); opacity: 1; }
+100% { transform: scale(1); opacity: 0.8; }
+}
+.fire-cell {
+position: absolute;
+width: 32px;
+height: 32px;
+display: flex;
+justify-content: center;
+align-items: center;
+pointer-events: none;
+z-index: 15;
+}
+.fire-emoji {
+font-size: 28px;
+animation: pulse-fire 1s ease-in-out infinite;
+transform-origin: center;
+}
 </style>
 </head>
 <body>
@@ -574,6 +594,7 @@ scrollbar-color: #007bff #2c2c2c;
 <div id="grid-container">
 <div id="night-overlay"></div>
 <canvas id="game-canvas"></canvas>
+<div id="fire-layer" class="visual-effect-layer"></div>
 <div id="cloud-shadow-layer" class="visual-effect-layer"></div>
 <div id="cloud-layer" class="visual-effect-layer"></div>
 </div>
@@ -808,7 +829,7 @@ world[i].building = null;
 }
 });
 }
-let gameLayout, mapContainer, gridContainer, canvas, ctx, minimapCanvas, minimapCtx, minimapViewport, cloudLayer, cloudShadowLayer;
+let gameLayout, mapContainer, gridContainer, canvas, ctx, minimapCanvas, minimapCtx, minimapViewport, cloudLayer, cloudShadowLayer, fireLayer;
 let camera = { x: 0, y: 0 };
 let viewport = { width: 0, height: 0 };
 let emojiFont = `${Math.floor(config.cellSize * 0.75)}px sans-serif`;
@@ -824,6 +845,7 @@ minimapCtx = minimapCanvas.getContext('2d');
 minimapViewport = document.getElementById('minimap-viewport');
 cloudLayer = document.getElementById('cloud-layer');
 cloudShadowLayer = document.getElementById('cloud-shadow-layer');
+fireLayer = document.getElementById('fire-layer');
 const totalMapWidth = config.gridSize * config.cellSize;
 const totalMapHeight = config.gridSize * config.cellSize;
 gridContainer.style.width = `${totalMapWidth}px`;
@@ -909,15 +931,77 @@ drawTrafficVariableSpeed(x, y, index, drawX, drawY, cell.roadWear);
 }
 if (cell.building) {
 let emoji = config.buildingEmojis[cell.building.type] || '';
-if (cell.building.type === 'park' && cell.building.hasFountain) emoji = '⛲️';
+// --- NY VARIASJONSLOGIKK START ---
+// Vi bruker en pseudo-tilfeldig indeks basert på posisjon for å velge variant.
+// Vi ganger med et primtall (13) for å "ryste" mønsteret så det ikke blir striper.
+// --- NY VARIASJONSLOGIKK START (RYDDET VERSJON) ---
+// Vi bruker en pseudo-tilfeldig indeks basert på posisjon
+const variantIndex = (index * 13) % 100;
+// 1. VARIASJON FOR HUS (HOUSE)
+// 1. VARIASJON FOR HUS (HOUSE)
 if (cell.building.type === 'house') {
-if (cell.building.population > 100) emoji = '🏢';
-else if (cell.building.population > 50) emoji = '🏘️';
+const pop = cell.building.population;
+// --- NY LOGIKK FOR Å SPRE TILFELDIGHETEN JEVNERE ---
+// 1. Hent x og y koordinater
+const x = index % config.gridSize;
+const y = Math.floor(index / config.gridSize);
+// 2. Bruk et stort primtall for å spre mønsteret over hele kartet (slik at de ikke klumper seg sammen i striper)
+// 16411 er et stort primtall, og gir en bedre "spredt" effekt enn 13
+const spreadIndex = ((x * 16411) + (y * 997)) % 1000;
+const rareChance = spreadIndex % 100; // Gir oss et spredt tall fra 0-99
+// -----------------------------------------------------------------
+if (pop > 100) {
+// Sjekk om det er luksus-område (Park eller Vann i nærheten)
+const neighbors = getNeighbors(index, 2);
+const isLuxury = neighbors.some(n => {
+const cb = world[n];
+return cb && (cb.base === 'lake' || (cb.building && cb.building.type === 'park'));
+});
+if (isLuxury) {
+if (rareChance < 2) {
+emoji = '🏰'; // 2% sjanse
+} else if (rareChance < 15) {
+emoji = '🏛️'; // 13% sjanse
+} else {
+emoji = '🏢'; // 85% sjanse
 }
+} else {
+// Vanlige strøk
+emoji = '🏢';
+}
+}
+else if (pop > 50) {
+// Mellomstore bygg
+const midRise = ['🏘️', '🏘️', '🏠', '🏡'];
+emoji = midRise[rareChance % midRise.length]; // Bruk rareChance her for spredning
+} else {
+// Små hus
+const lowRise = ['🏠', '🏡'];
+emoji = lowRise[rareChance % lowRise.length]; // Bruk rareChance her for spredning
+}
+}
+// 2. VARIASJON FOR BUTIKKER (STORE)
+else if (cell.building.type === 'store') {
+// Her legger vi alt som ser ut som "næring"
+// Inkluderer Kjøpesenter, Kiosk, Hotell, Bank, Postkontor
+const stores = ['🏬', '🏪', '🏨', '🏦', '🏤'];
+emoji = stores[variantIndex % stores.length];
+}
+// 3. VARIASJON FOR INDUSTRI (INDUSTRY)
+else if (cell.building.type === 'industry') {
+// Fabrikker, Byggekran, Forfalt hus
+const industries = ['🏭', '🏭', '🏗️', '🏚️'];
+emoji = industries[variantIndex % industries.length];
+}
+// --- NY VARIASJONSLOGIKK SLUTT ---
+// Spesialhåndtering for park med fontene (behold denne fra før)
+if (cell.building.type === 'park' && cell.building.hasFountain) emoji = '⛲️';
+// Tegneffekter for strøm (behold denne)
 if (cell.building.powered) {
 ctx.shadowColor = isNight ? '#ffeb3b' : '#fff';
 ctx.shadowBlur = isNight ? 8 : 4;
 }
+// Tegn emojien
 ctx.fillText(emoji, drawX + config.cellSize / 2, drawY + config.cellSize / 2 + 1);
 ctx.shadowBlur = 0;
 }
@@ -927,10 +1011,28 @@ drawPowerLine(x, y, index, drawX, drawY);
 if (cell.onFire) {
 ctx.fillStyle = 'rgba(255, 69, 0, 0.6)';
 ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
-ctx.fillText('🔥', drawX + config.cellSize / 2, drawY + config.cellSize / 2 + 1);
 }
 }
 }
+}
+function updateFireLayer() {
+if (!fireLayer) return;
+fireLayer.innerHTML = ''; // Fjern alle eksisterende branner
+world.forEach((cell, index) => {
+if (cell && cell.onFire) {
+const x = index % config.gridSize;
+const y = Math.floor(index / config.gridSize);
+const fireDiv = document.createElement('div');
+fireDiv.className = 'fire-cell';
+fireDiv.style.left = `${x * config.cellSize}px`;
+fireDiv.style.top = `${y * config.cellSize}px`;
+const emojiSpan = document.createElement('span');
+emojiSpan.className = 'fire-emoji';
+emojiSpan.textContent = '🔥';
+fireDiv.appendChild(emojiSpan);
+fireLayer.appendChild(fireDiv);
+}
+});
 }
 function drawPowerLine(x, y, index, drawX, drawY) {
 ctx.fillStyle = '#000';
@@ -1806,6 +1908,7 @@ return;
 const newStateChanges = simulateYear(gameState, logEvent);
 Object.assign(gameState, newStateChanges);
 updateStatsPanel(gameState);
+updateFireLayer();
 updateMinimap();
 if (gameState.population >= config.WIN_CONDITION_POPULATION && !gameState.isGameOver) {
 winGame();
