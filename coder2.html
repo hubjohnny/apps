@@ -78,12 +78,9 @@ padding: 15px 15px 100px 15px;
 line-height: 1.5;
 margin: 0;
 background-color: transparent;
-
 will-change: transform, scroll-position;
-transform: translateZ(0); /* Hack to force GPU acceleration */
-
+transform: translateZ(0);
 contain: content;
-
 }
 #highlight-layer {
 z-index: 1;
@@ -303,28 +300,28 @@ editor.focus();
 },
 
 handleEditorScroll() {
-  if (this.state.ticking) return;
-  
-  window.requestAnimationFrame(() => {
-    const { editor, lineNumbers, highlightLayer } = this.elements;
-    lineNumbers.scrollTop = editor.scrollTop;
-    highlightLayer.scrollTop = editor.scrollTop;
-    highlightLayer.scrollLeft = editor.scrollLeft;
-    this.state.ticking = false;
-  });
+if (this.state.ticking) return;
 
-  this.state.ticking = true;
+window.requestAnimationFrame(() => {
+const { editor, lineNumbers, highlightLayer } = this.elements;
+lineNumbers.scrollTop = editor.scrollTop;
+highlightLayer.scrollTop = editor.scrollTop;
+highlightLayer.scrollLeft = editor.scrollLeft;
+this.state.ticking = false;
+});
+
+this.state.ticking = true;
 },
 
 
 highlight() {
-  const code = this.elements.editor.value;
-  // If text is huge (e.g., > 50,000 chars), skip regex to prevent freezing
-  if (code.length > 50000) {
-      this.elements.highlightLayer.textContent = code; // Plain text fallback
-      return;
-  }
-  this.elements.highlightLayer.innerHTML = this.highlightHTML(code);
+const code = this.elements.editor.value;
+
+if (code.length > 50000) {
+this.elements.highlightLayer.textContent = code;
+return;
+}
+this.elements.highlightLayer.innerHTML = this.highlightHTML(code);
 },
 
 
@@ -410,22 +407,14 @@ this.elements.lineNumbers.textContent = Array.from({ length: lineCount }, (_, i)
 
 
 handleEditorInput() {
-  if (this.state.ignoreNextInput) {
-    this.state.ignoreNextInput = false;
-  } else {
-    if (!this.state.hasUnsavedChanges) this.setUnsavedChanges(true);
-  }
-  
-  // --- NEW CODE START ---
-  // 1. Show plain text IMMEDIATELY so you don't type "blind"
-  // This removes the "ghost trail" feeling
-  
- // this.elements.highlightLayer.innerHTML = this.escapeHTML(this.elements.editor.value);
- 
-  // --- NEW CODE END ---
+if (this.state.ignoreNextInput) {
+this.state.ignoreNextInput = false;
+} else {
+if (!this.state.hasUnsavedChanges) this.setUnsavedChanges(true);
+}
 
-  this.state.searchResults.term = '';
-  this.debouncedUpdate(); // The colors will catch up in a moment
+this.state.searchResults.term = '';
+this.debouncedUpdate();
 },
 
 
@@ -590,8 +579,8 @@ this.regexJump(/(^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{|^\s*functio
 
 
 jumpToComment() {
-  // (?<!:) checks that the // is NOT preceded by a colon
-  this.regexJump(/(\/\*[\s\S]*?\*\/|(?<!:)\/\/.*)/g);
+
+this.regexJump(/(\/\*[\s\S]*?\*\/|(?<!:)\/\/.*)/g);
 },
 
 
