@@ -931,27 +931,14 @@ drawTrafficVariableSpeed(x, y, index, drawX, drawY, cell.roadWear);
 }
 if (cell.building) {
 let emoji = config.buildingEmojis[cell.building.type] || '';
-// --- NY VARIASJONSLOGIKK START ---
-// Vi bruker en pseudo-tilfeldig indeks basert på posisjon for å velge variant.
-// Vi ganger med et primtall (13) for å "ryste" mønsteret så det ikke blir striper.
-// --- NY VARIASJONSLOGIKK START (RYDDET VERSJON) ---
-// Vi bruker en pseudo-tilfeldig indeks basert på posisjon
 const variantIndex = (index * 13) % 100;
-// 1. VARIASJON FOR HUS (HOUSE)
-// 1. VARIASJON FOR HUS (HOUSE)
 if (cell.building.type === 'house') {
 const pop = cell.building.population;
-// --- NY LOGIKK FOR Å SPRE TILFELDIGHETEN JEVNERE ---
-// 1. Hent x og y koordinater
 const x = index % config.gridSize;
 const y = Math.floor(index / config.gridSize);
-// 2. Bruk et stort primtall for å spre mønsteret over hele kartet (slik at de ikke klumper seg sammen i striper)
-// 16411 er et stort primtall, og gir en bedre "spredt" effekt enn 13
 const spreadIndex = ((x * 16411) + (y * 997)) % 1000;
-const rareChance = spreadIndex % 100; // Gir oss et spredt tall fra 0-99
-// -----------------------------------------------------------------
+const rareChance = spreadIndex % 100;
 if (pop > 100) {
-// Sjekk om det er luksus-område (Park eller Vann i nærheten)
 const neighbors = getNeighbors(index, 2);
 const isLuxury = neighbors.some(n => {
 const cb = world[n];
@@ -959,51 +946,40 @@ return cb && (cb.base === 'lake' || (cb.building && cb.building.type === 'park')
 });
 if (isLuxury) {
 if (rareChance < 2) {
-emoji = '🏰'; // 2% sjanse
+emoji = '🏰';
 } else if (rareChance < 15) {
-emoji = '🏛️'; // 13% sjanse
+emoji = '🏛️';
 } else {
-emoji = '🏢'; // 85% sjanse
+emoji = '🏢';
 }
 } else {
-// Vanlige strøk
 emoji = '🏢';
 }
 }
 else if (pop > 50) {
-// Mellomstore bygg
 const midRise = ['🏘️', '🏘️', '🏠', '🏡'];
-emoji = midRise[rareChance % midRise.length]; // Bruk rareChance her for spredning
+emoji = midRise[rareChance % midRise.length];
 } else {
-// Små hus
 const lowRise = ['🏠', '🏡'];
-emoji = lowRise[rareChance % lowRise.length]; // Bruk rareChance her for spredning
+emoji = lowRise[rareChance % lowRise.length];
 }
 }
-// 2. VARIASJON FOR BUTIKKER (STORE)
 else if (cell.building.type === 'store') {
-// Her legger vi alt som ser ut som "næring"
-// Inkluderer Kjøpesenter, Kiosk, Hotell, Bank, Postkontor
 const stores = ['🏬', '🏪', '🏨', '🏦', '🏤'];
 emoji = stores[variantIndex % stores.length];
 }
-// 3. VARIASJON FOR INDUSTRI (INDUSTRY)
 else if (cell.building.type === 'industry') {
-// Fabrikker, Byggekran, Forfalt hus
 const industries = ['🏭', '🏭', '🏗️', '🏚️'];
 emoji = industries[variantIndex % industries.length];
 }
-// --- NY VARIASJONSLOGIKK SLUTT ---
-// Spesialhåndtering for park med fontene (behold denne fra før)
 if (cell.building.type === 'park' && cell.building.hasFountain) emoji = '⛲️';
-// Tegneffekter for strøm (behold denne)
+ctx.save();
 if (cell.building.powered) {
 ctx.shadowColor = isNight ? '#ffeb3b' : '#fff';
-ctx.shadowBlur = isNight ? 8 : 4;
+ctx.filter = 'brightness(1.1) contrast(1.2)';
 }
-// Tegn emojien
 ctx.fillText(emoji, drawX + config.cellSize / 2, drawY + config.cellSize / 2 + 1);
-ctx.shadowBlur = 0;
+ctx.restore();
 }
 if (cell.hasPowerLine) {
 drawPowerLine(x, y, index, drawX, drawY);
@@ -1341,7 +1317,6 @@ pollutionGrid[nIndex] = Math.min(255, pollutionGrid[nIndex] + 5);
 }
 }
 world.forEach((cell, index) => {
-// FJERNET sjekken '&& cell.building.powered'
 if (cell && cell.building?.type === 'park') {
 const cleanRadius = 3;
 const cleanAmount = 3;
