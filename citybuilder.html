@@ -1070,24 +1070,71 @@ if (index < 0 || index >= world.length) return false;
 const neighbor = world[index];
 return neighbor && (neighbor.hasPowerLine || (neighbor.building && neighbor.building.type !== 'park'));
 }
+
+
+
+// Hjelpevariabel for å huske farge-konverteringer så vi slipper å regne dem ut hver gang
+const colorCache = {};
+
+function hexToRgb(hex) {
+    if (colorCache[hex]) return colorCache[hex];
+    let c;
+    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+        c= hex.substring(1).split('');
+        if(c.length== 3){
+            c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c= '0x'+c.join('');
+        const rgb = [(c>>16)&255, (c>>8)&255, c&255];
+        colorCache[hex] = rgb;
+        return rgb;
+    }
+    return [0, 0, 0]; // Fallback til svart ved feil
+}
+
 function updateMinimap() {
-if (!minimapCtx) return;
-minimapCtx.clearRect(0, 0, config.gridSize, config.gridSize);
-for (let i = 0; i < world.length; i++) {
-const cell = world[i];
-if (!cell) continue;
-let color = config.minimapColors[cell.base] || config.minimapColors.grass;
-if (cell.building) {
-if (cell.building.type === 'industry') color = config.minimapColors.industry;
-else color = cell.building.powered ? config.minimapColors.building : '#8d6e63';
+    if (!minimapCtx) return;
+
+    // 1. Lag et bilde-objekt som vi kan skrive direkte til (mye raskere enn fillRect)
+    const imgData = minimapCtx.createImageData(config.gridSize, config.gridSize);
+    const data = imgData.data;
+
+    for (let i = 0; i < world.length; i++) {
+        const cell = world[i];
+        if (!cell) continue;
+
+        // Finn riktig hex-farge basert på logikken din
+        let colorHex = config.minimapColors[cell.base] || config.minimapColors.grass;
+        
+        if (cell.building) {
+            if (cell.building.type === 'industry') {
+                colorHex = config.minimapColors.industry;
+            } else {
+                // Sjekk om bygget har strøm
+                colorHex = cell.building.powered ? config.minimapColors.building : '#8d6e63';
+            }
+        }
+        if (cell.onFire) {
+            colorHex = config.minimapColors.fire;
+        }
+
+        // Konverter hex til RGB (bruker cachen vår for hastighet)
+        const [r, g, b] = hexToRgb(colorHex);
+
+        // Skriv direkte til piksel-arrayen
+        const index = i * 4;
+        data[index] = r;     // Rød
+        data[index + 1] = g; // Grønn
+        data[index + 2] = b; // Blå
+        data[index + 3] = 255; // Alpha (helt synlig)
+    }
+
+    // 2. Tegn hele bildet på én gang
+    minimapCtx.putImageData(imgData, 0, 0);
 }
-if (cell.onFire) {
-color = config.minimapColors.fire;
-}
-minimapCtx.fillStyle = color;
-minimapCtx.fillRect(i % config.gridSize, Math.floor(i / config.gridSize), 1, 1);
-}
-}
+
+
+
 function updateMinimapViewport() {
 if (!minimapViewport || !minimapCanvas || !gridContainer || viewport.width === 0 || gridContainer.scrollWidth === 0) return;
 const mapWidth = minimapCanvas.offsetWidth;
