@@ -1075,6 +1075,7 @@ return neighbor && (neighbor.hasPowerLine || (neighbor.building && neighbor.buil
 
 // Hjelpevariabel for å huske farge-konverteringer så vi slipper å regne dem ut hver gang
 const colorCache = {};
+let cachedMinimapData = null; // Her lagrer vi bildet av kartet
 
 function hexToRgb(hex) {
     if (colorCache[hex]) return colorCache[hex];
@@ -1095,7 +1096,7 @@ function hexToRgb(hex) {
 function updateMinimap() {
     if (!minimapCtx) return;
 
-    // 1. Lag et bilde-objekt som vi kan skrive direkte til (mye raskere enn fillRect)
+    // 1. Lag bildet (som før)
     const imgData = minimapCtx.createImageData(config.gridSize, config.gridSize);
     const data = imgData.data;
 
@@ -1103,53 +1104,62 @@ function updateMinimap() {
         const cell = world[i];
         if (!cell) continue;
 
-        // Finn riktig hex-farge basert på logikken din
         let colorHex = config.minimapColors[cell.base] || config.minimapColors.grass;
-        
         if (cell.building) {
             if (cell.building.type === 'industry') {
                 colorHex = config.minimapColors.industry;
             } else {
-                // Sjekk om bygget har strøm
                 colorHex = cell.building.powered ? config.minimapColors.building : '#8d6e63';
             }
         }
-        if (cell.onFire) {
-            colorHex = config.minimapColors.fire;
-        }
+        if (cell.onFire) colorHex = config.minimapColors.fire;
 
-        // Konverter hex til RGB (bruker cachen vår for hastighet)
         const [r, g, b] = hexToRgb(colorHex);
-
-        // Skriv direkte til piksel-arrayen
         const index = i * 4;
-        data[index] = r;     // Rød
-        data[index + 1] = g; // Grønn
-        data[index + 2] = b; // Blå
-        data[index + 3] = 255; // Alpha (helt synlig)
+        data[index] = r;
+        data[index + 1] = g;
+        data[index + 2] = b;
+        data[index + 3] = 255;
     }
 
-    // 2. Tegn hele bildet på én gang
+    // 2. Tegn det på lerretet
     minimapCtx.putImageData(imgData, 0, 0);
+
+    // 3. VIKTIG: Lagre en kopi av dette bildet i variabelen vår!
+    cachedMinimapData = imgData;
+    
+    // Oppdater viewporten med en gang så vi ser endringen
+    updateMinimapViewport();
 }
 
 
 
 function updateMinimapViewport() {
-if (!minimapViewport || !minimapCanvas || !gridContainer || viewport.width === 0 || gridContainer.scrollWidth === 0) return;
-const mapWidth = minimapCanvas.offsetWidth;
-const mapHeight = minimapCanvas.offsetHeight;
-if (mapWidth === 0 || mapHeight === 0) return;
-const totalMapWidth = gridContainer.scrollWidth;
-const totalMapHeight = gridContainer.scrollHeight;
-if (totalMapWidth === 0 || totalMapHeight === 0) return;
-const xRatio = viewport.width / totalMapWidth;
-const yRatio = viewport.height / totalMapHeight;
-minimapViewport.style.width = `${Math.max(0, (xRatio * mapWidth) - 2)}px`;
-minimapViewport.style.height = `${Math.max(0, (yRatio * mapHeight) - 2)}px`;
-minimapViewport.style.left = `${(mapContainer.scrollLeft / totalMapWidth) * mapWidth}px`;
-minimapViewport.style.top = `${(mapContainer.scrollTop / totalMapHeight) * mapHeight}px`;
+    // Sjekk at vi har alt vi trenger
+    if (!minimapCtx || !cachedMinimapData) return;
+
+    // 1. Lim inn det lagrede kartet (dette visker ut forrige ramme)
+    minimapCtx.putImageData(cachedMinimapData, 0, 0);
+
+    // 2. Beregn hvor rammen skal være
+    // Siden minimappet er 100px og verden er 100 celler,
+    // og hver celle er 32px (config.cellSize), er forholdet 1/32.
+    const scale = 1 / config.cellSize;
+
+    const viewX = camera.x * scale;
+    const viewY = camera.y * scale;
+    const viewW = viewport.width * scale;
+    const viewH = viewport.height * scale;
+
+    // 3. Tegn den hvite rammen
+    minimapCtx.strokeStyle = '#fff';
+    minimapCtx.lineWidth = 1;
+    minimapCtx.strokeRect(viewX, viewY, viewW, viewH);
 }
+
+
+
+
 function createClouds() {
 if (!cloudLayer || !cloudShadowLayer) return;
 cloudLayer.innerHTML = '';
