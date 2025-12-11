@@ -35,15 +35,25 @@ body {
 .container {
   max-width: 1024px;
   margin: 0 auto;
+  position: relative;
+}
+
+.header-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
 h1 {
   font-size: 2rem;
   text-align: right;
   color: var(--text-main);
-  margin: 0 0 1rem 0;
+  margin: 0;
   border-bottom: 2px solid;
   border-image: linear-gradient(to right, transparent, var(--accent)) 1;
+  flex-shrink: 0;
+  padding-left: 30rem;
 }
 
 h2 {
@@ -126,25 +136,90 @@ hr {
   .feature-card { padding: 1.5rem; }
 }
 
+#smart-menu-container {
+  position: relative;
+  z-index: 1000;
+}
+
+#smart-menu-toggle {
+  background-color: var(--accent);
+  color: var(--bg-color);
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+#smart-menu-toggle:hover {
+  background-color: var(--accent-hover);
+}
+
+#smart-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  list-style: none;
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  max-height: 400px;
+  overflow-y: auto;
+  width: max-content;
+  min-width: 250px;
+}
+
+#smart-menu-dropdown.hidden {
+  display: none;
+}
+
+#smart-menu-dropdown li a {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--text-main);
+  text-decoration: none;
+}
+
+#smart-menu-dropdown li a:hover {
+  background-color: var(--bg-color);
+  text-decoration: none;
+}
+
 </style>
 </head>
 
 <body>
 
 <div class="container">
+
+<div class="header-layout">
+
+<div id="smart-menu-container">
+<button id="smart-menu-toggle">Sitemap (All Links)</button>
+<ul id="smart-menu-dropdown" class="hidden">
+</ul>
+</div>
+
 <h1>Johnny Heggelund</h1>
-  <p>🟢 <a href="sokoban2.html">My Sokoban Puzzle Game with more than 45,000 levels now released as a second version with more stylized graphics.</a></p>
-  <p>🟢 <a href="coder2.html">Coder 2 Beta released for testing, with color syntax highlighting.</a></p>
-  <hr>
+
+</div>
+<p>🟢 <a href="sokoban2.html">My Sokoban Puzzle Game with more than 45,000 levels now released as a second version with more stylized graphics.</a></p>
+<p>🟢 <a href="coder2.html">Coder 2 Beta released for testing, with color syntax highlighting.</a></p>
+<hr>
 <section>
 <h2>Popular Games</h2>
 <div class="tag-list">
-  <a href="100laps.html" class="tag">🚔 100 Laps Racing</a>
-  <a href="adventure.html" class="tag">🔑 Adventure RPG</a>
-  <a href="championship.html" class="tag">🚘 Championship Racing</a>
-  <a href="citybuilder.html" class="tag">🏠 City Builder</a>
-  <a href="lunarlander.html" class="tag">🚀 Lander Rescue</a>
-  <a href="tetrisneon.html" class="tag">🟧 Tetris Neon</a>
+<a href="100laps.html" class="tag">🚔 100 Laps Racing</a>
+<a href="adventure.html" class="tag">🔑 Adventure RPG</a>
+<a href="championship.html" class="tag">🚘 Championship Racing</a>
+<a href="citybuilder.html" class="tag">🏠 City Builder</a>
+<a href="lunarlander.html" class="tag">🚀 Lander Rescue</a>
+<a href="tetrisneon.html" class="tag">🟧 Tetris Neon</a>
 </div>
 </section>
 
@@ -163,14 +238,14 @@ Don't forget to check out my <strong><a href="sokobaned.html">Sokoban Level Edit
 <section>
 <h2>Classic Fun</h2>
 <div class="tag-list">
-  <a href="ameliax.html" class="tag">Amelia X</a>
-  <a href="billiards.html" class="tag">Billiards</a>
-  <a href="blackjack.html" class="tag">Blackjack</a>
-  <a href="minigolf.html" class="tag">Mini Golf</a>
-  <a href="shithead.html" class="tag">Shithead Card Game</a>
-  <a href="snakeneon.html" class="tag">Snake</a>
-  <a href="uno.html" class="tag">UNO Card Game</a>
-  <a href="yatzy.html" class="tag">Yatzy Dice Game</a>
+<a href="ameliax.html" class="tag">Amelia X</a>
+<a href="billiards.html" class="tag">Billiards</a>
+<a href="blackjack.html" class="tag">Blackjack</a>
+<a href="minigolf.html" class="tag">Mini Golf</a>
+<a href="shithead.html" class="tag">Shithead Card Game</a>
+<a href="snakeneon.html" class="tag">Snake</a>
+<a href="uno.html" class="tag">UNO Card Game</a>
+<a href="yatzy.html" class="tag">Yatzy Dice Game</a>
 </div>
 </section>
 
@@ -190,15 +265,15 @@ on "Autopilot" to let an AI take over your player and show you how the game is p
 <section>
 <h2>Popular Tools</h2>
 <div class="tag-list">
-  <a href="base64.html" class="tag">Base64</a>
-  <a href="coder2.html" class="tag">Coder 2</a>
-  <a href="emojis.html" class="tag">Emojis</a>
-  <a href="image2ascii.html" class="tag">image2ASCII</a>
-  <a href="image2pixel.html" class="tag">image2Pixel</a>
-  <a href="secretnote.html" class="tag">Secret Note</a>
-  <a href="sprited.html" class="tag">Sprite Editor</a>
-  <a href="video2gif.html" class="tag">video2GIF</a>
-  <a href="videoplayer.html" class="tag">Video Player</a>
+<a href="base64.html" class="tag">Base64</a>
+<a href="coder2.html" class="tag">Coder 2</a>
+<a href="emojis.html" class="tag">Emojis</a>
+<a href="image2ascii.html" class="tag">image2ASCII</a>
+<a href="image2pixel.html" class="tag">image2Pixel</a>
+<a href="secretnote.html" class="tag">Secret Note</a>
+<a href="sprited.html" class="tag">Sprite Editor</a>
+<a href="video2gif.html" class="tag">video2GIF</a>
+<a href="videoplayer.html" class="tag">Video Player</a>
 </div>
 </section>
 
@@ -230,13 +305,67 @@ or resize operations. Media playback is supported via <code>play</code>. And whe
 <section>
 <h2>More Tools</h2>
 <div class="tag-list">
-  <a href="imagecomp.html" class="tag">Image Compression</a>
-  <a href="imaged.html" class="tag">Image Editor</a>
-  <a href="imageupscale.html" class="tag">Image Upscaler</a>
-  <a href="soundtracker.html" class="tag">Soundtracker</a>
+<a href="imagecomp.html" class="tag">Image Compression</a>
+<a href="imaged.html" class="tag">Image Editor</a>
+<a href="imageupscale.html" class="tag">Image Upscaler</a>
+<a href="soundtracker.html" class="tag">Soundtracker</a>
 </div>
 </section>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+const toggleButton = document.getElementById('smart-menu-toggle');
+const dropdown = document.getElementById('smart-menu-dropdown');
+if (!toggleButton || !dropdown) return;
+const allLinks = Array.from(document.querySelectorAll('a[href]:not([href=""])'));
+const uniqueLinks = new Map();
+allLinks.forEach(linkElement => {
+const url = linkElement.getAttribute('href');
+let text = linkElement.textContent.trim();
+if (text === '' && linkElement.querySelector('img')) {
+text = '[Bilde-lenke]';
+} else if (text === '' && linkElement.parentElement.nodeName === 'P' && linkElement.parentElement.textContent.trim().startsWith('🟢')) {
+text = linkElement.parentElement.textContent.trim();
+} else if (text === '') {
+text = url;
+}
+if (uniqueLinks.has(url)) {
+const existingText = uniqueLinks.get(url).text;
+if (existingText.length < text.length) {
+ uniqueLinks.set(url, { text: text, url: url });
+}
+} else {
+uniqueLinks.set(url, { text: text, url: url });
+}
+});
+const sortedLinks = Array.from(uniqueLinks.values()).sort((a, b) => {
+const cleanA = a.text.replace(/^[^\w\s]*\s*/, '');
+const cleanB = b.text.replace(/^[^\w\s]*\s*/, '');
+return cleanA.localeCompare(cleanB);
+});
+sortedLinks.forEach(linkData => {
+const listItem = document.createElement('li');
+const anchor = document.createElement('a');
+anchor.href = linkData.url;
+anchor.textContent = linkData.text;
+listItem.appendChild(anchor);
+dropdown.appendChild(listItem);
+});
+toggleButton.addEventListener('click', () => {
+dropdown.classList.toggle('hidden');
+toggleButton.textContent = dropdown.classList.contains('hidden') ? 'Sitemap (All Links)' : '❌ Close Sitemap';
+});
+document.addEventListener('click', (event) => {
+const isClickInside = document.getElementById('smart-menu-container').contains(event.target);
+if (!isClickInside && !dropdown.classList.contains('hidden')) {
+dropdown.classList.add('hidden');
+toggleButton.textContent = 'Sitemap (All Links)';
+}
+});
+});
+</script>
+
 </body>
 </html>
