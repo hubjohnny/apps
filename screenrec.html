@@ -415,20 +415,45 @@ statusText.innerText = `Finalizing: ${progress}%`;
 }
 }, 200);
 if (writableStream) await writableStream.close();
+
+
+// Ny, minne-effektiv kode som bare leser starten av filen.
 try {
-const file = await fileHandle.getFile();
-const rawBlob = await file.arrayBuffer().then(buffer => new Blob([buffer], { type: "video/webm" }));
-const fixedBlob = await new Promise((resolve) => {
-ysFixWebmDuration(rawBlob, actualDurationMs, (fixed) => {
-resolve(fixed);
-});
-});
-const newWritable = await fileHandle.createWritable();
-await newWritable.write(fixedBlob);
-await newWritable.close();
+    const file = await fileHandle.getFile();
+
+    // Vi leser KUN de første 10 MB av filen. Metadata ligger alltid i starten.
+    const headerBlob = file.slice(0, 10 * 1024 * 1024, 'video/webm');
+    
+    // Konverterer den lille delen til en Blob som ysFixWebmDuration kan lese
+    const rawBlob = await headerBlob.arrayBuffer().then(buffer => new Blob([buffer], { type: "video/webm" }));
+    
+    // Fiks varigheten på denne lille "header"-blob'en.
+    const fixedHeaderBlob = await new Promise((resolve) => {
+        ysFixWebmDuration(rawBlob, actualDurationMs, (fixed) => {
+            resolve(fixed);
+        });
+    });
+
+    // Opprett en ny skrivestrøm, men med innstillingen keepExistingData: true
+    // Dette er kritisk for å kun overskrive metadataene.
+    const newWritable = await fileHandle.createWritable({ keepExistingData: true });
+
+    // Søk til starten av filen (posisjon 0).
+    await newWritable.seek(0);
+
+    // Skriv de fiksete metadataene. Dette overskriver kun den gamle headeren.
+    await newWritable.write(fixedHeaderBlob);
+    
+    await newWritable.close();
+
+    console.log("WebM duration successfully fixed using header-only approach.");
+
 } catch (err) {
-console.error("Kunne ikke fikse tidsstempel:", err);
+    console.error("Klarte ikke å fikse tidsstempel med ny metode. Mulig filen er ufiksbar:", err);
+    // Vi lar opptaket ligge ufiksert hvis fiksen feiler, men vi unngår krasj.
 }
+
+
 clearInterval(progressTimer);
 statusText.innerText = "Finalizing: 100%";
 await new Promise(r => setTimeout(r, 500));
