@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>City Builder Deluxe (v2.5)</title>
+<style>
+/* --- GENERELT OPPSETT --- */
+html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212; color: #f0f0f0;
+    user-select: none; /* Hindrer tekstmarkering mens man spiller */
+}
+* { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: #007bff #2c2c2c; }
+
+/* --- UI LAYOUT --- */
+#game-container {
+    display: flex; width: 100vw; height: 100vh;
+    justify-content: center; align-items: center; background-color: #000;
+}
+#game-layout {
+    display: flex; flex-direction: row; width: 98vw; height: 97vh;
+    border: 2px solid #ffc107; background-color: #1a1a1a;
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.2); border-radius: 8px; overflow: hidden;
+}
+
+/* --- VENSTRE PANEL --- */
+#ui-panel {
+    width: 300px; flex-shrink: 0; height: 100%; padding: 15px;
+    overflow-y: auto; border-right: 2px solid #333; background: #222;
+    display: flex; flex-direction: column; gap: 15px;
+}
+h3 { margin: 0 0 10px 0; color: #ffc107; font-weight: 300; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
+p { margin: 5px 0; font-size: 14px; }
+
+/* --- STATS & INFO --- */
+#stats-box { background: #2a2a2a; padding: 10px; border-radius: 5px; border: 1px solid #444; }
+.stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.stat-val { font-weight: bold; }
+.text-green { color: #81c784; }
+.text-red { color: #e57373; }
+
+/* --- MINIMAP (FIKSET) --- */
+#minimap-container {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+#minimap-wrapper {
+    position: relative; 
+    width: 200px; /* Fast bredde for stabilitet */
+    height: 200px;
+    border: 2px solid #555; background-color: #000;
+    cursor: crosshair; overflow: hidden;
+    contain: paint layout; transform: translateZ(0);
+}
+#minimap-canvas { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+#minimap-viewport {
+    position: absolute; border: 1px solid #fff;
+    box-shadow: 0 0 4px rgba(0,0,0,0.8); pointer-events: none;
+    transform: translateZ(0); will-change: left, top;
+    left: 0; top: 0;
+}
+
+/* --- VERKTØYKNAPPER --- */
+.tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.tool-btn {
+    background: #333; color: #fff; border: 1px solid #555;
+    padding: 8px; font-size: 13px; cursor: pointer; border-radius: 4px;
+    text-align: left; transition: all 0.1s; display: flex; align-items: center; gap: 5px;
+}
+.tool-btn:hover { background: #444; border-color: #888; }
+.tool-btn.active { background: #ffc107; color: #000; border-color: #fff; font-weight: bold; }
+.btn-price { font-size: 0.85em; opacity: 0.8; margin-left: auto; }
+
+/* --- HOVEDKART --- */
+#map-container {
+    flex-grow: 1; height: 100%; position: relative; overflow: hidden;
+    background-color: #111; cursor: crosshair; /* Standard cursor for building */
+}
+/* Canvas lag */
+#game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; z-index: 1; }
+#weather-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+#night-overlay {
+    pointer-events: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 10, 25, 0.5); opacity: 0; transition: opacity 1.5s; z-index: 10;
+}
+.night-mode #night-overlay { opacity: 1; }
+
+/* --- MODALS & POPUPS --- */
+.modal {
+    display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+}
+.modal.active { display: flex; }
+.modal-content {
+    background: #222; padding: 25px; border: 2px solid #ffc107; border-radius: 8px;
+    max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; color: #eee;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+}
+.close-btn { float: right; font-size: 24px; cursor: pointer; color: #aaa; }
+.close-btn:hover { color: #fff; }
+ul { padding-left: 20px; }
+li { margin-bottom: 5px; }
+
+/* --- TOOLTIP & TICKER --- */
+#tooltip {
+    position: fixed; background: rgba(0, 0, 0, 0.9); color: #fff;
+    padding: 8px 12px; border-radius: 4px; font-size: 13px; pointer-events: none;
+    z-index: 3000; border: 1px solid #555; display: none; white-space: pre-wrap;
+}
+#event-ticker {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8); border: 1px solid #ffc107; color: #ffc107;
+    padding: 8px 20px; border-radius: 20px; font-weight: bold; z-index: 100;
+    opacity: 0; transition: opacity 0.5s; pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="game-layout">
+        <div id="ui-panel">
+            <h3>City Stats</h3>
+            <div id="stats-box">
+                <div class="stat-row"><span>Year:</span> <span id="year" class="stat-val">2025</span></div>
+                <div class="stat-row"><span>Pop:</span> <span id="population" class="stat-val">0</span></div>
+                <div class="stat-row"><span>Funds:</span> <span id="budget" class="stat-val">$100,000</span></div>
+                <hr style="border-color: #444; margin: 5px 0;">
+                <div class="stat-row text-green"><span>Income:</span> <span id="income">0</span></div>
+                <div class="stat-row text-red"><span>Upkeep:</span> <span id="maintenance">0</span></div>
+            </div>
+
+            <div style="display: flex; gap: 5px; align-items: center; margin-top: 10px;">
+                <span style="font-size: 13px;">Tax:</span>
+                <button class="tool-btn tax-btn" style="flex:1; justify-content:center;" data-rate="0.5">Low</button>
+                <button class="tool-btn tax-btn active" style="flex:1; justify-content:center;" data-rate="0.7">Med</button>
+                <button class="tool-btn tax-btn" style="flex:1; justify-content:center;" data-rate="1.0">High</button>
+            </div>
+
+            <div id="minimap-container">
+                <div id="minimap-wrapper">
+                    <canvas id="minimap-canvas"></canvas>
+                    <div id="minimap-viewport"></div>
+                </div>
+            </div>
+
+            <h3>Build</h3>
+            <div class="tool-grid">
+                <button class="tool-btn" data-tool="house">🏠 House <span class="btn-price">$700</span></button>
+                <button class="tool-btn" data-tool="store">🏬 Store <span class="btn-price">$900</span></button>
+                <button class="tool-btn" data-tool="industry">🏭 Industry <span class="btn-price">$12k</span></button>
+                <button class="tool-btn" data-tool="road">➖ Road <span class="btn-price">$25</span></button>
+                <button class="tool-btn" data-tool="park">🌳 Park <span class="btn-price">$450</span></button>
+                <button class="tool-btn" data-tool="power-plant">⚡️ Power <span class="btn-price">$8k</span></button>
+                <button class="tool-btn" data-tool="power-line">🔌 Lines <span class="btn-price">$50</span></button>
+                <button class="tool-btn" data-tool="police-station">🚓 Police <span class="btn-price">$10k</span></button>
+                <button class="tool-btn" data-tool="fire-station">🚒 Fire <span class="btn-price">$12k</span></button>
+                <button class="tool-btn" data-tool="school">🏫 School <span class="btn-price">$12k</span></button>
+                <button class="tool-btn" data-tool="bulldoze" style="color:#ff6b6b; border-color:#ff6b6b;">💣 Bulldoze <span class="btn-price">$50</span></button>
+            </div>
+
+            <div style="margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                <button id="log-btn" class="tool-btn" style="justify-content:center;">📖 Log</button>
+                <button id="economy-btn" class="tool-btn" style="justify-content:center;">📊 Economy</button>
+                <button id="save-btn" class="tool-btn" style="justify-content:center;">💾 Save</button>
+                <button id="help-btn" class="tool-btn" style="justify-content:center;">❓ Help</button>
+                <button id="night-btn" class="tool-btn" style="justify-content:center;">🌙 Night</button>
+                <button id="new-game-btn" class="tool-btn" style="justify-content:center; background:#d32f2f;">✨ Reset</button>
+            </div>
+        </div>
+
+        <div id="map-container" oncontextmenu="return false;"> <div id="event-ticker">Welcome Mayor!</div>
+            <canvas id="game-canvas"></canvas>
+            <div id="night-overlay"></div>
+            <canvas id="weather-canvas"></canvas>
+        </div>
+    </div>
+</div>
+
+<div id="tooltip"></div>
+
+<div id="help-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>City Builder Guide 🏗️</h2>
+        <p>Build a thriving city of <strong>400,000</strong> people!</p>
+        <h3>Controls</h3>
+        <ul>
+            <li><strong>Left Click:</strong> Build / Select Tool</li>
+            <li><strong>Right Click + Drag:</strong> Move Camera 📷</li>
+            <li><strong>Scroll:</strong> (Zoom coming soon)</li>
+        </ul>
+        <h3>Gameplay</h3>
+        <ul>
+            <li><strong>Zones:</strong> Residents (🏠) need jobs (🏭/🏬).</li>
+            <li><strong>Power:</strong> Connect everything with lines (🔌).</li>
+            <li><strong>Disasters:</strong> Fires happen. ⚡️ Power Plants can be struck by lightning!</li>
+            <li><strong>Pollution:</strong> Industry creates pollution. Keep it away from homes.</li>
+        </ul>
+    </div>
+</div>
+
+<div id="log-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>City Log 📖</h2>
+        <ul id="log-list"><li>No events yet.</li></ul>
+    </div>
+</div>
+
+<div id="economy-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Economy Report 📊</h2>
+        <div id="economy-details">Details...</div>
+    </div>
+</div>
+
+<script>
+/* =========================================
+   DEL 1: KONFIGURASJON & GLOBALE VARIABLER
+   ========================================= */
+const config = {
+    gridSize: 100,
+    cellSize: 32,
+    WIN_CONDITION: 400000,
+    costs: {
+        house: 700, store: 900, industry: 12000, park: 450,
+        'power-plant': 8000, 'power-line': 50, 'police-station': 10000,
+        'fire-station': 12000, school: 12000, bulldoze: 50, road: 25
+    },
+    emojis: {
+        house: '🏠', store: '🏬', industry: '🏭', park: '🌳',
+        'power-plant': '⚡️', 'police-station': '🚓', 'fire-station': '🚒',
+        school: '🏫', 'power-line': '•'
+    },
+    minimapColors: {
+        grass: '#225D25', road: '#555', water: '#0077be',
+        building: '#f5deb3', industry: '#a52a2a', fire: '#ff4500'
+    },
+    colors: {
+        grass: '#225D25', road: '#444', water: '#0077be',
+        nightGrass: '#134216', nightRoad: '#222', nightWater: '#0d47a1'
+    }
+};
+
+let gameState = {
+    budget: 100000, population: 0, year: 2025,
+    taxRate: 0.7, currentTool: null, gameOver: false,
+    weather: 'clear', weatherTimer: 0,
+    gameLog: []
+};
+
+let world = [];
+let particles = [];
+let floatingTexts = [];
+let pollutionGrid = new Uint8Array(config.gridSize * config.gridSize);
+let camera = { x: 0, y: 0 };
+let viewport = { w: 0, h: 0 };
+
+// DOM Elementer
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+const weatherCanvas = document.getElementById('weather-canvas');
+const wCtx = weatherCanvas.getContext('2d');
+const minimapCanvas = document.getElementById('minimap-canvas');
+const minimapCtx = minimapCanvas.getContext('2d');
+const mapContainer = document.getElementById('map-container');
+
+/* =========================================
+   DEL 2: EMOJI CACHE (TURBO MODE 🚀)
+   ========================================= */
+const emojiCache = {};
+const emojiFont = "24px Segoe UI Emoji";
+
+function drawCachedEmoji(ctx, emoji, x, y, powered) {
+    const key = emoji + (powered ? '_ON' : '_OFF');
+    if (!emojiCache[key]) {
+        const c = document.createElement('canvas');
+        c.width = config.cellSize; c.height = config.cellSize;
+        const cCtx = c.getContext('2d');
+        cCtx.font = emojiFont;
+        cCtx.textAlign = 'center'; cCtx.textBaseline = 'middle';
+        
+        if (powered) cCtx.filter = 'brightness(1.2) contrast(1.1) saturate(1.2)';
+        
+        cCtx.fillText(emoji, config.cellSize/2, config.cellSize/2 + 2);
+        emojiCache[key] = c;
+    }
+    ctx.drawImage(emojiCache[key], x, y);
+}
+
+/* =========================================
+   DEL 3: PARTIKKEL-SYSTEM
+   ========================================= */
+class Particle {
+    constructor(x, y, type) {
+        this.x = x; this.y = y; this.type = type;
+        this.life = 1.0;
+        
+        if (type === 'smoke') {
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = -0.5 - Math.random() * 0.5;
+            this.size = Math.random() * 3 + 2;
+            this.color = `rgba(100,100,100,`;
+        } else if (type === 'spark') {
+            this.vx = (Math.random() - 0.5) * 2;
+            this.vy = -1 - Math.random() * 2;
+            this.size = Math.random() * 2 + 1;
+            this.color = `rgba(255,100,0,`;
+            this.life = 0.8;
+        } else if (type === 'dust') {
+            this.vx = (Math.random() - 0.5);
+            this.vy = (Math.random() - 0.5);
+            this.size = Math.random() * 4 + 2;
+            this.color = `rgba(200,190,150,`;
+        } else if (type === 'explosion') {
+            this.vx = (Math.random() - 0.5) * 4;
+            this.vy = (Math.random() - 0.5) * 4;
+            this.size = Math.random() * 5 + 3;
+            this.color = `rgba(255,50,0,`;
+            this.life = 0.6;
+        }
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy;
+        this.life -= 0.015;
+        if (this.type === 'smoke') this.size += 0.05;
+    }
+    draw(ctx) {
+        if (this.life <= 0) return;
+        ctx.fillStyle = this.color + this.life + ')';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+class FloatingText {
+    constructor(x, y, text, color) {
+        this.x = x; this.y = y; this.text = text; this.color = color;
+        this.life = 1.0; this.vy = -0.5;
+    }
+    update() { this.y += this.vy; this.life -= 0.015; }
+    draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.font = "bold 14px sans-serif";
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeText(this.text, this.x, this.y);
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+function addVisuals(x, y, type) {
+    const px = x * config.cellSize + config.cellSize/2;
+    const py = y * config.cellSize + config.cellSize/2;
+    if (type === 'build') {
+        for(let i=0; i<8; i++) particles.push(new Particle(px, py, 'dust'));
+    } else if (type === 'money-up') {
+        floatingTexts.push(new FloatingText(px, py - 10, "+$", '#4caf50'));
+    } else if (type === 'money-down') {
+        floatingTexts.push(new FloatingText(px, py - 10, "-$", '#e57373'));
+    } else if (type === 'explosion') {
+        for(let i=0; i<20; i++) particles.push(new Particle(px, py, 'explosion'));
+    }
+}
+
+/* =========================================
+   DEL 4: HOVEDLOGIKK & RENDERING
+   ========================================= */
+function init() {
+    // Sett canvas størrelse til å dekke skjermen
+    resizeCanvasIfNeeded();
+    
+    // Init Minimap størrelse - Sørg for at den matcher GridSize
+    minimapCanvas.width = config.gridSize;
+    minimapCanvas.height = config.gridSize;
+
+    // Generer verden
+    world = Array(config.gridSize * config.gridSize).fill(null).map(() => ({
+        base: 'grass', building: null, hasPowerLine: false, onFire: false,
+        roadWear: 0, hasTraffic: false
+    }));
+    generateLakes();
+    
+    // Sentrer kamera (viktig!)
+    const totalW = config.gridSize * config.cellSize;
+    camera.x = (totalW - mapContainer.clientWidth) / 2;
+    camera.y = (totalW - mapContainer.clientHeight) / 2;
+
+    // Start looper
+    requestAnimationFrame(renderLoop);
+    setInterval(simulationTick, 2000);
+    setInterval(updateStats, 1000);
+    updateMinimap();
+    logEvent("City founded! Good luck, Mayor.");
+}
+
+function generateLakes() {
+    for (let i=0; i<8; i++) {
+        let x = Math.floor(Math.random() * config.gridSize);
+        let y = Math.floor(Math.random() * config.gridSize);
+        for(let j=0; j<80; j++) {
+            const idx = y * config.gridSize + x;
+            if (world[idx]) world[idx].base = 'water';
+            x += Math.floor(Math.random()*3)-1;
+            y += Math.floor(Math.random()*3)-1;
+            x = Math.max(0, Math.min(x, config.gridSize-1));
+            y = Math.max(0, Math.min(y, config.gridSize-1));
+        }
+    }
+}
+
+function renderLoop() {
+    resizeCanvasIfNeeded();
+    
+    viewport.w = mapContainer.clientWidth;
+    viewport.h = mapContainer.clientHeight;
+    
+    const startCol = Math.floor(camera.x / config.cellSize);
+    const endCol = startCol + Math.ceil(viewport.w / config.cellSize) + 1;
+    const startRow = Math.floor(camera.y / config.cellSize);
+    const endRow = startRow + Math.ceil(viewport.h / config.cellSize) + 1;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Flytt context for å simulere kamera
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+
+    const isNight = document.body.classList.contains('night-mode');
+    const cols = isNight ? config.colors.nightGrass : config.colors.grass;
+
+    // --- TEGNE GRID ---
+    for (let y = startRow; y <= endRow; y++) {
+        for (let x = startCol; x <= endCol; x++) {
+            const idx = y * config.gridSize + x;
+            if (idx < 0 || idx >= world.length) continue;
+            const cell = world[idx];
+            const px = x * config.cellSize;
+            const py = y * config.cellSize;
+
+            // Bakke - Legg til +1 på størrelsen for å fjerne striper (Raster-fix)
+            ctx.fillStyle = (cell.base === 'road') ? (isNight ? config.colors.nightRoad : config.colors.road) :
+                            (cell.base === 'water') ? (isNight ? config.colors.nightWater : config.colors.water) : cols;
+            ctx.fillRect(px, py, config.cellSize + 1, config.cellSize + 1);
+
+            // Forurensning
+            if (pollutionGrid[idx] > 50) {
+                ctx.fillStyle = `rgba(100, 80, 50, ${pollutionGrid[idx]/800})`;
+                ctx.fillRect(px, py, config.cellSize + 1, config.cellSize + 1);
+            }
+
+            // Bygninger
+            if (cell.building) {
+                let emoji = config.emojis[cell.building.type] || '❓';
+                if (cell.building.type === 'house' && cell.building.pop > 50) emoji = '🏢';
+                drawCachedEmoji(ctx, emoji, px, py, cell.building.powered);
+                
+                if (cell.building.type === 'industry' && cell.building.powered && Math.random() < 0.02) {
+                    particles.push(new Particle(px + 16, py + 5, 'smoke'));
+                }
+            }
+
+            // Strømlinjer
+            if (cell.hasPowerLine) drawPowerLine(ctx, idx, px, py);
+
+            // Brann
+            if (cell.onFire) {
+                ctx.fillStyle = `rgba(255, 69, 0, ${0.4 + Math.random()*0.3})`;
+                ctx.fillRect(px, py, config.cellSize, config.cellSize);
+                if (Math.random() < 0.1) particles.push(new Particle(px+16, py+16, 'spark'));
+            }
+
+            // Trafikk
+            if (cell.base === 'road' && cell.hasTraffic) {
+                const carPos = (Date.now() / 20) % config.cellSize;
+                ctx.fillStyle = isNight ? '#ffeb3b' : '#eee';
+                ctx.fillRect(px + carPos, py + 12, 6, 4);
+            }
+        }
+    }
+
+    // --- EFFEKTER ---
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw(ctx);
+        if (particles[i].life <= 0) particles.splice(i, 1);
+    }
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        floatingTexts[i].update();
+        floatingTexts[i].draw(ctx);
+        if (floatingTexts[i].life <= 0) floatingTexts.splice(i, 1);
+    }
+
+    ctx.restore();
+
+    renderWeather();
+    updateMinimapViewport();
+    requestAnimationFrame(renderLoop);
+}
+
+function drawPowerLine(ctx, idx, px, py) {
+    ctx.fillStyle = '#111';
+    const cx = px + 16, cy = py + 16;
+    const has = (i) => {
+        if(i<0 || i>=world.length) return false;
+        return world[i].hasPowerLine || (world[i].building && world[i].building.type === 'power-plant');
+    };
+    if (has(idx - 1)) ctx.fillRect(px, cy-1, 16, 2);
+    if (has(idx + 1)) ctx.fillRect(cx, cy-1, 16, 2);
+    if (has(idx - config.gridSize)) ctx.fillRect(cx-1, py, 2, 16);
+    if (has(idx + config.gridSize)) ctx.fillRect(cx-1, cy, 2, 16);
+    ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI*2); ctx.fill();
+}
+
+function resizeCanvasIfNeeded() {
+    if (canvas.width !== mapContainer.clientWidth || canvas.height !== mapContainer.clientHeight) {
+        canvas.width = mapContainer.clientWidth;
+        canvas.height = mapContainer.clientHeight;
+        weatherCanvas.width = canvas.width;
+        weatherCanvas.height = canvas.height;
+    }
+}
+
+/* =========================================
+   DEL 5: SIMULERING & LOGIKK
+   ========================================= */
+function simulationTick() {
+    if (gameState.gameOver) return;
+
+    // Vær
+    gameState.weatherTimer++;
+    if (gameState.weatherTimer > 30 && Math.random() < 0.05) {
+        const types = ['clear', 'rain', 'snow'];
+        gameState.weather = types[Math.floor(Math.random() * types.length)];
+        gameState.weatherTimer = 0;
+        if(gameState.weather !== 'clear') showTicker("Weather report: " + gameState.weather.toUpperCase());
+    }
+
+    gameState.year++;
+    distributePower();
+    
+    let yearlyIncome = 0;
+    let yearlyCost = 0;
+    let newPop = 0;
+
+    world.forEach((cell, idx) => {
+        if (!cell.building) return;
+        yearlyCost += (config.costs[cell.building.type] || 0) * 0.05;
+        
+        // --- LYNNEDSLAG LOGIKK ---
+        if (cell.building.type === 'power-plant' && !cell.onFire) {
+            // Høyere sjanse for lynnedslag hvis det regner
+            let chance = gameState.weather === 'rain' ? 0.01 : 0.001;
+            if (Math.random() < chance) {
+                cell.onFire = true;
+                logEvent("⚡️ LIGHTNING STRUCK A POWER PLANT!");
+                addVisuals(idx % config.gridSize, Math.floor(idx/config.gridSize), 'explosion');
+                updateMinimap();
+            }
+        }
+        // ------------------------
+
+        if (cell.building.powered) {
+            if (cell.building.type === 'house') {
+                let growth = 1;
+                if (pollutionGrid[idx] > 20) growth -= 2;
+                const n = getNeighbors(idx);
+                if (n.some(ni => world[ni] && world[ni].building && world[ni].building.type === 'park')) growth += 2;
+                cell.building.pop = Math.min(100, Math.max(0, cell.building.pop + growth));
+                newPop += cell.building.pop;
+                yearlyIncome += cell.building.pop * gameState.taxRate;
+            } else if (cell.building.type === 'industry') {
+                yearlyIncome += 50;
+                pollutionGrid[idx] = 255;
+                getNeighbors(idx).forEach(ni => pollutionGrid[ni] = Math.min(255, pollutionGrid[ni] + 20));
+            } else if (cell.building.type === 'store') {
+                yearlyIncome += 30;
+            }
+        }
+        if (cell.onFire) {
+            if (Math.random() < 0.2) {
+                logEvent(`A ${cell.building.type} burned down!`);
+                cell.building = null;
+                cell.onFire = false;
+                updateMinimap();
+            }
+        } else if (Math.random() < 0.0005) {
+             cell.onFire = true;
+             logEvent("Fire broke out!");
+             updateMinimap();
+        }
+    });
+    
+    for(let i=0; i<pollutionGrid.length; i++) {
+        if (pollutionGrid[i] > 0) pollutionGrid[i]--;
+    }
+
+    gameState.population = Math.floor(newPop);
+    gameState.budget += (yearlyIncome - yearlyCost);
+    
+    document.getElementById('income').textContent = Math.floor(yearlyIncome);
+    document.getElementById('maintenance').textContent = Math.floor(yearlyCost);
+}
+
+function distributePower() {
+    world.forEach(c => { if(c.building) c.building.powered = false; });
+    const queue = [];
+    world.forEach((c, i) => {
+        if(c.building && c.building.type === 'power-plant' && !c.onFire) { // Brenner ikke
+            c.building.powered = true;
+            queue.push(i);
+        }
+    });
+    const visited = new Set(queue);
+    while(queue.length > 0) {
+        const idx = queue.shift();
+        getNeighbors(idx).forEach(n => {
+            if (!visited.has(n)) {
+                const cell = world[n];
+                // Strøm flyter ikke gjennom brennende ting
+                if ((cell.hasPowerLine || cell.building) && !cell.onFire) {
+                    visited.add(n);
+                    queue.push(n);
+                    if (cell.building) cell.building.powered = true;
+                }
+            }
+        });
+    }
+}
+
+function getNeighbors(idx) {
+    return [idx-1, idx+1, idx-config.gridSize, idx+config.gridSize].filter(i => i >= 0 && i < world.length);
+}
+
+function logEvent(msg) {
+    const entry = `Y${gameState.year}: ${msg}`;
+    gameState.gameLog.unshift(entry);
+    if (gameState.gameLog.length > 50) gameState.gameLog.pop();
+    showTicker(msg);
+    const list = document.getElementById('log-list');
+    if (list) {
+        const li = document.createElement('li');
+        li.textContent = entry;
+        list.prepend(li);
+    }
+}
+
+/* =========================================
+   DEL 6: VÆR & ATMOSFÆRE
+   ========================================= */
+const weatherParticles = [];
+function renderWeather() {
+    wCtx.clearRect(0, 0, weatherCanvas.width, weatherCanvas.height);
+    if (gameState.weather === 'clear') return;
+
+    if (weatherParticles.length < 150) {
+        weatherParticles.push({
+            x: Math.random() * weatherCanvas.width,
+            y: -10,
+            speed: Math.random() * 5 + 5
+        });
+    }
+
+    wCtx.beginPath();
+    wCtx.strokeStyle = 'rgba(150, 150, 255, 0.5)';
+    wCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    wCtx.lineWidth = 1;
+
+    for (let i = weatherParticles.length - 1; i >= 0; i--) {
+        let p = weatherParticles[i];
+        p.y += p.speed;
+        
+        if (gameState.weather === 'rain') {
+            wCtx.moveTo(p.x, p.y);
+            wCtx.lineTo(p.x - 2, p.y + 10);
+        } else { // Snow
+            p.x += Math.sin(p.y * 0.05);
+            wCtx.moveTo(p.x, p.y);
+            wCtx.arc(p.x, p.y, 2, 0, Math.PI*2);
+        }
+
+        if (p.y > weatherCanvas.height) weatherParticles.splice(i, 1);
+    }
+    
+    if (gameState.weather === 'rain') wCtx.stroke();
+    else wCtx.fill();
+}
+
+/* =========================================
+   DEL 7: INTERAKSJON & VERKTØY (FIXED)
+   ========================================= */
+let isDragging = false;
+let lastMouse = { x: 0, y: 0 };
+
+// Håndter høyreklikk-draing
+mapContainer.addEventListener('mousedown', (e) => {
+    if (e.button === 2) { // Høyreklikk
+        isDragging = true;
+        lastMouse = { x: e.clientX, y: e.clientY };
+        mapContainer.style.cursor = 'grabbing';
+    }
+});
+
+window.addEventListener('mouseup', () => {
+    isDragging = false;
+    mapContainer.style.cursor = 'crosshair';
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        const dx = e.clientX - lastMouse.x;
+        const dy = e.clientY - lastMouse.y;
+        
+        camera.x -= dx;
+        camera.y -= dy;
+        
+        // Clamp
+        const totalW = config.gridSize * config.cellSize;
+        camera.x = Math.max(-500, Math.min(camera.x, totalW - 100));
+        camera.y = Math.max(-500, Math.min(camera.y, totalW - 100));
+        
+        lastMouse = { x: e.clientX, y: e.clientY };
+        updateMinimapViewport();
+    }
+});
+
+canvas.addEventListener('click', (e) => {
+    // Kun venstreklikk bygger
+    if (e.button !== 0 || gameState.gameOver) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const wx = e.clientX - rect.left + camera.x;
+    const wy = e.clientY - rect.top + camera.y;
+    const gx = Math.floor(wx / config.cellSize);
+    const gy = Math.floor(wy / config.cellSize);
+    const idx = gy * config.gridSize + gx;
+
+    if (idx < 0 || idx >= world.length) return;
+    const cell = world[idx];
+    const tool = gameState.currentTool;
+    const cost = config.costs[tool];
+
+    if (!tool) return;
+    if (gameState.budget < cost) {
+        showTicker("Not enough funds!", true);
+        return;
+    }
+
+    let success = false;
+    if (tool === 'bulldoze') {
+        if (cell.building || cell.hasPowerLine || cell.base === 'road') {
+            if (cell.building) addVisuals(gx, gy, 'build');
+            cell.building = null; cell.hasPowerLine = false; cell.base = 'grass';
+            success = true;
+        }
+    } else if (tool === 'road') {
+        if (cell.base !== 'road' && !cell.building) { cell.base = 'road'; success = true; }
+    } else if (tool === 'power-line') {
+        if (!cell.hasPowerLine && !cell.building) { cell.hasPowerLine = true; success = true; }
+    } else if (config.emojis[tool]) {
+        if (!cell.building && cell.base !== 'water' && cell.base !== 'road') {
+            cell.building = { type: tool, powered: false, pop: 0 };
+            addVisuals(gx, gy, 'build');
+            success = true;
+        }
+    }
+
+    if (success) {
+        gameState.budget -= cost;
+        addVisuals(gx, gy, 'money-down');
+        updateStats();
+        updateMinimap();
+        distributePower();
+    }
+});
+
+/* =========================================
+   DEL 8: UI HJELPERE
+   ========================================= */
+const stats = { year: document.getElementById('year'), pop: document.getElementById('population'), budget: document.getElementById('budget') };
+
+function updateStats() {
+    stats.year.textContent = gameState.year;
+    stats.pop.textContent = gameState.population.toLocaleString();
+    stats.budget.textContent = "$" + Math.floor(gameState.budget).toLocaleString();
+    stats.budget.style.color = gameState.budget < 0 ? '#ff6b6b' : '#81c784';
+}
+
+function showTicker(msg, isError=false) {
+    const t = document.getElementById('event-ticker');
+    t.textContent = msg;
+    t.style.color = isError ? '#ff6b6b' : '#ffc107';
+    t.style.opacity = 1;
+    setTimeout(() => t.style.opacity = 0, 3000);
+}
+
+// Skatt Knapper
+document.querySelectorAll('.tax-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        gameState.taxRate = parseFloat(e.target.dataset.rate);
+        document.querySelectorAll('.tax-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        showTicker(`Tax set to ${e.target.textContent}`);
+    });
+});
+
+// Minimap
+const cacheColor = {};
+function getMinimapColor(hex) {
+    if (cacheColor[hex]) return cacheColor[hex];
+    const bi = parseInt(hex.slice(1), 16);
+    return cacheColor[hex] = [(bi>>16)&255, (bi>>8)&255, bi&255];
+}
+
+function updateMinimap() {
+    const img = minimapCtx.createImageData(config.gridSize, config.gridSize);
+    const d = img.data;
+    for(let i=0; i<world.length; i++) {
+        const c = world[i];
+        let col = config.minimapColors.grass;
+        if (c.base === 'water') col = config.minimapColors.water;
+        else if (c.base === 'road') col = config.minimapColors.road;
+        else if (c.onFire) col = config.minimapColors.fire;
+        else if (c.building) col = (c.building.type === 'industry') ? config.minimapColors.industry : config.minimapColors.building;
+        const [r,g,b] = getMinimapColor(col);
+        const idx = i*4;
+        d[idx]=r; d[idx+1]=g; d[idx+2]=b; d[idx+3]=255;
+    }
+    minimapCtx.putImageData(img, 0, 0);
+    updateMinimapViewport();
+}
+
+function updateMinimapViewport() {
+    const mmv = document.getElementById('minimap-viewport');
+    if (!mmv) return;
+    const w = minimapCanvas.clientWidth;
+    // Forhold mellom skjermstørrelse og totalt kart
+    const totalW = config.gridSize * config.cellSize;
+    const ratio = w / totalW;
+    
+    mmv.style.width = Math.max(2, viewport.w * ratio) + 'px';
+    mmv.style.height = Math.max(2, viewport.h * ratio) + 'px';
+    mmv.style.left = (camera.x * ratio) + 'px';
+    mmv.style.top = (camera.y * ratio) + 'px';
+}
+
+// Knappelyttere og Modals
+document.querySelectorAll('.tool-btn').forEach(btn => {
+    if(btn.dataset.tool) {
+        btn.addEventListener('click', (e) => {
+            const tool = btn.dataset.tool;
+            if (tool) {
+                gameState.currentTool = tool;
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active'); // Herlig, tax knapper er separate
+                showTicker("Tool: " + tool.toUpperCase());
+            }
+        });
+    }
+});
+
+function setupModal(btnId, modalId) {
+    const btn = document.getElementById(btnId);
+    const modal = document.getElementById(modalId);
+    const close = modal.querySelector('.close-btn');
+    if(btn) btn.onclick = () => modal.classList.add('active');
+    if(close) close.onclick = () => modal.classList.remove('active');
+    window.onclick = (e) => { if(e.target == modal) modal.classList.remove('active'); }
+}
+
+setupModal('help-btn', 'help-modal');
+setupModal('log-btn', 'log-modal');
+setupModal('economy-btn', 'economy-modal');
+
+document.getElementById('save-btn').addEventListener('click', () => {
+    localStorage.setItem('citySave', JSON.stringify({ world, gameState, pollutionGrid: Array.from(pollutionGrid) }));
+    showTicker("Game Saved! 💾");
+});
+
+document.getElementById('new-game-btn').addEventListener('click', () => {
+    if(confirm("Start new city?")) { localStorage.removeItem('citySave'); location.reload(); }
+});
+
+document.getElementById('night-btn').addEventListener('click', () => document.body.classList.toggle('night-mode'));
+
+// Start
+init();
+
+</script>
+</body>
+</html>
