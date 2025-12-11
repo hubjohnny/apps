@@ -256,13 +256,30 @@ to {
 transform: translateX(3400px);
 }
 }
+
+
 #minimap-wrapper {
-position: relative;
-width: 100%;
-aspect-ratio: 1 / 1;
-cursor: crosshair;
-margin: 15px 0;
+    position: relative;
+    
+    /* --- HER ER RETTINGEN --- */
+    width: 100%;       /* Fyll hele bredden av menyen igjen */
+    aspect-ratio: 1/1; /* Sørg for at den alltid er kvadratisk */
+    height: auto;      /* Fjern den faste høyden på 100px */
+    /* ------------------------ */
+
+    margin: 15px 0;
+    border: 2px solid #555;
+    background-color: #000;
+    cursor: crosshair;
+    
+    /* --- BEHOLD DISSE FOR YTELSEN --- */
+    transform: translateZ(0); 
+    will-change: transform;
+    overflow: hidden; 
+    contain: paint layout;
 }
+
+
 #minimap-canvas {
 width: 100%;
 height: 100%;
@@ -270,14 +287,20 @@ background-color: #000;
 border: 1px solid #ffc107;
 image-rendering: pixelated;
 }
+
+
 #minimap-viewport {
-position: absolute;
-top: 0;
-left: 0;
-border: 1px solid #fff;
-background-color: rgba(255, 255, 255, 0.3);
-pointer-events: none;
+    position: absolute;
+    border: 1px solid #fff;
+    box-shadow: 0 0 4px rgba(0,0,0,0.5); /* Gjør rammen litt tydeligere */
+    pointer-events: none; /* Viktig! Lar deg klikke "gjennom" rammen på kartet */
+    
+    /* --- GPU ACCELERATION FOR RAMMEN OGSÅ --- */
+    transform: translateZ(0);
+    will-change: left, top;
 }
+
+
 #tooltip {
 position: fixed;
 display: none;
@@ -632,6 +655,44 @@ transform-origin: center;
 <div class="explosion"></div>
 </div>
 <script>
+
+// --- OPTIMALISERING: EMOJI CACHE (MED LYS) ---
+const emojiCache = {}; 
+
+window.addEventListener('resize', () => {
+    for (let key in emojiCache) delete emojiCache[key];
+});
+
+function drawCachedEmoji(ctx, emoji, x, y, powered) {
+    // Vi lager en unik nøkkel for "med strøm" og "uten strøm"
+    const key = emoji + (powered ? '_ON' : '_OFF');
+
+    if (!emojiCache[key]) {
+        const c = document.createElement('canvas');
+        c.width = config.cellSize;
+        c.height = config.cellSize;
+        const cCtx = c.getContext('2d');
+        
+        cCtx.font = emojiFont; 
+        cCtx.textAlign = 'center';
+        cCtx.textBaseline = 'middle';
+        
+        // Hvis dette er "påslått"-versjonen, legg på effekten ÉN gang her
+        if (powered) {
+            cCtx.filter = 'brightness(1.2) contrast(1.1)';
+        }
+
+        cCtx.fillText(emoji, config.cellSize / 2, config.cellSize / 2 + 2);
+        emojiCache[key] = c;
+    }
+    
+    // Tegn det ferdige bildet (Ingen filter-beregning i spill-løkken!)
+    ctx.drawImage(emojiCache[key], x, y);
+}
+
+
+
+
 const config = {
 gridSize: 100,
 cellSize: 32,
@@ -897,100 +958,97 @@ renderGrid();
 ctx.restore();
 requestAnimationFrame(render);
 }
+
+
+
 function renderGrid() {
-if (viewport.width === 0 || viewport.height === 0) return;
-const startCol = Math.floor(camera.x / config.cellSize);
-const endCol = Math.min(config.gridSize - 1, Math.ceil((camera.x + viewport.width) / config.cellSize));
-const startRow = Math.floor(camera.y / config.cellSize);
-const endRow = Math.min(config.gridSize - 1, Math.ceil((camera.y + viewport.height) / config.cellSize));
-const isNight = gameLayout.classList.contains('night-mode');
-const colors = isNight ? config.nightTerrainColors : config.terrainColors;
-ctx.font = emojiFont;
-ctx.textAlign = 'center';
-ctx.textBaseline = 'middle';
-for (let y = startRow; y <= endRow; y++) {
-for (let x = startCol; x <= endCol; x++) {
-const index = y * config.gridSize + x;
-const cell = world[index];
-if (!cell) continue;
-const drawX = x * config.cellSize;
-const drawY = y * config.cellSize;
-ctx.fillStyle = colors[cell.base] || colors.grass;
-ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
-const pollution = pollutionGrid[index];
-if (pollution > 20) {
-ctx.fillStyle = `rgba(139, 69, 19, ${pollution / 600})`;
-ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
+    if (viewport.width === 0 || viewport.height === 0) return;
+    const startCol = Math.floor(camera.x / config.cellSize);
+    const endCol = Math.min(config.gridSize - 1, Math.ceil((camera.x + viewport.width) / config.cellSize));
+    const startRow = Math.floor(camera.y / config.cellSize);
+    const endRow = Math.min(config.gridSize - 1, Math.ceil((camera.y + viewport.height) / config.cellSize));
+    const isNight = gameLayout.classList.contains('night-mode');
+    const colors = isNight ? config.nightTerrainColors : config.terrainColors;
+    
+    ctx.font = emojiFont;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (let y = startRow; y <= endRow; y++) {
+        for (let x = startCol; x <= endCol; x++) {
+            const index = y * config.gridSize + x;
+            const cell = world[index];
+            if (!cell) continue;
+            const drawX = x * config.cellSize;
+            const drawY = y * config.cellSize;
+
+            // 1. Tegn bakken
+            ctx.fillStyle = colors[cell.base] || colors.grass;
+            ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
+
+            if (pollutionGrid[index] > 20) {
+                ctx.fillStyle = `rgba(139, 69, 19, ${pollutionGrid[index] / 600})`;
+                ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
+            }
+
+            if (cell.base === 'road' && cell.roadWear > 0) {
+                ctx.fillStyle = `rgba(0, 0, 0, ${cell.roadWear * 0.2})`;
+                ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
+            }
+
+            if (cell.hasTraffic) {
+                drawTrafficVariableSpeed(x, y, index, drawX, drawY, cell.roadWear);
+            }
+
+            // 2. Tegn bygning (Optimalisert!)
+            if (cell.building) {
+                let emoji = config.buildingEmojis[cell.building.type] || '';
+                const variantIndex = (index * 13) % 100;
+
+                // Din logikk for å velge emoji
+                if (cell.building.type === 'house') {
+                    const pop = cell.building.population;
+                    const spreadIndex = ((x * 16411) + (y * 997)) % 1000;
+                    const rareChance = spreadIndex % 100;
+                    
+                    if (pop > 100) {
+                        const neighbors = getNeighbors(index, 2);
+                        const isLuxury = neighbors.some(n => {
+                            const cb = world[n];
+                            return cb && (cb.base === 'lake' || (cb.building && cb.building.type === 'park'));
+                        });
+                        if (isLuxury) emoji = rareChance < 2 ? '🏰' : (rareChance < 15 ? '🏛️' : '🏢');
+                        else emoji = '🏢';
+                    } else if (pop > 50) emoji = ['🏘️', '🏘️', '🏠', '🏡'][rareChance % 4];
+                    else emoji = ['🏠', '🏡'][rareChance % 2];
+                } else if (cell.building.type === 'store') {
+                    emoji = ['🏬', '🏪', '🏨', '🏦', '🏤'][variantIndex % 5];
+                } else if (cell.building.type === 'industry') {
+                    emoji = ['🏭', '🏭', '🏗️', '🏚️'][variantIndex % 4];
+                }
+                if (cell.building.type === 'park' && cell.building.hasFountain) emoji = '⛲️';
+
+                // HER SKJER MAGIEN: Vi ber om "powered" versjon direkte fra cachen
+                // Ingen filter, ingen save/restore. Lynraskt.
+                drawCachedEmoji(ctx, emoji, drawX, drawY, cell.building.powered);
+            } // <--- HER VAR DEN MANGLENDE PARENTESEN!
+
+            // 3. Strømlinjer
+            if (cell.hasPowerLine) {
+                drawPowerLine(x, y, index, drawX, drawY);
+            }
+
+            // 4. Brann
+            if (cell.onFire) {
+                ctx.fillStyle = 'rgba(255, 69, 0, 0.6)';
+                ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
+            }
+        }
+    }
 }
-if (cell.base === 'road' && cell.roadWear > 0) {
-ctx.fillStyle = `rgba(0, 0, 0, ${cell.roadWear * 0.2})`;
-ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
-}
-if (cell.hasTraffic) {
-drawTrafficVariableSpeed(x, y, index, drawX, drawY, cell.roadWear);
-}
-if (cell.building) {
-let emoji = config.buildingEmojis[cell.building.type] || '';
-const variantIndex = (index * 13) % 100;
-if (cell.building.type === 'house') {
-const pop = cell.building.population;
-const x = index % config.gridSize;
-const y = Math.floor(index / config.gridSize);
-const spreadIndex = ((x * 16411) + (y * 997)) % 1000;
-const rareChance = spreadIndex % 100;
-if (pop > 100) {
-const neighbors = getNeighbors(index, 2);
-const isLuxury = neighbors.some(n => {
-const cb = world[n];
-return cb && (cb.base === 'lake' || (cb.building && cb.building.type === 'park'));
-});
-if (isLuxury) {
-if (rareChance < 2) {
-emoji = '🏰';
-} else if (rareChance < 15) {
-emoji = '🏛️';
-} else {
-emoji = '🏢';
-}
-} else {
-emoji = '🏢';
-}
-}
-else if (pop > 50) {
-const midRise = ['🏘️', '🏘️', '🏠', '🏡'];
-emoji = midRise[rareChance % midRise.length];
-} else {
-const lowRise = ['🏠', '🏡'];
-emoji = lowRise[rareChance % lowRise.length];
-}
-}
-else if (cell.building.type === 'store') {
-const stores = ['🏬', '🏪', '🏨', '🏦', '🏤'];
-emoji = stores[variantIndex % stores.length];
-}
-else if (cell.building.type === 'industry') {
-const industries = ['🏭', '🏭', '🏗️', '🏚️'];
-emoji = industries[variantIndex % industries.length];
-}
-if (cell.building.type === 'park' && cell.building.hasFountain) emoji = '⛲️';
-ctx.save();
-if (cell.building.powered) {
-ctx.shadowColor = isNight ? '#ffeb3b' : '#fff';
-ctx.filter = 'brightness(1.1) contrast(1.2)';
-}
-ctx.fillText(emoji, drawX + config.cellSize / 2, drawY + config.cellSize / 2 + 1);
-ctx.restore();
-}
-if (cell.hasPowerLine) {
-drawPowerLine(x, y, index, drawX, drawY);
-}
-if (cell.onFire) {
-ctx.fillStyle = 'rgba(255, 69, 0, 0.6)';
-ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
-}
-}
-}
-}
+
+
+
 function updateFireLayer() {
 if (!fireLayer) return;
 fireLayer.innerHTML = ''; // Fjern alle eksisterende branner
@@ -1073,30 +1131,25 @@ return neighbor && (neighbor.hasPowerLine || (neighbor.building && neighbor.buil
 
 
 
-// Hjelpevariabel for å huske farge-konverteringer så vi slipper å regne dem ut hver gang
 const colorCache = {};
-let cachedMinimapData = null; // Her lagrer vi bildet av kartet
-
 function hexToRgb(hex) {
     if (colorCache[hex]) return colorCache[hex];
     let c;
     if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
         c= hex.substring(1).split('');
-        if(c.length== 3){
-            c= [c[0], c[0], c[1], c[1], c[2], c[2]];
-        }
+        if(c.length== 3) c= [c[0], c[0], c[1], c[1], c[2], c[2]];
         c= '0x'+c.join('');
-        const rgb = [(c>>16)&255, (c>>8)&255, c&255];
-        colorCache[hex] = rgb;
-        return rgb;
+        return colorCache[hex] = [(c>>16)&255, (c>>8)&255, c&255];
     }
-    return [0, 0, 0]; // Fallback til svart ved feil
+    return [0, 0, 0];
 }
+
+
 
 function updateMinimap() {
     if (!minimapCtx) return;
 
-    // 1. Lag bildet (som før)
+    // Lag et bilde i minnet (super-raskt)
     const imgData = minimapCtx.createImageData(config.gridSize, config.gridSize);
     const data = imgData.data;
 
@@ -1104,61 +1157,50 @@ function updateMinimap() {
         const cell = world[i];
         if (!cell) continue;
 
+        // Bestem farge
         let colorHex = config.minimapColors[cell.base] || config.minimapColors.grass;
         if (cell.building) {
-            if (cell.building.type === 'industry') {
-                colorHex = config.minimapColors.industry;
-            } else {
-                colorHex = cell.building.powered ? config.minimapColors.building : '#8d6e63';
-            }
+            if (cell.building.type === 'industry') colorHex = config.minimapColors.industry;
+            else colorHex = cell.building.powered ? config.minimapColors.building : '#8d6e63';
         }
         if (cell.onFire) colorHex = config.minimapColors.fire;
 
+        // Sett piksel direkte (ingen tegning, bare data)
         const [r, g, b] = hexToRgb(colorHex);
-        const index = i * 4;
-        data[index] = r;
-        data[index + 1] = g;
-        data[index + 2] = b;
-        data[index + 3] = 255;
+        const idx = i * 4;
+        data[idx] = r; data[idx+1] = g; data[idx+2] = b; data[idx+3] = 255;
     }
 
-    // 2. Tegn det på lerretet
+    // "Stemple" bildet på skjermen
     minimapCtx.putImageData(imgData, 0, 0);
-
-    // 3. VIKTIG: Lagre en kopi av dette bildet i variabelen vår!
-    cachedMinimapData = imgData;
     
-    // Oppdater viewporten med en gang så vi ser endringen
+    // Oppdater rammen til slutt så den ligger riktig
     updateMinimapViewport();
 }
 
 
 
+
 function updateMinimapViewport() {
-    // Sjekk at alle elementene finnes
-    if (!minimapViewport || !minimapCanvas || !gridContainer || viewport.width === 0 || gridContainer.scrollWidth === 0) return;
+    // Vi bruker HTML-elementet, ikke canvas-tegning, for å unngå hakking
+    if (!minimapViewport || !minimapCanvas || !gridContainer || viewport.width === 0) return;
 
-    const mapWidth = minimapCanvas.offsetWidth;
-    const mapHeight = minimapCanvas.offsetHeight;
+    const mapW = minimapCanvas.offsetWidth;
+    const mapH = minimapCanvas.offsetHeight;
+    const totalW = gridContainer.scrollWidth;
+    const totalH = gridContainer.scrollHeight;
 
-    if (mapWidth === 0 || mapHeight === 0) return;
+    if (totalW === 0 || totalH === 0) return;
 
-    const totalMapWidth = gridContainer.scrollWidth;
-    const totalMapHeight = gridContainer.scrollHeight;
-
-    if (totalMapWidth === 0 || totalMapHeight === 0) return;
-
-    // Beregn størrelsen på firkanten
-    const xRatio = viewport.width / totalMapWidth;
-    const yRatio = viewport.height / totalMapHeight;
-
-    // Flytt HTML-elementet (mye raskere enn å tegne på canvas)
-    minimapViewport.style.width = `${Math.max(0, (xRatio * mapWidth) - 2)}px`;
-    minimapViewport.style.height = `${Math.max(0, (yRatio * mapHeight) - 2)}px`;
+    // Regn ut størrelse og posisjon
+    const xRatio = viewport.width / totalW;
+    const yRatio = viewport.height / totalH;
     
-    // Posisjoner firkanten basert på hvor du har scrollet
-    minimapViewport.style.left = `${(mapContainer.scrollLeft / totalMapWidth) * mapWidth}px`;
-    minimapViewport.style.top = `${(mapContainer.scrollTop / totalMapHeight) * mapHeight}px`;
+    // Flytt den hvite boksen med CSS (lynhurtig)
+    minimapViewport.style.width = `${Math.max(0, (xRatio * mapW) - 2)}px`;
+    minimapViewport.style.height = `${Math.max(0, (yRatio * mapH) - 2)}px`;
+    minimapViewport.style.left = `${(mapContainer.scrollLeft / totalW) * mapW}px`;
+    minimapViewport.style.top = `${(mapContainer.scrollTop / totalH) * mapH}px`;
 }
 
 
