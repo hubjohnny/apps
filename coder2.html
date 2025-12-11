@@ -587,9 +587,14 @@ if(idx > -1) this.jumpTo(idx);
 jumpToNextDefinition() {
 this.regexJump(/(^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{|^\s*function\s+\w+)/gm);
 },
+
+
 jumpToComment() {
-this.regexJump(/(^\s*\/\*[\s\S]*?\*\/|^\s*\/\/.*)/gm);
+  // (?<!:) checks that the // is NOT preceded by a colon
+  this.regexJump(/(\/\*[\s\S]*?\*\/|(?<!:)\/\/.*)/g);
 },
+
+
 regexJump(regex) {
 const val = this.elements.editor.value;
 const current = this.elements.editor.selectionStart;
