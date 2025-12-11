@@ -78,6 +78,12 @@ padding: 15px 15px 100px 15px;
 line-height: 1.5;
 margin: 0;
 background-color: transparent;
+
+will-change: transform, scroll-position;
+transform: translateZ(0); /* Hack to force GPU acceleration */
+
+contain: content;
+
 }
 #highlight-layer {
 z-index: 1;
@@ -224,7 +230,7 @@ margin-right: 50px;
 <script>
 const CodeEditor = {
 config: {
-debounceDelay: 50,
+debounceDelay: 10,
 indentUnit: '  ',
 toastDuration: 2500,
 },
@@ -295,15 +301,33 @@ editor.focus();
 }
 });
 },
+
 handleEditorScroll() {
-const { editor, lineNumbers, highlightLayer } = this.elements;
-lineNumbers.scrollTop = editor.scrollTop;
-highlightLayer.scrollTop = editor.scrollTop;
-highlightLayer.scrollLeft = editor.scrollLeft;
+  if (this.state.ticking) return;
+  
+  window.requestAnimationFrame(() => {
+    const { editor, lineNumbers, highlightLayer } = this.elements;
+    lineNumbers.scrollTop = editor.scrollTop;
+    highlightLayer.scrollTop = editor.scrollTop;
+    highlightLayer.scrollLeft = editor.scrollLeft;
+    this.state.ticking = false;
+  });
+
+  this.state.ticking = true;
 },
+
+
 highlight() {
-this.elements.highlightLayer.innerHTML = this.highlightHTML(this.elements.editor.value);
+  const code = this.elements.editor.value;
+  // If text is huge (e.g., > 50,000 chars), skip regex to prevent freezing
+  if (code.length > 50000) {
+      this.elements.highlightLayer.textContent = code; // Plain text fallback
+      return;
+  }
+  this.elements.highlightLayer.innerHTML = this.highlightHTML(code);
 },
+
+
 escapeHTML(str) {
 return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 },
@@ -383,15 +407,28 @@ this.state.lastLineCount = lineCount;
 this.elements.lineNumbers.textContent = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
 }
 },
+
+
 handleEditorInput() {
-if (this.state.ignoreNextInput) {
-this.state.ignoreNextInput = false;
-} else {
-if (!this.state.hasUnsavedChanges) this.setUnsavedChanges(true);
-}
-this.state.searchResults.term = '';
-this.debouncedUpdate();
+  if (this.state.ignoreNextInput) {
+    this.state.ignoreNextInput = false;
+  } else {
+    if (!this.state.hasUnsavedChanges) this.setUnsavedChanges(true);
+  }
+  
+  // --- NEW CODE START ---
+  // 1. Show plain text IMMEDIATELY so you don't type "blind"
+  // This removes the "ghost trail" feeling
+  
+ // this.elements.highlightLayer.innerHTML = this.escapeHTML(this.elements.editor.value);
+ 
+  // --- NEW CODE END ---
+
+  this.state.searchResults.term = '';
+  this.debouncedUpdate(); // The colors will catch up in a moment
 },
+
+
 handleEditorKeyDown(e) {
 const isCtrl = e.ctrlKey || e.metaKey;
 const isAlt = e.altKey;
