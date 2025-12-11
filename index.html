@@ -1,160 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Johnny Heggelund</title>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
+
 <style>
+
 :root {
---bg-color: #0f172a;
---card-bg: #1e293b;
---text-main: #f1f5f9;
---text-muted: #94a3b8;
---accent: #38bdf8;
---accent-hover: #0ea5e9;
---border: #334155;
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --border: #334155;
 }
+
 * {
-box-sizing: border-box;
-margin: 0;
-padding: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
+
 body {
-font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-background-color: var(--bg-color);
-color: var(--text-main);
-line-height: 1.6;
-padding: 2rem 1rem;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.6;
+  padding: 2rem 1rem;
 }
+
 .container {
-max-width: 1024px;
-margin: 0 auto;
+  max-width: 1024px;
+  margin: 0 auto;
 }
+
 h1 {
-font-size: 2rem;
-text-align: right;
-color: var(--text-main);
-margin: 0 0 1rem 0;
-border-bottom: 2px solid;
-border-image: linear-gradient(to right, transparent, var(--accent)) 1;
+  font-size: 2rem;
+  text-align: right;
+  color: var(--text-main);
+  margin: 0 0 1rem 0;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(to right, transparent, var(--accent)) 1;
 }
-.header-actions {
-text-align: right;
-margin-top: 1rem;
-margin-bottom: 0;
-}
-.fb-btn {
-background-color: #1877F2;
-color: white;
-padding: 0.6rem 1.2rem;
-border-radius: 25px;
-font-weight: bold;
-display: inline-flex;
-align-items: center;
-gap: 8px;
-transition: all 0.3s ease;
-box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
-border: 1px solid #1877F2;
-text-decoration: none;
-margin: 0;
-}
-.fb-btn:hover {
-background-color: #166fe5;
-transform: translateY(-2px);
-box-shadow: 0 6px 20px rgba(24, 119, 242, 0.5);
-color: white;
-}
+
 h2 {
-font-size: 1.5rem;
-margin-bottom: 1rem;
-color: var(--text-main);
-border-left: 4px solid var(--accent);
-padding-left: 1rem;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--text-main);
+  border-left: 4px solid var(--accent);
+  padding-left: 1rem;
 }
+
 h3 {
-font-size: 1.25rem;
-margin-bottom: 0.5rem;
-color: var(--accent);
-display: flex;
-align-items: center;
-gap: 0.5rem;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+
 p {
-margin-bottom: 1rem;
-color: #cbd5e1;
+  margin-bottom: 1rem;
+  color: #cbd5e1;
 }
+
 a {
-color: var(--accent);
-text-decoration: none;
+  color: var(--accent);
+  text-decoration: none;
 }
+
 a:hover {
-text-decoration: underline;
+  text-decoration: underline;
 }
+
 .tag-list {
-display: flex;
-flex-wrap: wrap;
-gap: 0.75rem;
-margin-bottom: 3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 3rem;
 }
+
 .tag {
-background-color: var(--card-bg);
-border: 1px solid var(--border);
-padding: 0.5rem 1rem;
-border-radius: 20px;
-font-size: 0.9rem;
-color: var(--text-main);
-text-decoration: none;
-transition: all 0.2s;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: all 0.2s;
 }
+
 .tag:hover {
-background-color: var(--accent);
-color: #000;
-border-color: var(--accent);
-text-decoration: none;
-transform: translateY(-2px);
+  background-color: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  text-decoration: none;
+  transform: translateY(-2px);
 }
+
 .feature-card {
-background-color: var(--card-bg);
-border: 1px solid var(--border);
-border-radius: 12px;
-padding: 2rem;
-margin-bottom: 3rem;
-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
+
 .feature-card strong {
-color: var(--text-main);
+  color: var(--text-main);
 }
+
+hr {
+  border-image: linear-gradient(to right, transparent, var(--accent)) 1;
+  margin: 0 0 40px 0;
+}
+
 @media (max-width: 600px) {
-h1 { font-size: 2rem; }
-.feature-card { padding: 1.5rem; }
+  h1 { font-size: 2rem; }
+  .feature-card { padding: 1.5rem; }
 }
+
 </style>
 </head>
+
 <body>
+
 <div class="container">
 <h1>Johnny Heggelund</h1>
-<p>🟢 <a href="sokoban2.html">My Sokoban Puzzle Game with more than 45,000 levels now released as a second version with more stylized graphics.</a></p>
-<p>🟢 <a href="coder2.html">Coder 2 Beta released for testing, with color syntax highlighting.</a></p>
-<div class="header-actions">
-<a href="https://www.facebook.com/heggelund666/" target="_blank" class="fb-btn">
-<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-<path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-</svg>
-My Facebook
-</a>
-</div>
+  <p>🟢 <a href="sokoban2.html">My Sokoban Puzzle Game with more than 45,000 levels now released as a second version with more stylized graphics.</a></p>
+  <p>🟢 <a href="coder2.html">Coder 2 Beta released for testing, with color syntax highlighting.</a></p>
+  <hr>
 <section>
 <h2>Popular Games</h2>
 <div class="tag-list">
-<a href="100laps.html" class="tag">🚔 100 Laps Racing</a>
-<a href="adventure.html" class="tag">🔑 Adventure RPG</a>
-<a href="championship.html" class="tag">🚘 Championship Racing</a>
-<a href="citybuilder.html" class="tag">🏠 City Builder</a>
-<a href="lunarlander.html" class="tag">🚀 Lander Rescue</a>
-<a href="tetrisneon.html" class="tag">🟧 Tetris Neon</a>
+  <a href="100laps.html" class="tag">🚔 100 Laps Racing</a>
+  <a href="adventure.html" class="tag">🔑 Adventure RPG</a>
+  <a href="championship.html" class="tag">🚘 Championship Racing</a>
+  <a href="citybuilder.html" class="tag">🏠 City Builder</a>
+  <a href="lunarlander.html" class="tag">🚀 Lander Rescue</a>
+  <a href="tetrisneon.html" class="tag">🟧 Tetris Neon</a>
 </div>
 </section>
+
 <article class="feature-card">
 <h3>💲 <a href="sokoban.html">Sokoban Puzzle Game</a></h3>
 <p>
@@ -170,16 +163,17 @@ Don't forget to check out my <strong><a href="sokobaned.html">Sokoban Level Edit
 <section>
 <h2>Classic Fun</h2>
 <div class="tag-list">
-<a href="ameliax.html" class="tag">Amelia X</a>
-<a href="billiards.html" class="tag">Billiards</a>
-<a href="blackjack.html" class="tag">Blackjack</a>
-<a href="minigolf.html" class="tag">Mini Golf</a>
-<a href="shithead.html" class="tag">Shithead Card Game</a>
-<a href="snakeneon.html" class="tag">Snake</a>
-<a href="uno.html" class="tag">UNO Card Game</a>
-<a href="yatzy.html" class="tag">Yatzy Dice Game</a>
+  <a href="ameliax.html" class="tag">Amelia X</a>
+  <a href="billiards.html" class="tag">Billiards</a>
+  <a href="blackjack.html" class="tag">Blackjack</a>
+  <a href="minigolf.html" class="tag">Mini Golf</a>
+  <a href="shithead.html" class="tag">Shithead Card Game</a>
+  <a href="snakeneon.html" class="tag">Snake</a>
+  <a href="uno.html" class="tag">UNO Card Game</a>
+  <a href="yatzy.html" class="tag">Yatzy Dice Game</a>
 </div>
 </section>
+
 <article class="feature-card">
 <h3>🟢 <a href="ludo.html">Ludo Board Game</a></h3>
 <p>
@@ -191,22 +185,23 @@ to its starting area, forcing them to roll a six again to re-enter. The first pl
 colour-matched home triangle in the centre of the board wins the game. In my version of the game, you can play against three AI opponents or turn
 on "Autopilot" to let an AI take over your player and show you how the game is played.
 </p>
-
 </article>
+
 <section>
 <h2>Popular Tools</h2>
 <div class="tag-list">
-<a href="base64.html" class="tag">Base64</a>
-<a href="coder2.html" class="tag">Coder 2</a>
-<a href="emojis.html" class="tag">Emojis</a>
-<a href="image2ascii.html" class="tag">image2ASCII</a>
-<a href="image2pixel.html" class="tag">image2Pixel</a>
-<a href="secretnote.html" class="tag">Secret Note</a>
-<a href="sprited.html" class="tag">Sprite Editor</a>
-<a href="video2gif.html" class="tag">video2GIF</a>
-<a href="videoplayer.html" class="tag">Video Player</a>
+  <a href="base64.html" class="tag">Base64</a>
+  <a href="coder2.html" class="tag">Coder 2</a>
+  <a href="emojis.html" class="tag">Emojis</a>
+  <a href="image2ascii.html" class="tag">image2ASCII</a>
+  <a href="image2pixel.html" class="tag">image2Pixel</a>
+  <a href="secretnote.html" class="tag">Secret Note</a>
+  <a href="sprited.html" class="tag">Sprite Editor</a>
+  <a href="video2gif.html" class="tag">video2GIF</a>
+  <a href="videoplayer.html" class="tag">Video Player</a>
 </div>
 </section>
+
 <article class="feature-card">
 <h3>🖥️ <a href="coder.html">Coder 1.0</a></h3>
 <p>
@@ -219,6 +214,7 @@ specific keyboard shortcuts for rapid semantic navigation, and code hygiene util
 a "Preview in New Tab" function.
 </p>
 </article>
+
 <article class="feature-card">
 <h3>💄 <a href="babelinux.html">Babelinux Terminal Emulator 6.9</a></h3>
 <p>
@@ -230,15 +226,17 @@ or resize operations. Media playback is supported via <code>play</code>. And whe
 <code>sokoban</code>, or <code>tetris</code> to open a classic arcade game in a new tab.
 </p>
 </article>
+
 <section>
 <h2>More Tools</h2>
 <div class="tag-list">
-<a href="imagecomp.html" class="tag">Image Compression</a>
-<a href="imaged.html" class="tag">Image Editor</a>
-<a href="imageupscale.html" class="tag">Image Upscaler</a>
-<a href="soundtracker.html" class="tag">Soundtracker</a>
+  <a href="imagecomp.html" class="tag">Image Compression</a>
+  <a href="imaged.html" class="tag">Image Editor</a>
+  <a href="imageupscale.html" class="tag">Image Upscaler</a>
+  <a href="soundtracker.html" class="tag">Soundtracker</a>
 </div>
 </section>
+
 </div>
 </body>
 </html>
