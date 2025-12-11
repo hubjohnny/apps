@@ -1135,26 +1135,30 @@ function updateMinimap() {
 
 
 function updateMinimapViewport() {
-    // Sjekk at vi har alt vi trenger
-    if (!minimapCtx || !cachedMinimapData) return;
+    // Sjekk at alle elementene finnes
+    if (!minimapViewport || !minimapCanvas || !gridContainer || viewport.width === 0 || gridContainer.scrollWidth === 0) return;
 
-    // 1. Lim inn det lagrede kartet (dette visker ut forrige ramme)
-    minimapCtx.putImageData(cachedMinimapData, 0, 0);
+    const mapWidth = minimapCanvas.offsetWidth;
+    const mapHeight = minimapCanvas.offsetHeight;
 
-    // 2. Beregn hvor rammen skal være
-    // Siden minimappet er 100px og verden er 100 celler,
-    // og hver celle er 32px (config.cellSize), er forholdet 1/32.
-    const scale = 1 / config.cellSize;
+    if (mapWidth === 0 || mapHeight === 0) return;
 
-    const viewX = camera.x * scale;
-    const viewY = camera.y * scale;
-    const viewW = viewport.width * scale;
-    const viewH = viewport.height * scale;
+    const totalMapWidth = gridContainer.scrollWidth;
+    const totalMapHeight = gridContainer.scrollHeight;
 
-    // 3. Tegn den hvite rammen
-    minimapCtx.strokeStyle = '#fff';
-    minimapCtx.lineWidth = 1;
-    minimapCtx.strokeRect(viewX, viewY, viewW, viewH);
+    if (totalMapWidth === 0 || totalMapHeight === 0) return;
+
+    // Beregn størrelsen på firkanten
+    const xRatio = viewport.width / totalMapWidth;
+    const yRatio = viewport.height / totalMapHeight;
+
+    // Flytt HTML-elementet (mye raskere enn å tegne på canvas)
+    minimapViewport.style.width = `${Math.max(0, (xRatio * mapWidth) - 2)}px`;
+    minimapViewport.style.height = `${Math.max(0, (yRatio * mapHeight) - 2)}px`;
+    
+    // Posisjoner firkanten basert på hvor du har scrollet
+    minimapViewport.style.left = `${(mapContainer.scrollLeft / totalMapWidth) * mapWidth}px`;
+    minimapViewport.style.top = `${(mapContainer.scrollTop / totalMapHeight) * mapHeight}px`;
 }
 
 
