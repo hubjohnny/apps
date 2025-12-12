@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calming Sleep Sounds Mixer</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        #mixer {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 30px;
+        }
+        .sound-control {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sound-control label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #90CAF9;
+        }
+        .volume-container {
+            display: flex;
+            align-items: center;
+        }
+        .volume-container input[type="range"] {
+            flex-grow: 1;
+            margin-right: 15px;
+        }
+        #playPauseBtn {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+        #playPauseBtn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="mixer">
+        <h1>🌬️ Sleep Sound Mixer ⛈️</h1>
+
+        <button id="playPauseBtn">▶️ Play Sounds</button>
+
+        <div class="sound-control" id="wind-control">
+            <label for="windVolume">Wind Ambiance</label>
+            <div class="volume-container">
+                <input type="range" id="windVolume" min="0" max="1" step="0.01" value="0.8">
+            </div>
+        </div>
+
+        <div class="sound-control" id="thunder-control">
+            <label for="thunderVolume">Loud Rumbling Thunder</label>
+            <div class="volume-container">
+                <input type="range" id="thunderVolume" min="0" max="1" step="0.01" value="0.4">
+            </div>
+        </div>
+
+        <div class="sound-control" id="rain-control">
+            <label for="rainVolume">Constant Rain Sound</label>
+            <div class="volume-container">
+                <input type="range" id="rainVolume" min="0" max="1" step="0.01" value="0.7">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state and AudioContext
+        let audioCtx;
+        let isPlaying = false;
+        const soundNodes = {};
+        const volumeGains = {};
+        const scheduledTimeouts = []; // Still needed for thunder
+
+        // --- Sound Generator Functions ---
+
+        /**
+         * 1. WIND AMBIANCE (Your original code, adapted for modularity)
+         */
+        const wind_ambiance = (ctx, masterGainNode) => {
+            const t = ctx.currentTime;
+            const bufferSize = 5 * ctx.sampleRate;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = buffer.getChannelData(0);
+
+            // Generate noise
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = (Math.random() * 2 - 1) * 0.2; 
+            }
+
+            // Simple fade in/out for loop continuity
+            const fadeLength = Math.floor(ctx.sampleRate * 0.01);
+            for (let i = 0; i < fadeLength; i++) {
+                output[i] *= (i / fadeLength);
+                output[bufferSize - 1 - i] *= (i / fadeLength);
+            }
+
+            const noiseNode = ctx.createBufferSource();
+            noiseNode.buffer = buffer;
+            noiseNode.loop = true;
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(300, t);
+            filter.Q.setValueAtTime(1, t);
+
+            // LFOs for gusting effect
+            const lfoFilterSlow = ctx.createOscillator();
+            lfoFilterSlow.type = 'sine';
+            lfoFilterSlow.frequency.setValueAtTime(0.08, t);
+            const lfoFilterSlowGain = ctx.createGain();
+            lfoFilterSlowGain.gain.setValueAtTime(100, t);
+            lfoFilterSlow.connect(lfoFilterSlowGain).connect(filter.frequency);
+
+            const lfoFilterFast = ctx.createOscillator();
+            lfoFilterFast.type = 'sine';
+            lfoFilterFast.frequency.setValueAtTime(0.3, t);
+            const lfoFilterFastGain = ctx.createGain();
+            lfoFilterFastGain.gain.setValueAtTime(50, t);
+            lfoFilterFast.connect(lfoFilterFastGain).connect(filter.frequency);
+
+            const volumeLfo = ctx.createOscillator();
+            volumeLfo.type = 'sine';
+            volumeLfo.frequency.setValueAtTime(0.11, t);
+            const volumeLfoGain = ctx.createGain();
+            volumeLfoGain.gain.setValueAtTime(0.2, t);
+            
+            const soundGain = ctx.createGain();
+            soundGain.gain.setValueAtTime(0.0001, t); // Initialize near zero
+
+            volumeLfo.connect(volumeLfoGain).connect(soundGain.gain);
+
+            noiseNode.connect(filter).connect(soundGain).connect(masterGainNode);
+
+            lfoFilterSlow.start(t);
+            lfoFilterFast.start(t);
+            volumeLfo.start(t);
+            noiseNode.start(t);
+
+            return {
+                startNodes: [lfoFilterSlow, lfoFilterFast, volumeLfo, noiseNode],
+                gainNode: soundGain
+            };
+        };
+
+        /**
+         * 2. CONSTANT RAIN SOUND (Reverted to continuous noise for "shhh" texture)
+         */
+        const constant_rain = (ctx, masterGainNode) => {
+            const t = ctx.currentTime;
+            const bufferSize = 4 * ctx.sampleRate;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = buffer.getChannelData(0);
+            
+            // Generate basic noise
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = (Math.random() * 2 - 1) * 0.5;
+            }
+
+            const noiseNode = ctx.createBufferSource();
+            noiseNode.buffer = buffer;
+            noiseNode.loop = true;
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            // Center frequency lowered and Q adjusted to create a dense 'shhhh' rain texture
+            filter.frequency.setValueAtTime(1800, t); 
+            filter.Q.setValueAtTime(1.0, t); 
+
+            const soundGain = ctx.createGain();
+            soundGain.gain.setValueAtTime(0.0001, t); // Initialize near zero
+
+            noiseNode.connect(filter).connect(soundGain).connect(masterGainNode);
+
+            noiseNode.start(t);
+
+            return {
+                startNodes: [noiseNode],
+                gainNode: soundGain
+            };
+        };
+
+        /**
+         * 3. LOUD RUMBLING THUNDER (More aggressive, heavier sound)
+         */
+        const loud_thunder = (ctx, masterGainNode) => {
+            const soundGain = ctx.createGain();
+            soundGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            soundGain.connect(masterGainNode);
+
+            const scheduleThunder = () => {
+                const currentGain = soundGain.gain.value; 
+                
+                // Interval calculation: 
+                // Max delay (low volume/0.01 gain) = 50s. Min delay (high volume/1.0 gain) = 10s.
+                const minDelay = 10.0;
+                const maxDelay = 50.0;
+                const baseDelay = (maxDelay - currentGain * (maxDelay - minDelay));
+                
+                const startDelay = baseDelay + Math.random() * 5; 
+                
+                const startTime = ctx.currentTime + startDelay;
+                const duration = Math.random() * 2 + 3.0; // 3s to 5s rumble length
+                const endTime = startTime + duration;
+                
+                if (currentGain > 0.01) { 
+                    
+                    // 1. Noise Generator
+                    const bufferSize = Math.floor(duration * ctx.sampleRate);
+                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                    const output = buffer.getChannelData(0);
+                    let phase = Math.random() * 10 - 5; 
+                    for (let i = 0; i < bufferSize; i++) {
+                        let random = (Math.random() * 2 - 1) * 0.8;
+                        output[i] = (random * 0.4) + (phase * 0.6); 
+                        phase = output[i];
+                    }
+                    const noiseNode = ctx.createBufferSource();
+                    noiseNode.buffer = buffer;
+                    
+                    // 2. FM Synthesis (Deep BWOOM)
+                    const carrier = ctx.createOscillator();
+                    carrier.type = 'sine';
+                    carrier.frequency.setValueAtTime(40, startTime); // Higher starting frequency for more punch
+                    carrier.frequency.linearRampToValueAtTime(5 + Math.random() * 5, endTime); 
+
+                    const modulator = ctx.createOscillator();
+                    modulator.type = 'sine';
+                    modulator.frequency.setValueAtTime(4, startTime); // Faster modulation for more grit
+                    
+                    const modGain = ctx.createGain();
+                    modGain.gain.setValueAtTime(35 + Math.random() * 15, startTime); // Increased modulation depth
+
+                    modulator.connect(modGain).connect(carrier.frequency);
+
+                    // 3. Filter (Wider Lowpass band for heavier rumble)
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(150, startTime); // Cutoff raised to 150 Hz
+                    filter.Q.setValueAtTime(0.3, startTime); // Lower Q for a broader, less resonant sound
+
+                    // 4. Volume Envelope (ADSR)
+                    const volumeEnvelope = ctx.createGain();
+                    const peakVolume = 1.0 + Math.random() * 0.5; // PEAK VOLUME INCREASED
+                    const decayTime = duration * (0.8 + Math.random() * 0.15); // Longer decay
+
+                    volumeEnvelope.gain.setValueAtTime(0.0001, startTime); 
+                    volumeEnvelope.gain.linearRampToValueAtTime(peakVolume * currentGain, startTime + 0.1); // Faster attack
+                    volumeEnvelope.gain.exponentialRampToValueAtTime(0.0001, startTime + decayTime); 
+
+                    // Connect the signal chains
+                    const primaryGain = ctx.createGain();
+                    primaryGain.gain.setValueAtTime(0.7, startTime); // Increased primary gain mix
+                    
+                    noiseNode.connect(primaryGain);
+                    carrier.connect(primaryGain);
+                    
+                    primaryGain.connect(filter).connect(volumeEnvelope).connect(soundGain);
+
+                    // Start and Stop all nodes
+                    noiseNode.start(startTime);
+                    carrier.start(startTime);
+                    modulator.start(startTime);
+                    
+                    noiseNode.stop(endTime);
+                    carrier.stop(endTime);
+                    modulator.stop(endTime);
+                }
+
+                // Schedule the next thunder clap
+                const timeoutId = setTimeout(scheduleThunder, (startDelay + duration + 1) * 1000);
+                scheduledTimeouts.push(timeoutId);
+            };
+
+            // Initial call to start the scheduling loop
+            scheduleThunder();
+            
+            return {
+                startNodes: [], 
+                gainNode: soundGain
+            };
+        };
+
+
+// --- Control Logic ---
+
+    const soundGenerators = {
+        wind: wind_ambiance,
+        thunder: loud_thunder, 
+        rain: constant_rain 
+    };
+
+    function initAudio() {
+        if (!audioCtx) {
+            // FIX 1: Ensure AudioContext is only created if it doesn't exist.
+            // When resuming from a pause, we want to call audioCtx.resume().
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } else if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
+
+        const masterOutputGain = audioCtx.createGain();
+        masterOutputGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+        masterOutputGain.connect(audioCtx.destination);
+        
+        // Clear old scheduling timeouts (important for thunder's recurring event)
+        scheduledTimeouts.forEach(id => clearTimeout(id));
+        scheduledTimeouts.length = 0;
+
+        // If nodes already exist, stop them first to prevent duplicates when resuming
+        // We will call stopAudio() implicitly via the play/pause button handler.
+        
+        // This check prevents node duplication on resume/re-initialization
+        if (Object.keys(soundNodes).length === 0) {
+             for (const key in soundGenerators) {
+                const { startNodes, gainNode } = soundGenerators[key](audioCtx, masterOutputGain);
+                soundNodes[key] = { startNodes, gainNode };
+                volumeGains[key] = gainNode;
+            }
+        }
+        
+        isPlaying = true;
+        
+        // Apply current slider values
+        updateVolume('wind', document.getElementById('windVolume').value);
+        updateVolume('thunder', document.getElementById('thunderVolume').value);
+        updateVolume('rain', document.getElementById('rainVolume').value);
+    }
+
+    function suspendAudio() {
+        if (audioCtx && audioCtx.state === 'running') {
+            // Use suspend instead of close for better re-initialization
+            audioCtx.suspend().then(() => {
+                isPlaying = false;
+            });
+        }
+    }
+
+    function stopAndCloseAudio() {
+        if (audioCtx) {
+            // 1. Clear all pending JavaScript timeouts (for Thunder scheduling)
+            scheduledTimeouts.forEach(id => clearTimeout(id));
+            scheduledTimeouts.length = 0; 
+
+            // 2. Stop all continuous looping Web Audio API nodes (for Wind and Rain)
+            for (const key in soundGenerators) {
+                if (soundNodes[key] && soundNodes[key].startNodes) {
+                    const nodesToStop = soundNodes[key].startNodes;
+                    nodesToStop.forEach(node => {
+                        try {
+                            if (typeof node.stop === 'function') {
+                                node.stop(audioCtx.currentTime);
+                            }
+                        } catch (e) { } 
+                    });
+                }
+            }
+            
+            // 3. Close the AudioContext and clear global references
+            audioCtx.close().then(() => {
+                audioCtx = null;
+                isPlaying = false;
+                // Clear sound nodes map so initAudio creates new ones on next play
+                for (const key in soundNodes) { delete soundNodes[key]; }
+            });
+        }
+    }
+
+    function updateVolume(soundKey, volume) {
+        if (volumeGains[soundKey] && audioCtx) {
+            let targetValue = parseFloat(volume);
+            if (targetValue === 0.0) {
+                volumeGains[soundKey].gain.setValueAtTime(0.0, audioCtx.currentTime);
+            } else {
+                const floor = 0.0001;
+                if (targetValue < floor) targetValue = floor; 
+
+                volumeGains[soundKey].gain.exponentialRampToValueAtTime(
+                    targetValue, 
+                    audioCtx.currentTime + 0.1 
+                );
+            }
+        }
+    }
+
+    // --- Event Listeners ---
+
+    document.getElementById('playPauseBtn').addEventListener('click', () => {
+        const btn = document.getElementById('playPauseBtn');
+        if (!isPlaying) {
+            // If starting for the first time or resuming after suspension
+            initAudio();
+            btn.textContent = '⏸️ Pause Sounds';
+        } else {
+            // FIX 2: Added a proper pause state (suspension) instead of full closure
+            suspendAudio(); 
+            btn.textContent = '▶️ Resume Sounds';
+        }
+    });
+
+    // Add event listener to handle page visibility changes (mobile pause)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && isPlaying) {
+            suspendAudio();
+            document.getElementById('playPauseBtn').textContent = '▶️ Resume Sounds';
+        }
+    });
+
+
+    document.getElementById('windVolume').addEventListener('input', (e) => {
+        if (isPlaying) updateVolume('wind', e.target.value);
+    });
+
+    document.getElementById('thunderVolume').addEventListener('input', (e) => {
+        if (isPlaying) updateVolume('thunder', e.target.value);
+    });
+
+    document.getElementById('rainVolume').addEventListener('input', (e) => {
+        if (isPlaying) updateVolume('rain', e.target.value);
+    });
+    </script>
+</body>
+</html>
