@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Video Player</title>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
 :root {
 --subtitle-font-size: 2.5vh;
@@ -349,6 +348,7 @@ let saveInterval = null;
 let mediaRecorder;
 let recordedChunks = [];
 let subtitleOffset = 0.0;
+let isRecordingLoop = false;
 function updateStaticUIText() {
 document.title = lang.title;
 document.getElementById('choose-files-btn').textContent = lang.chooseFiles;
@@ -596,6 +596,7 @@ recordedChunks.push(event.data);
 }
 };
 mediaRecorder.onstop = () => {
+isRecordingLoop = false;
 showToast(lang.recordingFinished);
 const blob = new Blob(recordedChunks, { type: 'video/webm' });
 const url = URL.createObjectURL(blob);
@@ -613,20 +614,16 @@ videoPlayer.currentTime = loopStart;
 if (videoPlayer.paused) {
 videoPlayer.play();
 }
-const loopDuration = (loopEnd - loopStart) * 1000;
 setTimeout(() => {
 try {
 mediaRecorder.start();
-setTimeout(() => {
-if (mediaRecorder && mediaRecorder.state === 'recording') {
-mediaRecorder.stop();
-}
-}, loopDuration);
+isRecordingLoop = true;
 } catch (e) {
 console.error("Recording start failed during timeout:", e);
 showToast("🔴 Recording failed. Check console.");
+isRecordingLoop = false;
 }
-}, 200);
+}, 50);
 }
 function captureFrame() {
 const canvas = document.createElement('canvas');
@@ -743,6 +740,12 @@ controlsContainer.addEventListener('mouseenter', showControls);
 document.addEventListener('mousemove', showControls);
 videoPlayer.addEventListener('click', () => videoPlayer.paused ? videoPlayer.play() : videoPlayer.pause());
 videoPlayer.addEventListener('timeupdate', () => {
+if (isRecordingLoop && loopEnd !== null && videoPlayer.currentTime >= loopEnd) {
+if (mediaRecorder && mediaRecorder.state === 'recording') {
+mediaRecorder.stop();
+videoPlayer.pause();
+}
+}
 if (loopStart !== null && loopEnd !== null) {
 if (videoPlayer.currentTime >= loopEnd || videoPlayer.currentTime < loopStart) {
 videoPlayer.currentTime = loopStart;
@@ -834,17 +837,6 @@ case '0':
 e.preventDefault();
 resetSubtitleOffset();
 break;
-}
-});
-videoPlayer.addEventListener('loadedmetadata', () => {
-if (videoPlayer.duration === Infinity) {
-const fixDuration = () => {
-videoPlayer.currentTime = 0;
-showToast("✅ Timestamp Fixed");
-videoPlayer.removeEventListener('timeupdate', fixDuration);
-};
-videoPlayer.addEventListener('timeupdate', fixDuration);
-videoPlayer.currentTime = 1e101;
 }
 });
 updateStaticUIText();
