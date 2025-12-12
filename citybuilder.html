@@ -255,7 +255,6 @@ to {
 transform: translateX(3400px);
 }
 }
-
 #minimap-wrapper {
 position: relative;
 width: 100%;
@@ -270,7 +269,6 @@ will-change: transform;
 overflow: hidden;
 contain: paint layout;
 }
-
 #minimap-canvas {
 width: 100%;
 height: 100%;
@@ -278,7 +276,6 @@ background-color: #000;
 border: 1px solid #ffc107;
 image-rendering: pixelated;
 }
-
 #minimap-viewport {
 position: absolute;
 border: 1px solid #fff;
@@ -287,7 +284,6 @@ pointer-events: none;
 transform: translateZ(0);
 will-change: left, top;
 }
-
 #tooltip {
 position: fixed;
 display: none;
@@ -642,7 +638,6 @@ transform-origin: center;
 <div class="explosion"></div>
 </div>
 <script>
-
 const emojiCache = {};
 window.addEventListener('resize', () => {
 for (let key in emojiCache) delete emojiCache[key];
@@ -665,7 +660,6 @@ emojiCache[key] = c;
 }
 ctx.drawImage(emojiCache[key], x, y);
 }
-
 const config = {
 gridSize: 100,
 cellSize: 32,
@@ -931,7 +925,6 @@ renderGrid();
 ctx.restore();
 requestAnimationFrame(render);
 }
-
 function renderGrid() {
 if (viewport.width === 0 || viewport.height === 0) return;
 const startCol = Math.floor(camera.x / config.cellSize);
@@ -998,7 +991,6 @@ ctx.fillRect(drawX, drawY, config.cellSize, config.cellSize);
 }
 }
 }
-
 function updateFireLayer() {
 if (!fireLayer) return;
 fireLayer.innerHTML = '';
@@ -1078,7 +1070,6 @@ if (index < 0 || index >= world.length) return false;
 const neighbor = world[index];
 return neighbor && (neighbor.hasPowerLine || (neighbor.building && neighbor.building.type !== 'park'));
 }
-
 const colorCache = {};
 function hexToRgb(hex) {
 if (colorCache[hex]) return colorCache[hex];
@@ -1091,7 +1082,6 @@ return colorCache[hex] = [(c>>16)&255, (c>>8)&255, c&255];
 }
 return [0, 0, 0];
 }
-
 function updateMinimap() {
 if (!minimapCtx) return;
 const imgData = minimapCtx.createImageData(config.gridSize, config.gridSize);
@@ -1112,7 +1102,6 @@ data[idx] = r; data[idx+1] = g; data[idx+2] = b; data[idx+3] = 255;
 minimapCtx.putImageData(imgData, 0, 0);
 updateMinimapViewport();
 }
-
 function updateMinimapViewport() {
 if (!minimapViewport || !minimapCanvas || !gridContainer || viewport.width === 0) return;
 const mapW = minimapCanvas.offsetWidth;
@@ -1127,7 +1116,6 @@ minimapViewport.style.height = `${Math.max(0, (yRatio * mapH) - 2)}px`;
 minimapViewport.style.left = `${(mapContainer.scrollLeft / totalW) * mapW}px`;
 minimapViewport.style.top = `${(mapContainer.scrollTop / totalH) * mapH}px`;
 }
-
 function createClouds() {
 if (!cloudLayer || !cloudShadowLayer) return;
 cloudLayer.innerHTML = '';
@@ -1608,17 +1596,20 @@ function updateRoadWear() {
 world.forEach((cell, i) => {
 if (!cell) return;
 if (cell.base === 'road') {
-let nearbyPop = 0;
+let trafficValue = 0;
 getNeighbors(i, 2).forEach((nIndex) => {
 const nCell = world[nIndex];
 if (nCell?.building?.type === 'house' && nCell.building.population) {
-nearbyPop += nCell.building.population;
+trafficValue += nCell.building.population;
+}
+if (nCell?.building?.type === 'industry' && nCell.building.powered) {
+trafficValue += 500;
 }
 });
-cell.hasTraffic = nearbyPop > 50;
-if (nearbyPop > 800) cell.roadWear = 3;
-else if (nearbyPop > 300) cell.roadWear = 2;
-else if (nearbyPop > 100) cell.roadWear = 1;
+cell.hasTraffic = trafficValue > 50;
+if (trafficValue > 1000) cell.roadWear = 3;
+else if (trafficValue > 400) cell.roadWear = 2;
+else if (trafficValue > 150) cell.roadWear = 1;
 else {
 cell.roadWear = Math.max(0, cell.roadWear - 1);
 }
@@ -1769,7 +1760,7 @@ cell.hasTraffic = false;
 actionTaken = true;
 }
 } else if (currentTool === 'power-line') {
-if (!cell.hasPowerLine && !cell.building && (cell.base === 'grass' || cell.base === 'road')) {
+if (!cell.hasPowerLine && !cell.building && (cell.base === 'grass' || cell.base === 'road' || cell.base === 'lake')) {
 gameState.budget -= cost;
 cell.hasPowerLine = true;
 actionTaken = true;
