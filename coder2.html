@@ -344,7 +344,7 @@ handleEditorScroll() {
 
 highlight() {
   const code = this.elements.editor.value;
-  if (code.length > 50000) {
+  if (code.length > 200000) {
   this.elements.highlightLayer.textContent = code;
   return;
   }
