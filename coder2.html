@@ -106,8 +106,8 @@ textarea#editor {
 }
 
 textarea::selection {
-  background-color: var(--selection-bg);
-  color: var(--text-color);
+  background-color: rgba(255, 200, 0, 0.4);
+  color: transparent;
 }
 
 .token.comment { color: var(--c-comment); font-style: italic; }
@@ -255,7 +255,7 @@ hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
 
 const CodeEditor = {
   config: {
-  debounceDelay: 10,
+  debounceDelay: 20,
   indentUnit: '  ',
   toastDuration: 2500,
   },
@@ -451,8 +451,22 @@ handleEditorInput() {
 handleEditorKeyDown(e) {
   const isCtrl = e.ctrlKey || e.metaKey;
   const isAlt = e.altKey;
+  const key = e.key.toLowerCase();
   const pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
   const { selectionStart, selectionEnd, value } = this.elements.editor;
+  if (isCtrl && e.shiftKey && key === 'k') {
+  e.preventDefault();
+  const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+  let lineEnd = value.indexOf('\n', selectionStart);
+  if (lineEnd === -1) lineEnd = value.length;
+  const deletionEnd = (lineEnd < value.length) ? lineEnd + 1 : lineEnd;
+  this.elements.editor.setRangeText('', lineStart, deletionEnd, 'select');
+  this.handleEditorInput();
+  return;
+  }
+  if (e.key === 'Home') {
+  this.elements.editor.scrollLeft = 0;
+  }
   if (Object.values(pairs).includes(e.key) && selectionStart === selectionEnd && !isCtrl && !isAlt && value.charAt(selectionStart) === e.key) {
   e.preventDefault();
   this.elements.editor.setSelectionRange(selectionStart + 1, selectionStart + 1);
@@ -657,9 +671,8 @@ findNext() {
   if(!indices.length) return;
   this.state.searchResults.currentIndex = (this.state.searchResults.currentIndex + 1) % indices.length;
   const idx = indices[this.state.searchResults.currentIndex];
-  this.elements.editor.focus();
-  this.elements.editor.setSelectionRange(idx, idx + this.state.searchResults.term.length);
   this.jumpTo(idx);
+  this.elements.editor.setSelectionRange(idx, idx + this.state.searchResults.term.length);
 },
 
 replaceCurrent() {
