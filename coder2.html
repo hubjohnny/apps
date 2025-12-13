@@ -1,105 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coder 2 Beta</title>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
+
 :root {
---bg-color: #1e1e1e;
---text-color: #d4d4d4;
---accent-color: #61afef;
---border-color: #333333;
---caret-color: #aeafad;
---selection-bg: rgba(97, 175, 239, 0.25);
---font-mono: 'Fira Code', 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
---font-size: 15px;
---c-comment: #6a9955;
---c-string: #ce9178;
---c-number: #b5cea8;
---c-html-tag: #569cd6;
---c-html-attr: #9cdcfe;
---c-css-selector: #d7ba7d;
---c-css-property: #9cdcfe;
---c-js-keyword: #c586c0;
---c-js-function: #dcdcaa;
---c-trailing: rgba(255, 0, 0, 0.3);
+  --bg-color: #1e1e1e;
+  --text-color: #d4d4d4;
+  --accent-color: #61afef;
+  --border-color: #333333;
+  --caret-color: #aeafad;
+  --selection-bg: rgba(97, 175, 239, 0.25);
+  --font-mono: 'Fira Code', 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  --font-size: 15px;
+  --c-comment: #6a9955;
+  --c-string: #ce9178;
+  --c-number: #b5cea8;
+  --c-html-tag: #569cd6;
+  --c-html-attr: #9cdcfe;
+  --c-css-selector: #d7ba7d;
+  --c-css-property: #9cdcfe;
+  --c-js-keyword: #c586c0;
+  --c-js-function: #dcdcaa;
+  --c-trailing: rgba(255, 0, 0, 0.3);
 }
+
 html, body {
-margin: 0; padding: 0;
-width: 100%; height: 100%;
-background-color: var(--bg-color);
-color: var(--text-color);
-font-family: var(--font-mono);
-overflow: hidden;
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-mono);
+  overflow: hidden;
 }
+
 .editor-container {
-display: flex;
-height: 100vh;
-width: 100%;
-position: relative;
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  position: relative;
 }
+
 #line-numbers {
-border-right: 1px solid var(--border-color);
-min-width: 65px;
-padding: 15px 15px 100px 15px;
-box-sizing: border-box;
-text-align: right;
-color: #858585;
-user-select: none;
-pointer-events: none;
-overflow: hidden;
-font-size: var(--font-size);
-line-height: 1.5;
-background-color: var(--bg-color);
-white-space: pre;
+  border-right: 1px solid var(--border-color);
+  min-width: 65px;
+  padding: 15px 15px 100px 15px;
+  box-sizing: border-box;
+  text-align: right;
+  color: #858585;
+  user-select: none;
+  pointer-events: none;
+  overflow: hidden;
+  font-size: var(--font-size);
+  line-height: 1.5;
+  background-color: var(--bg-color);
+  white-space: pre;
 }
+
 .line-numbers-hidden #line-numbers {
-width: 0; min-width: 0; border: none; padding: 15px 0; overflow: hidden;
+  width: 0; min-width: 0; border: none; padding: 15px 0; overflow: hidden;
 }
+
 .editor-wrapper {
-position: relative;
-flex-grow: 1;
-height: 100%;
+  position: relative;
+  flex-grow: 1;
+  height: 100%;
 }
+
 .editor-textarea {
-position: absolute;
-top: 0; left: 0;
-width: 100%; height: 100%;
-box-sizing: border-box;
-border: none;
-outline: none;
-resize: none;
-white-space: pre;
-overflow-wrap: normal;
-font-family: var(--font-mono);
-font-size: var(--font-size);
-padding: 15px 15px 100px 15px;
-line-height: 1.5;
-margin: 0;
-background-color: transparent;
-will-change: transform, scroll-position;
-transform: translateZ(0);
-contain: content;
-overscroll-behavior-x: none;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+  resize: none;
+  white-space: pre;
+  overflow-wrap: normal;
+  font-family: var(--font-mono);
+  font-size: var(--font-size);
+  padding: 15px 15px 100px 15px;
+  line-height: 1.5;
+  margin: 0;
+  background-color: transparent;
+  will-change: transform, scroll-position;
+  transform: translateZ(0);
+  contain: content;
+  overscroll-behavior-x: none;
 }
+
 #highlight-layer {
-z-index: 1;
-pointer-events: none;
-overflow: hidden;
-color: var(--text-color);
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  color: var(--text-color);
 }
+
 textarea#editor {
-z-index: 2;
-color: transparent;
-caret-color: var(--caret-color);
-overflow: auto;
+  z-index: 2;
+  color: transparent;
+  caret-color: var(--caret-color);
+  overflow: auto;
 }
+
 textarea::selection {
-background-color: rgba(255, 200, 0, 0.4);
-color: transparent;
+  background-color: rgba(255, 200, 0, 0.4);
+  color: transparent;
 }
+
 .token.comment { color: var(--c-comment); font-style: italic; }
 .token.string { color: var(--c-string); }
 .token.number { color: var(--c-number); }
@@ -110,20 +122,22 @@ color: transparent;
 .token.keyword { color: var(--c-js-keyword); }
 .token.function { color: var(--c-js-function); }
 .token.trailing-space { background-color: var(--c-trailing); border-radius: 2px; }
+
 .modal {
-display: none;
-position: fixed;
-background-color: #252526;
-border: 1px solid #454545;
-color: #cccccc;
-z-index: 100;
-padding: 20px;
-box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-max-height: 90vh;
-overflow-y: auto;
-border-radius: 6px;
-font-family: sans-serif;
+  display: none;
+  position: fixed;
+  background-color: #252526;
+  border: 1px solid #454545;
+  color: #cccccc;
+  z-index: 100;
+  padding: 20px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 6px;
+  font-family: sans-serif;
 }
+
 #help-modal { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 450px; }
 #search-modal { top: 20px; right: 20px; width: 350px; padding: 15px; }
 .modal h1 { margin: 0 0 15px 0; color: var(--c-html-tag); font-weight: normal; font-size: 1.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
@@ -131,39 +145,48 @@ font-family: sans-serif;
 .modal ul { list-style-type: none; padding-left: 0; margin: 0; }
 .modal li { margin-bottom: 8px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; }
 .modal li span { color: #cccccc; }
+
 .modal li strong {
-background-color: #333; color: #d4d4d4;
-padding: 2px 6px; border-radius: 4px;
-font-family: monospace; border: 1px solid #3c3c3c; font-weight: normal;
+  background-color: #333; color: #d4d4d4;
+  padding: 2px 6px; border-radius: 4px;
+  font-family: monospace; border: 1px solid #3c3c3c; font-weight: normal;
 }
+
 .modal-close-btn { position: absolute; top: 10px; right: 10px; font-size: 20px; color: #858585; cursor: pointer; background: none; border: none; }
 .modal-close-btn:hover { color: #fff; }
 #search-modal .input-group { margin-bottom: 10px; }
 #search-modal label { display: block; margin-bottom: 5px; font-size: 0.85em; color: #999; }
+
 #search-modal input {
-width: 100%; background-color: #3c3c3c; border: 1px solid #3c3c3c;
-color: #fff; padding: 6px; box-sizing: border-box; font-family: inherit; font-size: 0.9em; border-radius: 3px;
+  width: 100%; background-color: #3c3c3c; border: 1px solid #3c3c3c;
+  color: #fff; padding: 6px; box-sizing: border-box; font-family: inherit; font-size: 0.9em; border-radius: 3px;
 }
+
 #search-modal input:focus { border-color: var(--c-html-tag); outline: none; }
 #search-modal .button-group { display: flex; justify-content: space-between; gap: 8px; margin-top: 15px; }
+
 #search-modal button {
-flex-grow: 1; background-color: #0e639c; border: none;
-color: white; padding: 6px 12px; cursor: pointer; border-radius: 3px; font-size: 0.9em;
+  flex-grow: 1; background-color: #0e639c; border: none;
+  color: white; padding: 6px 12px; cursor: pointer; border-radius: 3px; font-size: 0.9em;
 }
 #search-modal button:hover { background-color: #1177bb; }
 #search-modal #match-count { float: right; font-size: 0.9em; color: #999; margin-right: 50px; }
+
 #toast-notification {
-position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-background-color: #0e639c; color: white; padding: 8px 16px;
-border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-z-index: 200; opacity: 0; visibility: hidden;
-transition: opacity 0.3s, visibility 0.3s; font-size: 0.9em; font-family: sans-serif;
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background-color: #0e639c; color: white; padding: 8px 16px;
+  border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 200; opacity: 0; visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s; font-size: 0.9em; font-family: sans-serif;
 }
+
 #toast-notification.show { opacity: 1; visibility: visible; }
 hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
+
 </style>
 </head>
 <body>
+
 <div id="editor-container" class="editor-container">
 <div id="line-numbers">1</div>
 <div class="editor-wrapper">
@@ -215,6 +238,7 @@ hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
 </div>
 </div>
 <div id="toast-notification"></div>
+
 <script>
 const CodeEditor = {
 config: {
@@ -234,6 +258,7 @@ ticking: false,
 },
 elements: {},
 debouncedUpdate: null,
+
 init() {
 this.cacheDOMElements();
 this.bindEventListeners();
@@ -251,6 +276,7 @@ if (!urlParams.has('quiet') && !this.elements.editor.value) {
 this.toggleModal('help');
 }
 },
+
 cacheDOMElements() {
 this.elements = {
 editorContainer: document.getElementById('editor-container'),
@@ -270,6 +296,7 @@ matchCountSpan: document.getElementById('match-count'),
 toast: document.getElementById('toast-notification'),
 };
 },
+
 bindEventListeners() {
 const { editor, findInput, helpModalCloseBtn, searchModalCloseBtn, findNextBtn, replaceBtn, replaceAllBtn } = this.elements;
 editor.addEventListener('scroll', this.handleEditorScroll.bind(this));
@@ -289,6 +316,7 @@ editor.focus();
 }
 });
 },
+
 handleEditorScroll() {
 if (this.state.ticking) return;
 window.requestAnimationFrame(() => {
@@ -306,6 +334,7 @@ this.state.ticking = false;
 });
 this.state.ticking = true;
 },
+
 handleEditorInput() {
 if (this.state.ignoreNextInput) {
 this.state.ignoreNextInput = false;
@@ -314,6 +343,7 @@ return;
 if (!this.state.hasUnsavedChanges) this.setUnsavedChanges(true);
 this.debouncedUpdate();
 },
+
 highlight() {
 const code = this.elements.editor.value;
 if (code.length > 200000) {
@@ -325,9 +355,11 @@ window.requestAnimationFrame(() => {
 this.elements.highlightLayer.innerHTML = highlighted;
 });
 },
+
 escapeHTML(str) {
 return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 },
+
 highlightHTML(code) {
 let output = this.escapeHTML(code);
 output = output.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="token comment">$1</span>');
@@ -351,6 +383,7 @@ output = output.replace(/([ \t]+)(\n|$)/g, '<span class="token trailing-space">$
 if (code.endsWith('\n')) output += '\n';
 return output;
 },
+
 highlightJS(code) {
 const p = /(".*?"|'.*?'|`[\s\S]*?`|\/\/.*|\/\*[\s\S]*?\*\/)|(\b(?:const|let|var|function|return|if|else|for|while|class|new|this|async|await|import|export|from)\b)|(\b\d+\.?\d*\b)|(\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\())/g;
 return code.replace(p, (m, s, k, n, f) => {
@@ -361,6 +394,7 @@ if (f) return `<span class="token function">${f}</span>`;
 return m;
 });
 },
+
 highlightCSS(code) {
 const p = /(\/\*[\s\S]*?\*\/)|(".*?"|'.*?')|((-?\d+\.?\d*|\.\d+)[a-zA-Z%]*)|([\.#][\w-]+|(?<=[\}\s]|^)[a-zA-Z][\w-]*(?=\s*\{))|([a-zA-Z-]+)(?=:)|(@[\w-]+)/g;
 return code.replace(p, (m, c, s, n, d, sel, prop, at) => {
@@ -373,10 +407,12 @@ if (at) return `<span class="token keyword">${at}</span>`;
 return m;
 });
 },
+
 checkWhitespace() {
 const count = this.elements.editor.value.split('\n').filter(l => /[ \t]+$/.test(l)).length;
 this.showToast(count === 0 ? "No trailing whitespace found. ✨" : `${count} lines have trailing whitespace.`);
 },
+
 toggleModal(modalName) {
 const modal = this.elements[`${modalName}Modal`];
 const isVisible = modal.style.display === 'block';
@@ -389,6 +425,7 @@ this.updateSearchResults();
 this.elements.editor.focus();
 }
 },
+
 showToast(message) {
 clearTimeout(this.state.toastTimer);
 this.elements.toast.textContent = message;
@@ -397,6 +434,7 @@ this.state.toastTimer = setTimeout(() => {
 this.elements.toast.classList.remove('show');
 }, this.config.toastDuration);
 },
+
 updateLineNumbers() {
 const lineCount = (this.elements.editor.value.match(/\n/g) || []).length + 1;
 if (lineCount !== this.state.lastLineCount) {
@@ -404,6 +442,7 @@ this.state.lastLineCount = lineCount;
 this.elements.lineNumbers.textContent = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
 }
 },
+
 handleEditorKeyDown(e) {
 const isCtrl = e.ctrlKey || e.metaKey;
 const isAlt = e.altKey;
@@ -465,11 +504,11 @@ e.preventDefault();
 const indent = this.config.indentUnit;
 if (selectionStart !== selectionEnd) {
 const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-let effectiveEnd = selectionEnd;
-if (value.charAt(effectiveEnd - 1) === '\n') {
-effectiveEnd--;
+let searchFrom = selectionEnd;
+if (selectionEnd > 0 && value.charAt(selectionEnd - 1) === '\n') {
+searchFrom = selectionEnd - 1;
 }
-let lineEnd = value.indexOf('\n', selectionEnd);
+let lineEnd = value.indexOf('\n', searchFrom);
 if (lineEnd === -1) lineEnd = value.length;
 const lines = value.substring(lineStart, lineEnd).split('\n');
 const newLines = e.shiftKey
@@ -489,6 +528,7 @@ this.insertText(indent);
 this.handleEditorInput();
 }
 },
+
 insertText(text, select = false) {
 this.elements.editor.focus();
 const start = this.elements.editor.selectionStart;
@@ -497,6 +537,7 @@ if (select) {
 this.elements.editor.setSelectionRange(start, start + text.length);
 }
 },
+
 handleGlobalKeyDown(e) {
 const isModalOpen = this.elements.helpModal.style.display === 'block' || this.elements.searchModal.style.display === 'block';
 const isCtrl = e.ctrlKey || e.metaKey;
@@ -533,10 +574,12 @@ this.elements.helpModal.style.display = 'none';
 this.elements.editor.focus();
 }
 },
+
 setUnsavedChanges(isUnsaved) {
 this.state.hasUnsavedChanges = isUnsaved;
 document.title = isUnsaved ? `* ${this.state.fileName}` : this.state.fileName;
 },
+
 removeEmptyLines() {
 const editor = this.elements.editor;
 const originalValue = editor.value;
@@ -551,6 +594,7 @@ editor.setSelectionRange(0, 0);
 editor.scrollTop = 0;
 }
 },
+
 previewInNewTab() {
 const win = window.open();
 if(win) { win.document.write(this.elements.editor.value); win.document.close(); }
@@ -584,6 +628,7 @@ this.setUnsavedChanges(false);
 this.showToast('Saved!');
 } catch (e) {}
 },
+
 newFile() {
 if (this.state.hasUnsavedChanges && !confirm("Lose unsaved changes?")) return;
 this.elements.editor.value = '';
@@ -598,6 +643,7 @@ this.updateLineNumbers();
 this.setUnsavedChanges(false);
 this.elements.editor.focus();
 },
+
 jumpToSection(tag) {
 const val = this.elements.editor.value;
 const idx = val.indexOf(`<${tag}`, this.elements.editor.selectionStart + 1) > -1
@@ -605,12 +651,15 @@ const idx = val.indexOf(`<${tag}`, this.elements.editor.selectionStart + 1) > -1
 : val.indexOf(`<${tag}`);
 if(idx > -1) this.jumpTo(idx);
 },
+
 jumpToNextDefinition() {
 this.regexJump(/(^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{|^\s*function\s+\w+)/gm);
 },
+
 jumpToComment() {
 this.regexJump(/(\/\*[\s\S]*?\*\/|(?<!:)\/\/.*)/g);
 },
+
 regexJump(regex) {
 const val = this.elements.editor.value;
 const current = this.elements.editor.selectionStart;
@@ -621,6 +670,7 @@ if (match.index > current) { next = match.index; break; }
 }
 this.jumpTo(next > -1 ? next : first);
 },
+
 jumpTo(idx) {
 if(idx === -1) return;
 const editor = this.elements.editor;
@@ -630,6 +680,7 @@ const lines = editor.value.substr(0, idx).split('\n').length;
 const lineHeight = 22.5;
 editor.scrollTo({ top: (lines * lineHeight) - (editor.clientHeight / 3), behavior: 'smooth' });
 },
+
 updateSearchResults() {
 const term = this.elements.findInput.value;
 if (!term) { this.state.searchResults = { term: '', indices: [], currentIndex: -1 }; this.elements.matchCountSpan.textContent=''; return; }
@@ -640,6 +691,7 @@ while ((match = regex.exec(this.elements.editor.value)) !== null) indices.push(m
 this.state.searchResults = { term, indices, currentIndex: -1 };
 this.elements.matchCountSpan.textContent = `${indices.length} matches`;
 },
+
 findNext() {
 if(!this.state.searchResults.indices.length) this.updateSearchResults();
 const { indices } = this.state.searchResults;
@@ -649,12 +701,14 @@ const idx = indices[this.state.searchResults.currentIndex];
 this.jumpTo(idx);
 this.elements.editor.setSelectionRange(idx, idx + this.state.searchResults.term.length);
 },
+
 replaceCurrent() {
 const { selectionStart, selectionEnd } = this.elements.editor;
 if(selectionStart === selectionEnd) { this.findNext(); return; }
 this.insertText(this.elements.replaceInput.value);
 this.findNext();
 },
+
 replaceAll() {
 const term = this.elements.findInput.value;
 if(!term) return;
@@ -667,14 +721,17 @@ this.insertText(newVal, false);
 this.elements.editor.setSelectionRange(0, 0);
 this.elements.editor.scrollTop = 0;
 },
+
 toggleLineNumbers() {
 this.elements.editorContainer.classList.toggle('line-numbers-hidden');
 localStorage.setItem('lineNumbersHidden', this.elements.editorContainer.classList.contains('line-numbers-hidden'));
 },
+
 handleBeforeUnload(e) {
 if(this.state.hasUnsavedChanges) { e.preventDefault(); e.returnValue = ''; }
 },
 utils: {
+
 debounce(func, delay) {
 let timeout;
 return function(...args) {
@@ -682,6 +739,7 @@ clearTimeout(timeout);
 timeout = setTimeout(() => func.apply(this, args), delay);
 };
 },
+
 escapeRegExp(string) {
 return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
