@@ -1,591 +1,690 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adventure</title>
 <style>
+
 body,
 html {
-margin: 0;
-padding: 0;
-overflow: hidden;
-font-family: sans-serif;
-background-color: #1a1a1a;
-display: flex;
-flex-direction: column;
-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: sans-serif;
+  background-color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
+
 #game-container {
-flex-grow: 1;
-display: flex;
-justify-content: center;
-align-items: center;
-width: 100%;
-height: auto;
-background-color: #245E28;
-position: relative;
-overflow: hidden;
-transition: background-color 2s ease-in-out;
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: auto;
+  background-color: #245E28;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 2s ease-in-out;
 }
+
 #game-world {
-position: absolute;
-width: 100%;
-height: 100%;
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
+
 #night-overlay {
-position: absolute;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background-color: #000033;
-opacity: 0;
-z-index: 2;
-pointer-events: none;
-transition: opacity 5s ease-in-out;
-mask-image: radial-gradient(circle 12vmin at center, transparent 0%, black 100%);
--webkit-mask-image: radial-gradient(circle 12vmin at center, transparent 0%, black 100%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000033;
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 5s ease-in-out;
+  mask-image: radial-gradient(circle 12vmin at center, transparent 0%, black 100%);
+  -webkit-mask-image: radial-gradient(circle 12vmin at center, transparent 0%, black 100%);
 }
+
 #night-overlay.is-night {
-opacity: 0.85;
+  opacity: 0.85;
 }
+
 #rain-container {
-position: absolute;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-z-index: 3;
-pointer-events: none;
-overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
 }
+
 .raindrop {
-position: absolute;
-width: 2px;
-height: 12px;
-background-color: rgba(173, 216, 230, 0.6);
-border-radius: 1px;
-animation: fall linear infinite;
-transform-origin: bottom;
-will-change: transform;
+  position: absolute;
+  width: 2px;
+  height: 12px;
+  background-color: rgba(173, 216, 230, 0.6);
+  border-radius: 1px;
+  animation: fall linear infinite;
+  transform-origin: bottom;
+  will-change: transform;
 }
+
 @keyframes fall {
-from {
-transform: translateY(-20vh) translateX(-5vw) rotate(20deg);
+  from {
+    transform: translateY(-20vh) translateX(-5vw) rotate(20deg);
+  }
+  to {
+    transform: translateY(120vh) translateX(-15vw) rotate(20deg);
+  }
 }
-to {
-transform: translateY(120vh) translateX(-15vw) rotate(20deg);
-}
-}
+
 #lightning-flash {
-position: absolute;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background-color: #ffffff;
-opacity: 0;
-z-index: 4;
-pointer-events: none;
-transition: opacity 0.5s ease-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  opacity: 0;
+  z-index: 4;
+  pointer-events: none;
+  transition: opacity 0.5s ease-out;
 }
+
 #map-grid {
-position: absolute;
-transform-origin: top left;
+  position: absolute;
+  transform-origin: top left;
 }
+
 .cell {
-position: absolute;
-width: 8vmin;
-height: 8vmin;
-font-size: 6.5vmin;
-display: flex;
-justify-content: center;
-align-items: center;
-user-select: none;
-line-height: 1;
+  position: absolute;
+  width: 8vmin;
+  height: 8vmin;
+  font-size: 6.5vmin;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  line-height: 1;
 }
+
 @keyframes shake {
-0%,
-100% {
-transform: translate(0, 0) rotate(0);
+  0%,
+  100% {
+  transform: translate(0, 0) rotate(0);
+  }
+  25% {
+  transform: translate(-3px, 0) rotate(-1deg);
+  }
+  50% {
+  transform: translate(3px, 0) rotate(1deg);
+  }
+  75% {
+  transform: translate(-3px, 0) rotate(-1deg);
 }
-25% {
-transform: translate(-3px, 0) rotate(-1deg);
 }
-50% {
-transform: translate(3px, 0) rotate(1deg);
-}
-75% {
-transform: translate(-3px, 0) rotate(-1deg);
-}
-}
+
 .shaking {
-animation: shake 0.15s linear;
+  animation: shake 0.15s linear;
+  }
+  @keyframes pulse {
+  0%,
+  100% {
+  transform: scale(1);
+  }
+  50% {
+  transform: scale(1.1);
 }
-@keyframes pulse {
-0%,
-100% {
-transform: scale(1);
 }
-50% {
-transform: scale(1.1);
-}
-}
+
 @keyframes pulse-red {
-0%,
-100% {
-transform: scale(1);
-color: #ffcdd2;
-background-color: rgba(239, 83, 80, 0.7);
+  0%,
+  100% {
+  transform: scale(1);
+  color: #ffcdd2;
+  background-color: rgba(239, 83, 80, 0.7);
+  }
+  50% {
+  transform: scale(1.05);
+  color: #ffffff;
+  background-color: rgba(244, 67, 54, 0.9);
 }
-50% {
-transform: scale(1.05);
-color: #ffffff;
-background-color: rgba(244, 67, 54, 0.9);
 }
-}
+
 .hud-item.low-health-warning {
-animation: pulse-red 1s infinite ease-in-out;
-border-radius: 8px;
+  animation: pulse-red 1s infinite ease-in-out;
+  border-radius: 8px;
 }
+
 .cell.path {
-background-color: rgba(224, 224, 224, 0.3);
+  background-color: rgba(224, 224, 224, 0.3);
 }
+
 .cell.underworld-path {
-background-color: #4a4a4a;
+  background-color: #4a4a4a;
 }
+
 .cell.shelter {
-font-size: 7vmin;
+  font-size: 7vmin;
 }
+
 .cell.large {
-font-size: 8vmin;
+  font-size: 8vmin;
 }
+
 .cell.medium {
-font-size: 7vmin;
+  font-size: 7vmin;
 }
+
 .cell.small {
-font-size: 2.5vmin;
-display: flex;
-align-items: flex-end;
-padding-bottom: 5px;
+  font-size: 2.5vmin;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 5px;
 }
+
 #player,
 .monster-container,
 .npc-container {
-position: absolute;
-width: 8vmin;
-height: 8vmin;
-z-index: 5;
-will-change: transform;
-transform-origin: center center;
-text-shadow:
--1px 0 0 #000,
-1px 0 0 #000,
-0 -1px 0 #000,
-0 1px 0 #000;
+  position: absolute;
+  width: 8vmin;
+  height: 8vmin;
+  z-index: 5;
+  will-change: transform;
+  transform-origin: center center;
+  text-shadow:
+  -1px 0 0 #000,
+  1px 0 0 #000,
+  0 -1px 0 #000,
+  0 1px 0 #000;
 }
+
 .player-sprite,
 .monster-sprite,
 .npc-sprite {
-width: 100%;
-height: 100%;
-font-size: 6.5vmin;
-display: flex;
-justify-content: center;
-align-items: center;
-transform-origin: center center;
-user-select: none;
--webkit-tap-highlight-color: transparent;
-background-color: transparent;
+  width: 100%;
+  height: 100%;
+  font-size: 6.5vmin;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background-color: transparent;
 }
+
 .fighting-monster .monster-sprite {
-cursor: crosshair;
-animation: pulse 1s infinite;
+  cursor: crosshair;
+  animation: pulse 1s infinite;
 }
+
 @keyframes walk-bob {
-0%,
-100% {
-transform: translateY(0);
+  0%,
+  100% {
+  transform: translateY(0);
+  }
+  50% {
+  transform: translateY(-8%);
 }
-50% {
-transform: translateY(-8%);
 }
-}
+
 #player.is-walking .player-sprite {
-animation: walk-bob 0.4s infinite ease-in-out;
+  animation: walk-bob 0.4s infinite ease-in-out;
 }
+
 #player-floating-text-container {
-position: absolute;
-top: -85px;
-left: 50%;
-transform: translateX(-50%);
-width: 250px;
-display: flex;
-flex-direction: column-reverse;
-align-items: center;
-z-index: 10;
-pointer-events: none;
+  position: absolute;
+  top: -85px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
 }
+
 .floating-text {
-background: rgba(26, 26, 26, 0.85);
-color: #f0f0f0;
-padding: 5px 12px;
-border-radius: 12px;
-font-size: 1.8vmin;
-font-weight: bold;
-text-align: center;
-margin-bottom: 5px;
-white-space: nowrap;
-animation: fade-out-up 3s ease-out forwards;
+  background: rgba(26, 26, 26, 0.85);
+  color: #f0f0f0;
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 1.8vmin;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  animation: fade-out-up 3s ease-out forwards;
 }
+
 @keyframes fade-out-up {
-0% {
-opacity: 1;
-transform: translateY(0);
+  0% {
+  opacity: 1;
+  transform: translateY(0);
+  }
+  80% {
+  opacity: 1;
+  transform: translateY(0);
+  }
+  100% {
+  opacity: 0;
+  transform: translateY(-20px);
 }
-80% {
-opacity: 1;
-transform: translateY(0);
 }
-100% {
-opacity: 0;
-transform: translateY(-20px);
-}
-}
+
 .arrow {
-position: absolute;
-font-size: 4vmin;
-z-index: 6;
-pointer-events: none;
-color: #5d4037;
-will-change: transform, left, top;
+  position: absolute;
+  font-size: 4vmin;
+  z-index: 6;
+  pointer-events: none;
+  color: #5d4037;
+  will-change: transform, left, top;
 }
+
 #hud {
-position: absolute;
-top: 10px;
-left: 50%;
-transform: translateX(-50%);
-width: auto;
-min-width: 80vw;
-background: #512DA8;
-background-image: linear-gradient(to bottom, #7E57C2, #512DA8);
-border: 4px solid #311B92;
-color: #EDE7F6;
-display: flex;
-justify-content: flex-start;
-align-items: center;
-padding: 5px;
-font-size: 2.2vmin;
-font-weight: bold;
-z-index: 10;
-border-radius: 12px;
-overflow-x: auto;
-gap: 0.5rem;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  min-width: 80vw;
+  background: #512DA8;
+  background-image: linear-gradient(to bottom, #7E57C2, #512DA8);
+  border: 4px solid #311B92;
+  color: #EDE7F6;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 5px;
+  font-size: 2.2vmin;
+  font-weight: bold;
+  z-index: 10;
+  border-radius: 12px;
+  overflow-x: auto;
+  gap: 0.5rem;
 }
+
 .hud-item {
-display: flex;
-flex-direction: column;
-align-items: center;
-padding: 0 8px;
-white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 8px;
+  white-space: nowrap;
 }
+
 .hud-label {
-font-size: 1.8vmin;
-opacity: 0.8;
+  font-size: 1.8vmin;
+  opacity: 0.8;
 }
+
 .hud-value {
-font-size: 3vmin;
+  font-size: 3vmin;
 }
+
 #key-display,
 #time-display {
-font-size: 3.5vmin;
+  font-size: 3.5vmin;
 }
+
 #weapon-bar {
-display: flex;
-flex-direction: row;
-align-items: center;
-gap: 5px;
-border: 2px solid #311B92;
-border-radius: 8px;
-padding: 2px 5px;
-background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  border: 2px solid #311B92;
+  border-radius: 8px;
+  padding: 2px 5px;
+  background: rgba(0, 0, 0, 0.2);
 }
+
 .weapon-slot {
-display: flex;
-flex-direction: column;
-align-items: center;
-padding: 2px 4px;
-border-radius: 4px;
-transition: background-color 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s, transform 0.2s;
 }
+
 .weapon-slot.active {
-background-color: rgba(255, 255, 255, 0.3);
-transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
+
 .weapon-key {
-font-size: 1.5vmin;
-font-weight: bold;
-color: #fff;
+  font-size: 1.5vmin;
+  font-weight: bold;
+  color: #fff;
 }
+
 .weapon-emoji {
-font-size: 3.5vmin;
+  font-size: 3.5vmin;
 }
+
 .game-button {
-position: absolute;
-z-index: 15;
-padding: 10px 15px;
-font-size: 2vmin;
-font-weight: bold;
-background: #512DA8;
-border: 3px solid #311B92;
-color: #EDE7F6;
-border-radius: 8px;
-cursor: pointer;
-transition: transform 0.1s ease, background-color 0.2s;
+  position: absolute;
+  z-index: 15;
+  padding: 10px 15px;
+  font-size: 2vmin;
+  font-weight: bold;
+  background: #512DA8;
+  border: 3px solid #311B92;
+  color: #EDE7F6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.2s;
 }
+
 .game-button:hover {
-transform: scale(1.05);
-background-color: #7E57C2;
+  transform: scale(1.05);
+  background-color: #7E57C2;
 }
+
 .game-button.top-left {
-top: 15px;
-left: 15px;
+  top: 15px;
+  left: 15px;
 }
+
 .game-button.top-right {
-top: 15px;
-right: 15px;
+  top: 15px;
+  right: 15px;
 }
+
 .health-bar-container {
-position: absolute;
-bottom: -15px;
-left: 5%;
-width: 90%;
-height: 10px;
-background-color: #333;
-border: 1px solid #111;
-border-radius: 5px;
-overflow: hidden;
-z-index: 6;
+  position: absolute;
+  bottom: -15px;
+  left: 5%;
+  width: 90%;
+  height: 10px;
+  background-color: #333;
+  border: 1px solid #111;
+  border-radius: 5px;
+  overflow: hidden;
+  z-index: 6;
 }
+
 #player .health-bar-container {
-top: -50px;
-bottom: auto;
+  top: -50px;
+  bottom: auto;
 }
+
 .health-bar-inner {
-height: 100%;
-width: 100%;
-border-radius: 4px;
-transition: width 0.3s ease-out;
+  height: 100%;
+  width: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease-out;
 }
+
 .health-bar-inner.player {
-background-color: #4caf50;
+  background-color: #4caf50;
 }
+
 .health-bar-inner.monster {
-background-color: #f44336;
+  background-color: #f44336;
 }
+
 #player .status-bar-container {
-position: absolute;
-top: -50px;
-left: 10%;
-width: 80%;
-height: 8px;
-background-color: rgba(20, 20, 20, 0.7);
-border: 1px solid #111;
-border-radius: 4px;
-z-index: 6;
-opacity: 1;
-transition: opacity 0.5s ease-in-out;
+  position: absolute;
+  top: -50px;
+  left: 10%;
+  width: 80%;
+  height: 8px;
+  background-color: rgba(20, 20, 20, 0.7);
+  border: 1px solid #111;
+  border-radius: 4px;
+  z-index: 6;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
 }
+
 #player .status-bar-container.fading-out {
-opacity: 0;
+  opacity: 0;
 }
+
 #player .status-bar-inner {
-height: 100%;
-width: 100%;
-background-color: #4caf50;
-transition: width 0.3s ease-out;
+  height: 100%;
+  width: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease-out;
 }
+
 #message-overlay {
-position: absolute;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background-color: rgba(0, 0, 0, 0.7);
-display: flex;
-justify-content: center;
-align-items: center;
-z-index: 20;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
 }
+
 #message-box {
-background: #2a2135;
-color: #f0f0f0;
-border: 4px solid #311B92;
-padding: 15px 20px;
-border-radius: 10px;
-width: 80vw;
-max-width: 1200px;
-max-height: 85vh;
-overflow-y: auto;
-display: flex;
-flex-direction: column;
+  background: #2a2135;
+  color: #f0f0f0;
+  border: 4px solid #311B92;
+  padding: 15px 20px;
+  border-radius: 10px;
+  width: 80vw;
+  max-width: 1200px;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
+
 #message-text {
-font-size: 2.2vmin;
-margin-bottom: 25px;
-text-align: left;
-flex-grow: 1;
+  font-size: 2.2vmin;
+  margin-bottom: 25px;
+  text-align: left;
+  flex-grow: 1;
 }
+
 #message-text h2.how-to-play-title,
 #message-text h3 {
-text-align: center;
-color: #7E57C2;
-margin: 0;
+  text-align: center;
+  color: #7E57C2;
+  margin: 0;
 }
+
 .how-to-play-columns {
-display: flex;
-flex-direction: row;
-flex-wrap: wrap;
-gap: 2.5rem;
-align-items: flex-start;
-width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+  align-items: flex-start;
+  width: 100%;
 }
+
 .how-to-play-column {
-flex: 1;
-min-width: 280px;
+  flex: 1;
+  min-width: 280px;
 }
+
 .how-to-play-column h3 {
-margin-top: 0;
-margin-bottom: 10px;
+  margin-top: 0;
+  margin-bottom: 10px;
 }
+
 .how-to-play-column ul {
-padding-left: 20px;
-margin: 0;
-list-style-position: outside;
+  padding-left: 20px;
+  margin: 0;
+  list-style-position: outside;
 }
+
 .how-to-play-column li {
-margin-bottom: 6px;
+  margin-bottom: 6px;
 }
+
 .how-to-play-column li::marker {
-color: #7E57C2;
+  color: #7E57C2;
 }
+
 .how-to-play-final-message {
-text-align: center;
-margin-top: 25px;
-width: 100%;
+  text-align: center;
+  margin-top: 25px;
+  width: 100%;
 }
+
 #message-options {
-display: flex;
-justify-content: center;
-gap: 5px;
-margin-top: 0;
-flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 0;
+  flex-shrink: 0;
 }
+
 .message-option-button {
-padding: 10px 20px;
-border: 2px solid #311B92;
-background-color: #512DA8;
-color: #EDE7F6;
-font-size: 2vmin;
-font-weight: bold;
-border-radius: 5px;
-cursor: pointer;
-transition: background-color 0.2s;
+  padding: 10px 20px;
+  border: 2px solid #311B92;
+  background-color: #512DA8;
+  color: #EDE7F6;
+  font-size: 2vmin;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
+
 .message-option-button:hover {
-background-color: #7E57C2;
+  background-color: #7E57C2;
 }
+
 #message-box.has-options #message-button {
-display: none;
+  display: none;
 }
+
 #message-button {
-padding: 12px 24px;
-border: 2px solid #311B92;
-background-color: #512DA8;
-color: #EDE7F6;
-font-size: 2.5vmin;
-font-weight: bold;
-border-radius: 5px;
-cursor: pointer;
-transition: background-color 0.2s;
-margin: 0 auto;
-flex-shrink: 0;
+  padding: 12px 24px;
+  border: 2px solid #311B92;
+  background-color: #512DA8;
+  color: #EDE7F6;
+  font-size: 2.5vmin;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin: 0 auto;
+  flex-shrink: 0;
 }
+
 #message-button:hover {
-background-color: #7E57C2;
+  background-color: #7E57C2;
 }
+
 .hidden {
-display: none !important;
+  display: none !important;
 }
+
 ::-webkit-scrollbar {
-width: 8px;
-height: 8px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-background: #2a2135;
+  background: #2a2135;
 }
 ::-webkit-scrollbar-thumb {
-background: #512DA8;
-border-radius: 4px;
+  background: #512DA8;
+  border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-background: #7E57C2;
+  ::-webkit-scrollbar-thumb:hover {
+  background: #7E57C2;
 }
 * {
-scrollbar-width: thin;
-scrollbar-color: #512DA8 #2a2135;
+  scrollbar-width: thin;
+  scrollbar-color: #512DA8 #2a2135;
 }
+
 </style>
 </head>
 <body>
+
 <div id="game-container">
-<div id="rain-container"></div>
-<div id="lightning-flash"></div>
-<button id="how-to-play-button" class="game-button top-left">❓</button>
-<button id="save-game-button" class="game-button top-right">💾</button>
-<div id="hud">
-<div class="hud-item"> <span class="hud-label">Level</span> <span id="level-display" class="hud-value">1</span>
-</div>
-<div class="hud-item" id="hud-hp"> <span class="hud-label">❤️ Health</span> <span id="hp-display"
-class="hud-value">100/100</span> </div>
-<div class="hud-item" id="hud-strength"> <span class="hud-label">⚔️ Strength</span> <span id="strength-display"
-class="hud-value">5</span> </div>
-<div class="hud-item" id="hud-weapon"> <span class="hud-label">Weapon</span>
-<div id="weapon-bar"></div>
-</div>
-<div class="hud-item" id="hud-xp"> <span class="hud-label">⭐ XP</span> <span id="xp-display"
-class="hud-value">0/20</span> </div>
-<div class="hud-item"> <span class="hud-label">🪵 Wood</span> <span id="wood-display" class="hud-value">0</span>
-</div>
-<div class="hud-item"> <span class="hud-label">🪨 Stone</span> <span id="stone-display" class="hud-value">0</span>
-</div>
-<div class="hud-item"> <span class="hud-label">💎 Gem</span> <span id="gem-display" class="hud-value">0</span>
-</div>
-<div class="hud-item"> <span class="hud-label">🌿 Herb</span> <span id="herb-display" class="hud-value">0</span>
-</div>
-<div class="hud-item"> <span class="hud-label">➡️ Arrows</span> <span id="arrows-display"
-class="hud-value">0</span> </div>
-<div class="hud-item"> <span class="hud-label">🔑 Key</span> <span id="key-display" class="hud-value">❌</span>
-</div>
-<div class="hud-item"> <span id="time-display" class="hud-value">☀️ Day</span> </div>
-</div>
-<div id="game-world" oncontextmenu="return false;">
-<div id="player">
-<div id="player-floating-text-container"></div>
-<div class="player-sprite"></div>
-</div>
-</div>
-<div id="night-overlay"></div>
+  <div id="rain-container"></div>
+  <div id="lightning-flash"></div>
+  <button id="how-to-play-button" class="game-button top-left">❓</button>
+  <button id="save-game-button" class="game-button top-right">💾</button>
+  <div id="hud">
+    <div class="hud-item">
+      <span class="hud-label">Level</span>
+      <span id="level-display" class="hud-value">1</span>
+    </div>
+    <div class="hud-item" id="hud-hp">
+      <span class="hud-label">❤️ Health</span>
+      <span id="hp-display" class="hud-value">100/100</span>
+    </div>
+    <div class="hud-item" id="hud-strength">
+      <span class="hud-label">⚔️ Strength</span>
+      <span id="strength-display" class="hud-value">5</span>
+    </div>
+    <div class="hud-item" id="hud-weapon">
+      <span class="hud-label">Weapon</span>
+      <div id="weapon-bar"></div>
+    </div>
+    <div class="hud-item" id="hud-xp">
+      <span class="hud-label">⭐ XP</span>
+      <span id="xp-display" class="hud-value">0/20</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">🪵 Wood</span>
+      <span id="wood-display" class="hud-value">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">🪨 Stone</span>
+      <span id="stone-display" class="hud-value">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">💎 Gem</span>
+      <span id="gem-display" class="hud-value">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">🌿 Herb</span>
+      <span id="herb-display" class="hud-value">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">➡️ Arrows</span>
+      <span id="arrows-display" class="hud-value">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">🔑 Key</span>
+      <span id="key-display" class="hud-value">❌</span>
+    </div>
+    <div class="hud-item">
+      <span id="time-display" class="hud-value">☀️ Day</span>
+    </div>
+  </div>
+  <div id="game-world" oncontextmenu="return false;">
+    <div id="player">
+      <div id="player-floating-text-container"></div>
+      <div class="player-sprite"></div>
+    </div>
+  </div>
+  <div id="night-overlay"></div>
 </div>
 <div id="message-overlay" class="hidden">
-<div id="message-box">
-<div id="message-text"></div>
-<div id="message-options"></div>
-<button id="message-button">OK</button>
+  <div id="message-box">
+    <div id="message-text"></div>
+    <div id="message-options"></div>
+    <button id="message-button">OK</button>
+  </div>
 </div>
-</div>
+
 <script>
+
 const audioManager = {
 context: null,
 isInitialized: false,
@@ -608,6 +707,7 @@ console.error("Web Audio API støttes ikke i denne nettleseren.", e);
 }
 },
 sounds: {
+
 'tree_chop': (ctx, dest) => {
 const bufferSize = ctx.sampleRate * 0.1;
 const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -625,6 +725,7 @@ noise.connect(filter).connect(gain).connect(dest);
 noise.start(ctx.currentTime);
 noise.stop(ctx.currentTime + 0.1);
 },
+
 'item_pickup': (ctx, dest) => {
 const osc = ctx.createOscillator();
 osc.type = 'sine';
@@ -637,6 +738,7 @@ osc.connect(gain).connect(dest);
 osc.start(ctx.currentTime);
 osc.stop(ctx.currentTime + 0.1);
 },
+
 'wind_ambiance': (ctx, dest) => {
 const t = ctx.currentTime;
 const bufferSize = 5 * ctx.sampleRate;
@@ -690,6 +792,7 @@ lfoVolume,
 noiseNode
 };
 },
+
 'bird_chirp_1': (ctx, dest) => {
 const t = ctx.currentTime;
 const gain = ctx.createGain();
@@ -712,6 +815,7 @@ osc2.start(t);
 osc1.stop(t + 0.08);
 osc2.stop(t + 0.08);
 },
+
 'bird_chirp_2': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -728,6 +832,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.12);
 },
+
 'bird_chirp_3': (ctx, dest) => {
 const t = ctx.currentTime;
 const totalDuration = 0.5;
@@ -752,6 +857,7 @@ osc.start(t);
 lfo.stop(t + totalDuration);
 osc.stop(t + totalDuration);
 },
+
 'player_attack_unarmed': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -766,6 +872,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.1);
 },
+
 'player_attack_sword': (ctx, dest) => {
 const t = ctx.currentTime;
 const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
@@ -785,6 +892,7 @@ noise.connect(filter).connect(gain).connect(dest);
 noise.start(t);
 noise.stop(t + 0.15);
 },
+
 'player_attack_sledge': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -799,6 +907,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.15);
 },
+
 'arrow_shoot_swoosh': (ctx, dest) => {
 const t = ctx.currentTime;
 const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
@@ -818,6 +927,7 @@ noise.connect(filter).connect(gain).connect(dest);
 noise.start(t);
 noise.stop(t + 0.2);
 },
+
 'arrow_hit_thud': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -832,6 +942,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.08);
 },
+
 'monster_die_xp': (ctx, dest) => {
 const t = ctx.currentTime;
 const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
@@ -861,6 +972,7 @@ osc.connect(xpGain).connect(dest);
 osc.start(t + 0.1);
 osc.stop(t + 0.2);
 },
+
 'player_walk': (ctx, dest) => {
 const t = ctx.currentTime;
 const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
@@ -879,6 +991,7 @@ noise.connect(filter).connect(gain).connect(dest);
 noise.start(t);
 noise.stop(t + 0.08);
 },
+
 'gather_stone': (ctx, dest) => {
 const t = ctx.currentTime;
 const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
@@ -896,6 +1009,7 @@ noise.connect(filter).connect(gain).connect(dest);
 noise.start(t);
 noise.stop(t + 0.05);
 },
+
 'gather_gem': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -909,6 +1023,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.1);
 },
+
 'gather_herb': (ctx, dest) => {
 const t = ctx.currentTime;
 const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
@@ -927,6 +1042,7 @@ noise.connect(filter).connect(gain).connect(dest);
 noise.start(t);
 noise.stop(t + 0.1);
 },
+
 'night_ambiance': (ctx, dest) => {
 const bufferSize = 2 * ctx.sampleRate;
 const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -953,6 +1069,7 @@ lfo.start(ctx.currentTime);
 noiseNode.start(ctx.currentTime);
 return { lfo, noiseNode };
 },
+
 'owl_hoot': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -970,6 +1087,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.5);
 },
+
 'ghost_spawn': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -1005,6 +1123,7 @@ lfo.stop(t + 1.0);
 osc.stop(t + 1.0);
 noise.stop(t + 1.0);
 },
+
 'ambiance_rain': (ctx, dest) => {
 const bufferSize = 2 * ctx.sampleRate;
 const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -1022,6 +1141,7 @@ noiseNode.connect(filter).connect(dest);
 noiseNode.start(ctx.currentTime);
 return { noiseNode };
 },
+
 'effect_thunder': (ctx, dest) => {
 const t = ctx.currentTime;
 const duration = 2.5;
@@ -1049,6 +1169,7 @@ noise.connect(filter).connect(gain).connect(dest);
 noise.start(t);
 noise.stop(t + duration);
 },
+
 'player_take_damage': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -1063,6 +1184,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.15);
 },
+
 'door_open_creak': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -1078,6 +1200,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.5);
 },
+
 'key_pickup': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -1092,6 +1215,7 @@ osc.connect(gain).connect(dest);
 osc.start(t);
 osc.stop(t + 0.15);
 },
+
 'swan_heal': (ctx, dest) => {
 const t = ctx.currentTime;
 const osc = ctx.createOscillator();
@@ -1107,6 +1231,7 @@ osc.start(t);
 osc.stop(t + 0.3);
 }
 },
+
 playSound: function (name) {
 if (!this.isInitialized) this.init();
 if (!this.isInitialized || !this.sounds[name]) return;
@@ -1122,6 +1247,7 @@ setTimeout(() => {
 this.soundCooldowns[name] = false;
 }, delay);
 },
+
 startAmbiance: function (name) {
 if (!this.isInitialized) this.init();
 if (!this.isInitialized || !this.sounds[name] || this.activeAmbiance[name]) return;
@@ -1136,6 +1262,7 @@ gain.gain.linearRampToValueAtTime(targetVolume, this.context.currentTime + 3);
 const nodes = this.sounds[name](this.context, gain);
 this.activeAmbiance[name] = { ...nodes, gainNode: gain };
 },
+
 stopAmbiance: function (name) {
 if (!this.isInitialized || !this.activeAmbiance[name]) return;
 console.log('Stopper atmosfære:', name);
@@ -1150,6 +1277,7 @@ nodes.gainNode.disconnect();
 }, 2100);
 delete this.activeAmbiance[name];
 },
+
 startBirdSounds: function () {
 if (!this.isInitialized || this.birdChirpTimer) return;
 console.log("Starter fuglelyder...");
@@ -1165,6 +1293,7 @@ loop();
 };
 loop();
 },
+
 stopBirdSounds: function () {
 if (this.birdChirpTimer) {
 console.log("Stopper fuglelyder...");
@@ -1172,6 +1301,7 @@ clearTimeout(this.birdChirpTimer);
 this.birdChirpTimer = null;
 }
 },
+
 startNightSounds: function () {
 if (!this.isInitialized) return;
 this.startAmbiance('night_ambiance');
@@ -1187,6 +1317,7 @@ loop();
 };
 loop();
 },
+
 stopNightSounds: function () {
 this.stopAmbiance('night_ambiance');
 if (this.owlHootTimer) {
@@ -1196,6 +1327,7 @@ this.owlHootTimer = null;
 }
 }
 };
+
 document.addEventListener('DOMContentLoaded', () => {
 const WORLD_SIZE = {
 rows: 150,
@@ -1229,6 +1361,7 @@ const STONE_SWORD_COST = 20;
 const STONE_SLEDGE_COST = 80;
 const MIN_FOOD_COUNT = 25;
 const FOOD_RESPAWN_AMOUNT = 20;
+
 const TILE = {
 PLAYER: '🧍',
 EMPTY: ' ',
@@ -1269,6 +1402,7 @@ UNICORN: '🦄',
 CAGE: '⛓️',
 UNICORN_KEY: '🗝️'
 };
+
 const WEAPONS = {
 'unarmed': {
 name: 'Unarmed',
@@ -1482,6 +1616,7 @@ let visibleMonsterElements = {};
 let visibleNpcElements = {};
 let messageQueue = [];
 let isDisplayingMessage = false;
+
 function showFloatingText(htmlContent) {
 if (!playerFloatingTextContainer) return;
 const textElement = document.createElement('div');
@@ -1492,6 +1627,7 @@ setTimeout(() => {
 textElement.remove();
 }, 3000);
 }
+
 function showMessage(htmlContent, onConfirm, options = []) {
 if (!onConfirm && options.length === 0) {
 showFloatingText(htmlContent);
@@ -1504,6 +1640,7 @@ options
 processMessageQueue();
 }
 }
+
 function processMessageQueue() {
 if (isDisplayingMessage || messageQueue.length === 0) {
 return;
@@ -1539,6 +1676,7 @@ closeModal();
 }
 messageOverlay.classList.remove('hidden');
 }
+
 function closeModal() {
 messageOverlay.classList.add('hidden');
 isDisplayingMessage = false;
@@ -1546,6 +1684,7 @@ messageButton.onclick = null;
 messageOptions.innerHTML = '';
 processMessageQueue();
 }
+
 function showHowToPlay() {
 const costs = gameState.levelConfig;
 const instructions = `
@@ -1588,6 +1727,7 @@ const instructions = `
 </ul>`;
 showMessage(instructions, () => { });
 }
+
 function setupNewGame() {
 if (gameLoopInterval) clearInterval(gameLoopInterval);
 if (mainGameLoopId) cancelAnimationFrame(mainGameLoopId);
@@ -1686,6 +1826,7 @@ gameLoopInterval = setInterval(gameTick, 1000);
 lastFrameTime = performance.now();
 mainGameLoopId = requestAnimationFrame(mainGameLoop);
 }
+
 function saveGame() {
 if (gameState.isFighting) {
 showMessage("Cannot save during combat!");
@@ -1705,6 +1846,7 @@ console.error('Failed to save game:', error);
 showMessage("Error: Could not save the game.");
 }
 }
+
 function loadGame() {
 const savedData = localStorage.getItem('adventureGameSaveData');
 if (!savedData) return false;
@@ -1796,9 +1938,11 @@ localStorage.removeItem('adventureGameSaveData');
 return false;
 }
 }
+
 function levelUp() {
 showMessage(`Congratulations! You reached level ${gameState.level + 1}! The challenges grow tougher...`, setupNewGame);
 }
+
 function gameOver() {
 gameState.isGameOver = true;
 audioManager.stopAmbiance('wind_ambiance');
@@ -1813,6 +1957,7 @@ window.location.reload();
 }
 });
 }
+
 function gameWon() {
 gameState.isGameOver = true;
 audioManager.stopAmbiance('wind_ambiance');
@@ -1828,6 +1973,7 @@ text: "Play Again",
 action: () => window.location.reload()
 }]);
 }
+
 function findValidSpotNear(targetPos, searchRadius = 5) {
 const pathTile = gameState.isUnderworld ? TILE.UW_PATH : TILE.PATH;
 for (let r = 1; r <= searchRadius; r++) {
@@ -1850,6 +1996,7 @@ y: checkY
 }
 return null;
 }
+
 function generateLake() {
 const lakeSize = 15 + Math.floor(Math.random() * 10);
 const center = {
@@ -1881,6 +2028,7 @@ lakeTiles.push(newTile);
 }
 }
 }
+
 function generateRealisticWorld() {
 gameState.world = Array.from({
 length: WORLD_SIZE.rows
@@ -1968,6 +2116,7 @@ placeMonsters(TILE.SWAN, 1, swanPos);
 placeNPCs(TILE.TRADER, 1 + Math.floor(gameState.level / 4));
 placeNPCs(TILE.WISE_OLD_MAN, 1 + Math.floor(gameState.level / 6));
 }
+
 function generateUnderworld() {
 gameState.world = Array.from({
 length: WORLD_SIZE.rows
@@ -2012,6 +2161,7 @@ placeMonsters(TILE.U_MONSTER_2, 20);
 placeMonsters(TILE.U_MONSTER_3, 15);
 placeNPCs(TILE.TRADER, 1 + Math.floor(gameState.level / 4));
 }
+
 function generateUnicornLevel() {
 gameState.world = Array.from({
 length: WORLD_SIZE.rows
@@ -2066,6 +2216,7 @@ x: -1,
 y: -1
 };
 }
+
 function placeResourceClusters(tile, clusterCount, maxClusterSize) {
 for (let i = 0; i < clusterCount; i++) {
 const center = getRandomEmptyPosition(TILE.EMPTY, [gameState.player.pos], 5);
@@ -2094,6 +2245,7 @@ type: resourceType
 }
 }
 }
+
 function getRandomEmptyPosition(tileType, pointsToAvoid = [], minDistance = 20) {
 let x, y, tries = 0;
 const maxTries = 10000;
@@ -2121,6 +2273,7 @@ y
 console.warn(`Could not find a valid random position for ${tileType} after ${maxTries} tries.`);
 return null;
 }
+
 function carvePath(start, end, width) {
 let current = {
 ...start
@@ -2143,6 +2296,7 @@ current.y += Math.sign(end.y - current.y);
 }
 }
 }
+
 function placeFlowerBeds(bedCount, maxClusterSize) {
 for (let i = 0; i < bedCount; i++) {
 const center = getRandomEmptyPosition(TILE.EMPTY, [gameState.player.pos]);
@@ -2162,6 +2316,7 @@ gameState.world[flowerY][flowerX] = flowerType;
 }
 }
 }
+
 function placeObjectsInBiome(tile, count, targetBiome, shouldUpdateCells = false) {
 const isResource = [TILE.HERB, TILE.GEM].includes(tile);
 for (let i = 0; i < count; i++) {
@@ -2182,6 +2337,7 @@ updateCell(pos.x, pos.y, tile);
 }
 }
 }
+
 function placeMonsters(tile, count, fixedPos = null) {
 for (let i = 0; i < count; i++) {
 let pos = fixedPos;
@@ -2230,6 +2386,7 @@ y: pos.y
 gameState.monsters.push(monsterData);
 }
 }
+
 function placeNPCs(tile, count) {
 for (let i = 0; i < count; i++) {
 const pos = getRandomEmptyPosition(TILE.EMPTY, [gameState.player.pos], 15);
@@ -2254,6 +2411,7 @@ speed: OBJECT_DATA[tile].speed,
 gameState.npcs.push(npc);
 }
 }
+
 function placeSpecial(tile, count, fixedPos = null) {
 for (let i = 0; i < count; i++) {
 let pos = fixedPos || getRandomEmptyPosition(TILE.EMPTY, [gameState.player.pos], 10);
@@ -2278,6 +2436,7 @@ speed: 0,
 gameState.npcs.push(specialObject);
 }
 }
+
 function createWorldElements() {
 gameWorld.innerHTML = '';
 mapGrid = document.createElement('div');
@@ -2312,6 +2471,7 @@ gatherResource(resource, e.target);
 }
 });
 }
+
 function updateVisibleCells(forceRedraw = false) {
 const pPos = gameState.player.pos;
 const renderDistX = Math.ceil(gameContainer.clientWidth / cellSize / 2) + 1;
@@ -2371,6 +2531,7 @@ delete visibleCellElements[cellId];
 }
 }
 }
+
 function render() {
 if (!gameState || gameState.isGameOver) {
 if (playerElement) {
@@ -2391,6 +2552,7 @@ playerElement.style.transform = `translate(${screenCenterX - cellSize / 2}px, ${
 renderVisibleMonsters();
 renderVisibleNPCs();
 }
+
 function renderVisibleMonsters() {
 if (!gameState.player || !mapGrid) return;
 const pPos = gameState.player.pos;
@@ -2483,6 +2645,7 @@ delete visibleMonsterElements[monsterId];
 }
 }
 }
+
 function renderVisibleNPCs() {
 if (!gameState.player || !mapGrid) return;
 const pPos = gameState.player.pos;
@@ -2518,6 +2681,7 @@ delete visibleNpcElements[npcId];
 }
 }
 }
+
 function updateHUD() {
 if (!gameState || !gameState.player) return;
 hpDisplay.textContent = `${gameState.player.hp}/${gameState.player.maxHp}`;
@@ -2539,6 +2703,7 @@ hpElement.classList.remove('low-health-warning');
 }
 updateWeaponBar();
 }
+
 function updateWeaponBar() {
 weaponBar.innerHTML = '';
 const availableWeapons = WEAPON_HOTBAR_ORDER.filter(wId => gameState.player.inventory.includes(wId));
@@ -2560,6 +2725,7 @@ slot.appendChild(emojiEl);
 weaponBar.appendChild(slot);
 });
 }
+
 function updateCell(x, y, newTile) {
 const pathTile = gameState.isUnderworld ? TILE.UW_PATH : TILE.PATH;
 const isEntityTile = OBJECT_DATA[newTile] && ['monster', 'special', 'boss', 'npc'].includes(OBJECT_DATA[newTile].type);
@@ -2593,6 +2759,7 @@ cell.textContent = displayTile;
 updateCellClass(cell, displayTile);
 }
 }
+
 function updateCellClass(cell, tile) {
 cell.className = 'cell';
 if (tile === TILE.PATH) cell.classList.add('path');
@@ -2601,6 +2768,7 @@ else if (tile === TILE.SHELTER) cell.classList.add('shelter');
 else if ([TILE.WALL_1, TILE.WALL_2, TILE.STONE, TILE.GEM].includes(tile)) cell.classList.add('large');
 else if ([TILE.DECOR_1, TILE.DECOR_2, TILE.DECOR_3, TILE.HERB].includes(tile)) cell.classList.add('small');
 }
+
 function initRainEffect(dropCount) {
 stopRainEffect();
 audioManager.startAmbiance('ambiance_rain');
@@ -2615,9 +2783,11 @@ drop.style.transform = `scale(${0.5 + Math.random()})`;
 rainContainer.appendChild(drop);
 }
 }
+
 function stopRainEffect() {
 rainContainer.innerHTML = '';
 }
+
 function triggerLightning() {
 audioManager.playSound('effect_thunder');
 lightningFlash.style.opacity = '0.7';
@@ -2625,6 +2795,7 @@ setTimeout(() => {
 lightningFlash.style.opacity = '0';
 }, 150);
 }
+
 function handleInteraction(x, y, tile) {
 if (gameState.level === 20) {
 if (gameState.world[y][x] === TILE.CAGE) {
@@ -2664,6 +2835,7 @@ showMessage("You are at full health and don't need food right now.");
 }
 }
 }
+
 function handleNPCInteraction() {
 const p = gameState.player.pos;
 for (const npc of gameState.npcs) {
@@ -2683,6 +2855,7 @@ return;
 }
 }
 }
+
 function gatherResource(resource, cellElement) {
 if (gameState.player.hp <= GATHER_HP_COST) {
 showMessage("You are too weak to gather resources!");
@@ -2723,6 +2896,7 @@ updateHUD();
 showPlayerStatusBar();
 }
 }
+
 function buildShelter() {
 if (gameState.isFighting) return;
 const costs = gameState.levelConfig;
@@ -2750,6 +2924,7 @@ showMessage("You built a shelter! 🏰");
 showMessage("You can't build here!");
 }
 }
+
 function buildStoneWeapon(weaponType) {
 if (gameState.isFighting) return;
 const weaponData = WEAPONS[weaponType];
@@ -2767,6 +2942,7 @@ gameState.player.inventory.push(weaponType);
 equipWeapon(weaponType);
 showMessage(`You crafted a ${weaponData.name}! ${weaponData.emoji}`);
 }
+
 function buildCrossbow() {
 const costs = gameState.levelConfig;
 if (gameState.player.inventory.includes('crossbow')) {
@@ -2789,6 +2965,7 @@ gameState.player.arrows += 50;
 equipWeapon('crossbow');
 showMessage(`You crafted a Crossbow! ${TILE.CROSSBOW} +50 ${TILE.ARROW}`);
 }
+
 function craftArrows() {
 if (gameState.isFighting) return;
 if (!gameState.player.inventory.includes('crossbow')) {
@@ -2805,6 +2982,7 @@ gameState.player.arrows += 50;
 updateHUD();
 showMessage(`You crafted 50 arrows! +50 ${TILE.ARROW}, -${cost} 🪵`);
 }
+
 function craftHealthPotion() {
 if (gameState.isFighting) {
 showMessage("Cannot craft during combat!");
@@ -2826,6 +3004,7 @@ showMessage(`You crafted a potion! +${HEAL_AMOUNT} ❤️, -${HERB_COST} 🌿`);
 updateHUD();
 showPlayerStatusBar();
 }
+
 function equipWeapon(weaponId) {
 if (gameState.player.inventory.includes(weaponId)) {
 gameState.player.equippedWeapon = weaponId;
@@ -2834,6 +3013,7 @@ showMessage(`Switched to ${weaponData.name} ${weaponData.emoji}`);
 updateHUD();
 }
 }
+
 function startFight(monster) {
 if (gameState.isFighting) return;
 gameState.isFighting = true;
@@ -2858,6 +3038,7 @@ endFight('lose');
 }
 }, MONSTER_ATTACK_SPEED);
 }
+
 function endFight(outcome) {
 if (!gameState.isFighting) return;
 const monster = gameState.activeFighter;
@@ -2883,6 +3064,7 @@ gameOver();
 }
 updateHUD();
 }
+
 function killMonster(monster) {
 audioManager.playSound('monster_die_xp');
 monster.isDying = true;
@@ -2919,6 +3101,7 @@ gameState.monsters = gameState.monsters.filter((m) => m.id !== monster.id);
 updateVisibleCells();
 }
 }
+
 function checkIfStrengthIncreases() {
 while (gameState.player.xp >= gameState.player.xpForNextStrength) {
 gameState.player.xp -= gameState.player.xpForNextStrength;
@@ -2928,6 +3111,7 @@ showMessage(`✨ Strength increased to ${gameState.player.strength}! ✨`, null)
 updateHUD();
 }
 }
+
 function shootCrossbow(targetMapX, targetMapY) {
 if (gameState.player.arrows <= 0) {
 showMessage("You're out of arrows!");
@@ -2962,6 +3146,7 @@ distanceTraveled: 0,
 maxDistance: 15 * cellSize,
 });
 }
+
 function updateProjectiles(deltaTime) {
 for (let i = gameState.activeProjectiles.length - 1; i >= 0; i--) {
 const p = gameState.activeProjectiles[i];
@@ -3008,6 +3193,7 @@ gameState.activeProjectiles.splice(i, 1);
 }
 }
 }
+
 function createHealthBar(parent, current, max, type) {
 const existingBar = parent.querySelector('.health-bar-container');
 if (existingBar) existingBar.remove();
@@ -3019,6 +3205,7 @@ inner.style.width = `${Math.max(0, (current / max) * 100)}%`;
 container.appendChild(inner);
 parent.appendChild(container);
 }
+
 function updateHealthBar(barParent, current, max) {
 if (!barParent) return;
 const innerBar = barParent.querySelector('.health-bar-inner');
@@ -3026,6 +3213,7 @@ if (innerBar) {
 innerBar.style.width = `${Math.max(0, (current / max) * 100)}%`;
 }
 }
+
 function showPlayerStatusBar() {
 if (gameState.playerStatusBar) {
 gameState.playerStatusBar.remove();
@@ -3049,6 +3237,7 @@ gameState.playerStatusBar = null;
 }
 }, 2500);
 }
+
 function checkAggro() {
 if (gameState.isFighting) return;
 const pPos = gameState.player.pos;
@@ -3076,6 +3265,7 @@ showPlayerStatusBar();
 }
 }
 }
+
 function updateEntityPixelPositions(deltaTime) {
 const entities = [...gameState.monsters, ...gameState.npcs];
 for (const entity of entities) {
@@ -3110,6 +3300,7 @@ entity.pixelPos.y += (dy / dist) * moveAmount;
 }
 }
 }
+
 function moveEntities() {
 const playerInShelterAtNight = gameState.timeOfDay === 'night' && gameState.world[gameState.player.pos.y][gameState.player.pos.x] === TILE.SHELTER;
 const ghostsToRemove = [];
@@ -3245,6 +3436,7 @@ updateVisibleCells();
 }
 checkAggro();
 }
+
 function mainGameLoop(timestamp) {
 if (gameState.isGameOver) {
 cancelAnimationFrame(mainGameLoopId);
@@ -3258,6 +3450,7 @@ updateProjectiles(deltaTime);
 render();
 mainGameLoopId = requestAnimationFrame(mainGameLoop);
 }
+
 function gameTick() {
 if (gameState.isGameOver || gameState.isFighting) return;
 updateTime();
@@ -3269,6 +3462,7 @@ if (gameState.isUnderworld && Math.random() < 0.05) {
 triggerLightning();
 }
 }
+
 function processPlayerInputAndMove(deltaTime) {
 if (gameState.isFighting) {
 playerElement.classList.remove('is-walking');
@@ -3318,6 +3512,7 @@ handleInteraction(newGridX, newGridY, targetTile);
 checkAggro();
 }
 }
+
 function isTileBlocking(x, y) {
 if (x < 0 || x >= WORLD_SIZE.cols || y < 0 || y >= WORLD_SIZE.rows) return true;
 const targetTile = gameState.world[y][x];
@@ -3327,6 +3522,7 @@ if (gameState.monsters.some((m) => !m.isDying && m.tile !== TILE.GHOST && m.tile
 if (gameState.npcs.some((n) => n.x === x && n.y === y)) return true;
 return false;
 }
+
 function updateTime() {
 if (gameState.level === 20) return;
 gameState.time++;
@@ -3360,6 +3556,7 @@ despawnGhosts();
 }
 updateHUD();
 }
+
 function spawnGhosts() {
 if (gameState.isFighting) return;
 audioManager.playSound('ghost_spawn');
@@ -3367,6 +3564,7 @@ const ghostCount = 2 + gameState.level;
 placeMonsters(TILE.GHOST, ghostCount);
 showMessage("A sinister presence is felt... 👻");
 }
+
 function despawnGhosts() {
 gameState.monsters.forEach((monster) => {
 if (monster.tile === TILE.GHOST) {
@@ -3379,6 +3577,7 @@ delete visibleMonsterElements[monster.id];
 });
 gameState.monsters = gameState.monsters.filter((monster) => monster.tile !== TILE.GHOST);
 }
+
 function respawnFoodIfNeeded() {
 let foodCount = 0;
 const foodTiles = [TILE.FOOD_1, TILE.FOOD_2];
@@ -3394,6 +3593,7 @@ placeObjectsInBiome(TILE.FOOD_1, Math.ceil(FOOD_RESPAWN_AMOUNT * 0.7), TILE.EMPT
 placeObjectsInBiome(TILE.FOOD_2, Math.floor(FOOD_RESPAWN_AMOUNT * 0.3), TILE.EMPTY, true);
 }
 }
+
 function jumpToLevel(level) {
 closeModal();
 messageQueue = [];
@@ -3504,6 +3704,7 @@ if (!loadGame()) {
 setupNewGame();
 }
 showHowToPlay();
+
 function forceInitialDraw() {
 if (!gameState || !gameState.player || gameState.isGameOver || !mainGameLoopId) {
 setTimeout(forceInitialDraw, 50);
@@ -3525,6 +3726,7 @@ document.body.addEventListener('click', () => audioManager.init(), { once: true 
 document.body.addEventListener('keydown', () => audioManager.init(), { once: true });
 forceInitialDraw();
 });
+
 </script>
 </body>
 </html>
