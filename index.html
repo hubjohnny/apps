@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Johnny Heggelund</title>
-
 <style>
-
 :root {
   --bg-color: #0f172a;
   --card-bg: #1e293b;
@@ -17,13 +14,11 @@
   --accent-hover: #0ea5e9;
   --border: #334155;
 }
-
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
-
 body {
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-color);
@@ -31,20 +26,17 @@ body {
   line-height: 1.6;
   padding: 2rem 1rem;
 }
-
 .container {
   max-width: 1024px;
   margin: 0 auto;
   position: relative;
 }
-
 .header-layout {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
-
 h1 {
   font-size: 2rem;
   text-align: right;
@@ -55,7 +47,6 @@ h1 {
   flex-shrink: 0;
   padding-left: 30rem;
 }
-
 h2 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
@@ -63,7 +54,6 @@ h2 {
   border-left: 4px solid var(--accent);
   padding-left: 1rem;
 }
-
 h3 {
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
@@ -72,28 +62,23 @@ h3 {
   align-items: center;
   gap: 0.5rem;
 }
-
 p {
   margin-bottom: 1rem;
   color: #cbd5e1;
 }
-
 a {
   color: var(--accent);
   text-decoration: none;
 }
-
 a:hover {
   text-decoration: underline;
 }
-
 .tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-bottom: 3rem;
 }
-
 .tag {
   background-color: var(--card-bg);
   border: 1px solid var(--border);
@@ -104,7 +89,6 @@ a:hover {
   text-decoration: none;
   transition: all 0.2s;
 }
-
 .tag:hover {
   background-color: var(--accent);
   color: #000;
@@ -112,7 +96,6 @@ a:hover {
   text-decoration: none;
   transform: translateY(-2px);
 }
-
 .feature-card {
   background-color: var(--card-bg);
   border: 1px solid var(--border);
@@ -121,26 +104,21 @@ a:hover {
   margin-bottom: 3rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-
 .feature-card strong {
   color: var(--text-main);
 }
-
 hr {
   border-image: linear-gradient(to right, transparent, var(--accent)) 1;
   margin: 0 0 40px 0;
 }
-
 @media (max-width: 600px) {
   h1 { font-size: 2rem; }
   .feature-card { padding: 1.5rem; }
 }
-
 #smart-menu-container {
   position: relative;
   z-index: 1000;
 }
-
 #smart-menu-toggle {
   background-color: var(--accent);
   color: var(--bg-color);
@@ -152,11 +130,9 @@ hr {
   font-size: 1rem;
   transition: background-color 0.2s;
 }
-
 #smart-menu-toggle:hover {
   background-color: var(--accent-hover);
 }
-
 #smart-menu-dropdown {
   position: absolute;
   top: 100%;
@@ -173,199 +149,179 @@ hr {
   width: max-content;
   min-width: 250px;
 }
-
 #smart-menu-dropdown.hidden {
   display: none;
 }
-
 #smart-menu-dropdown li a {
   display: block;
   padding: 0.5rem 1rem;
   color: var(--text-main);
   text-decoration: none;
 }
-
 #smart-menu-dropdown li a:hover {
   background-color: var(--bg-color);
   text-decoration: none;
 }
-
 </style>
 </head>
-
 <body>
-
 <div class="container">
-
-<div class="header-layout">
-
-<div id="smart-menu-container">
-<button id="smart-menu-toggle">Sitemap (All Links)</button>
-<ul id="smart-menu-dropdown" class="hidden">
-</ul>
+  <div class="header-layout">
+    <div id="smart-menu-container">
+      <button id="smart-menu-toggle">Sitemap (All Links)</button>
+      <ul id="smart-menu-dropdown" class="hidden">
+      </ul>
+    </div>
+    <h1>Johnny Heggelund</h1>
+  </div>
+  <p>🟢 <a href="sokoban2.html">My Sokoban Puzzle Game with more than 45,000 levels now released as a second version with more stylized graphics.</a></p>
+  <p>🟢 <a href="coder2.html">Coder 2 Beta released for testing, with color syntax highlighting.</a></p>
+  <hr>
+  <section>
+    <h2>Popular Games</h2>
+    <div class="tag-list">
+      <a href="100laps.html" class="tag">🚔 100 Laps Racing</a>
+      <a href="adventure.html" class="tag">🔑 Adventure RPG</a>
+      <a href="championship.html" class="tag">🚘 Championship Racing</a>
+      <a href="citybuilder.html" class="tag">🏠 City Builder</a>
+      <a href="lunarlander.html" class="tag">🚀 Lander Rescue</a>
+      <a href="tetrisneon.html" class="tag">🟧 Tetris Neon</a>
+    </div>
+  </section>
+  <article class="feature-card">
+    <h3>🖥️ <a href="coder2.html">Coder 2 RC</a></h3>
+    <p>
+      <strong><a href="coder2.html">Coder 2 RC</a></strong>
+      is a specialized code editor engineered for building modern Single File Web Apps. It streamlines your
+      workflow by unifying HTML, CSS, and JavaScript into a single, distraction-free environment optimized for rapid prototyping. Featuring intelligent
+      syntax highlighting, context-aware navigation, and a powerful "Clean & Format" tool that automatically structures and indents your code,
+      Coder 2 RC gives you full control without the bloat of complex IDEs. It runs entirely in your browser with local file system support,
+      allowing you to build, test, and save your projects efficiently-anywhere. The original Coder is still available
+      <a href="coder.html">here</a>.
+    </p>
+  </article>
+  <article class="feature-card">
+    <h3>💲 <a href="sokoban.html">Sokoban Puzzle Game</a></h3>
+    <p>
+      <strong><a href="sokoban.html">Sokoban</a></strong> is a classic puzzle game where you control a warehouse keeper, represented by the @ symbol,
+      with the goal of pushing all the boxes ($) onto the designated storage spots (.). You must navigate through a maze of walls (#) and carefully
+      plan each move, as you can only push one box at a time and never pull them, meaning it is easy to get stuck if you act without thinking.
+      My version of the game features over 45,000 verified levels, offering a massive variety of logic challenges. There is also a version of the
+      same <strong><a href="sokoban2.html">game with more stylized graphics</a></strong>.
+      Don't forget to check out my <strong><a href="sokobaned.html">Sokoban Level Editor & Player</a></strong>, where you can design and test your own levels.
+    </p>
+  </article>
+  <section>
+    <h2>Classic Fun</h2>
+    <div class="tag-list">
+      <a href="ameliax.html" class="tag">Amelia X</a>
+      <a href="billiards.html" class="tag">Billiards</a>
+      <a href="blackjack.html" class="tag">Blackjack</a>
+      <a href="minigolf.html" class="tag">Mini Golf</a>
+      <a href="shithead.html" class="tag">Shithead Card Game</a>
+      <a href="snakeneon.html" class="tag">Snake</a>
+      <a href="uno.html" class="tag">UNO Card Game</a>
+      <a href="yatzy.html" class="tag">Yatzy Dice Game</a>
+    </div>
+  </section>
+  <article class="feature-card">
+    <h3>🟢 <a href="ludo.html">Ludo Board Game</a></h3>
+    <p>
+      <strong><a href="ludo.html">Ludo</a></strong> is a classic strategy and luck board game for two to four players, designed to be simple and
+      competitive. The main goal is to race your four coloured tokens from your starting area, around the entire track, and into your central 'home' column.
+      Players take turns rolling a single die. To get a token onto the track, you must roll a six. Once a token is moving, you advance it by the number shown
+      on the die. The key element of the game is conflict: if your token lands on a square occupied by an opponent's token, the opponent's token is sent back
+      to its starting area, forcing them to roll a six again to re-enter. The first player to successfully move all four of their tokens into their
+      colour-matched home triangle in the centre of the board wins the game. In my version of the game, you can play against three AI opponents or turn
+      on "Autopilot" to let an AI take over your player and show you how the game is played.
+    </p>
+  </article>
+  <section>
+    <h2>Popular Tools</h2>
+    <div class="tag-list">
+      <a href="base64.html" class="tag">Base64</a>
+      <a href="coder2.html" class="tag">Coder 2</a>
+      <a href="emojis.html" class="tag">Emojis</a>
+      <a href="image2ascii.html" class="tag">image2ASCII</a>
+      <a href="image2pixel.html" class="tag">image2Pixel</a>
+      <a href="secretnote.html" class="tag">Secret Note</a>
+      <a href="sprited.html" class="tag">Sprite Editor</a>
+      <a href="video2gif.html" class="tag">video2GIF</a>
+      <a href="videoplayer.html" class="tag">Video Player</a>
+    </div>
+  </section>
+  <article class="feature-card">
+    <h3>💄 <a href="babelinux.html">Babelinux Terminal Emulator 6.9</a></h3>
+    <p>
+      <strong><a href="babelinux.html">BabeLinux 6.9</a></strong> is a modern, web-based terminal emulator designed for both utility and entertainment,
+      running directly in your browser. You can manage your workspace efficiently with support for up to five simultaneous tabs. Core commands include
+      <code>clear</code> (cls) for a clean screen and <code>history</code> to recall past commands. For productivity, the <code>nano</code> command opens
+      a simple text editor. For creativity, the <code>pic</code> command launches a basic image editor, allowing you to apply grayscale, sepia, compress,
+      or resize operations. Media playback is supported via <code>play</code>. And when it's time for a break, simply type <code>snake</code>,
+      <code>sokoban</code>, or <code>tetris</code> to open a classic arcade game in a new tab.
+    </p>
+  </article>
+  <section>
+    <h2>More Tools</h2>
+    <div class="tag-list">
+      <a href="imagecomp.html" class="tag">Image Compression</a>
+      <a href="imaged.html" class="tag">Image Editor</a>
+      <a href="imageupscale.html" class="tag">Image Upscaler</a>
+      <a href="soundtracker.html" class="tag">Soundtracker</a>
+    </div>
+  </section>
 </div>
-
-<h1>Johnny Heggelund</h1>
-
-</div>
-<p>🟢 <a href="sokoban2.html">My Sokoban Puzzle Game with more than 45,000 levels now released as a second version with more stylized graphics.</a></p>
-<p>🟢 <a href="coder2.html">Coder 2 Beta released for testing, with color syntax highlighting.</a></p>
-<hr>
-<section>
-<h2>Popular Games</h2>
-<div class="tag-list">
-<a href="100laps.html" class="tag">🚔 100 Laps Racing</a>
-<a href="adventure.html" class="tag">🔑 Adventure RPG</a>
-<a href="championship.html" class="tag">🚘 Championship Racing</a>
-<a href="citybuilder.html" class="tag">🏠 City Builder</a>
-<a href="lunarlander.html" class="tag">🚀 Lander Rescue</a>
-<a href="tetrisneon.html" class="tag">🟧 Tetris Neon</a>
-</div>
-</section>
-
-<article class="feature-card">
-<h3>💲 <a href="sokoban.html">Sokoban Puzzle Game</a></h3>
-<p>
-<strong><a href="sokoban.html">Sokoban</a></strong> is a classic puzzle game where you control a warehouse keeper, represented by the @ symbol,
-with the goal of pushing all the boxes ($) onto the designated storage spots (.). You must navigate through a maze of walls (#) and carefully
-plan each move, as you can only push one box at a time and never pull them, meaning it is easy to get stuck if you act without thinking.
-My version of the game features over 45,000 verified levels, offering a massive variety of logic challenges. There is also a version of the
-same <strong><a href="sokoban2.html">game with more stylized graphics</a></strong>.
-Don't forget to check out my <strong><a href="sokobaned.html">Sokoban Level Editor & Player</a></strong>, where you can design and test your own levels.
-</p>
-
-</article>
-<section>
-<h2>Classic Fun</h2>
-<div class="tag-list">
-<a href="ameliax.html" class="tag">Amelia X</a>
-<a href="billiards.html" class="tag">Billiards</a>
-<a href="blackjack.html" class="tag">Blackjack</a>
-<a href="minigolf.html" class="tag">Mini Golf</a>
-<a href="shithead.html" class="tag">Shithead Card Game</a>
-<a href="snakeneon.html" class="tag">Snake</a>
-<a href="uno.html" class="tag">UNO Card Game</a>
-<a href="yatzy.html" class="tag">Yatzy Dice Game</a>
-</div>
-</section>
-
-<article class="feature-card">
-<h3>🟢 <a href="ludo.html">Ludo Board Game</a></h3>
-<p>
-<strong><a href="ludo.html">Ludo</a></strong> is a classic strategy and luck board game for two to four players, designed to be simple and
-competitive. The main goal is to race your four coloured tokens from your starting area, around the entire track, and into your central 'home' column.
-Players take turns rolling a single die. To get a token onto the track, you must roll a six. Once a token is moving, you advance it by the number shown
-on the die. The key element of the game is conflict: if your token lands on a square occupied by an opponent's token, the opponent's token is sent back
-to its starting area, forcing them to roll a six again to re-enter. The first player to successfully move all four of their tokens into their
-colour-matched home triangle in the centre of the board wins the game. In my version of the game, you can play against three AI opponents or turn
-on "Autopilot" to let an AI take over your player and show you how the game is played.
-</p>
-</article>
-
-<section>
-<h2>Popular Tools</h2>
-<div class="tag-list">
-<a href="base64.html" class="tag">Base64</a>
-<a href="coder2.html" class="tag">Coder 2</a>
-<a href="emojis.html" class="tag">Emojis</a>
-<a href="image2ascii.html" class="tag">image2ASCII</a>
-<a href="image2pixel.html" class="tag">image2Pixel</a>
-<a href="secretnote.html" class="tag">Secret Note</a>
-<a href="sprited.html" class="tag">Sprite Editor</a>
-<a href="video2gif.html" class="tag">video2GIF</a>
-<a href="videoplayer.html" class="tag">Video Player</a>
-</div>
-</section>
-
-<article class="feature-card">
-<h3>🖥️ <a href="coder.html">Coder 1.0</a></h3>
-<p>
-<strong><a href="coder.html">Coder</a></strong> is a minimalist Code Editor designed for building Single-File Web Apps using HTML, CSS, and JavaScript.
-Self-contained, zero-dependency web development environment engineered as a single HTML file that operates entirely client-side to ensure absolute
-data privacy and offline capability, utilizing the modern File System Access API for native file reading, writing, and creation directly from the
-user's local drive. The application provides a distraction-free, dark-themed interface featuring a custom-built textarea editor with toggleable line
-numbering and a specialized highlighting layer that visualizes trailing whitespace. It includes a robust modal-based search and replace engine,
-specific keyboard shortcuts for rapid semantic navigation, and code hygiene utilities. Beyond editing, the tool facilitates rapid iteration with
-a "Preview in New Tab" function.
-</p>
-</article>
-
-<article class="feature-card">
-<h3>💄 <a href="babelinux.html">Babelinux Terminal Emulator 6.9</a></h3>
-<p>
-<strong><a href="babelinux.html">BabeLinux 6.9</a></strong> is a modern, web-based terminal emulator designed for both utility and entertainment,
-running directly in your browser. You can manage your workspace efficiently with support for up to five simultaneous tabs. Core commands include
-<code>clear</code> (cls) for a clean screen and <code>history</code> to recall past commands. For productivity, the <code>nano</code> command opens
-a simple text editor. For creativity, the <code>pic</code> command launches a basic image editor, allowing you to apply grayscale, sepia, compress,
-or resize operations. Media playback is supported via <code>play</code>. And when it's time for a break, simply type <code>snake</code>,
-<code>sokoban</code>, or <code>tetris</code> to open a classic arcade game in a new tab.
-</p>
-</article>
-
-<section>
-<h2>More Tools</h2>
-<div class="tag-list">
-<a href="imagecomp.html" class="tag">Image Compression</a>
-<a href="imaged.html" class="tag">Image Editor</a>
-<a href="imageupscale.html" class="tag">Image Upscaler</a>
-<a href="soundtracker.html" class="tag">Soundtracker</a>
-</div>
-</section>
-
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-const toggleButton = document.getElementById('smart-menu-toggle');
-const dropdown = document.getElementById('smart-menu-dropdown');
-if (!toggleButton || !dropdown) return;
-const allLinks = Array.from(document.querySelectorAll('a[href]:not([href=""])'));
-const uniqueLinks = new Map();
-allLinks.forEach(linkElement => {
-const url = linkElement.getAttribute('href');
-let text = linkElement.textContent.trim();
-if (text === '' && linkElement.querySelector('img')) {
-text = '[Bilde-lenke]';
-} else if (text === '' && linkElement.parentElement.nodeName === 'P' && linkElement.parentElement.textContent.trim().startsWith('🟢')) {
-text = linkElement.parentElement.textContent.trim();
-} else if (text === '') {
-text = url;
-}
-if (uniqueLinks.has(url)) {
-const existingText = uniqueLinks.get(url).text;
-if (existingText.length < text.length) {
- uniqueLinks.set(url, { text: text, url: url });
-}
-} else {
-uniqueLinks.set(url, { text: text, url: url });
-}
-});
-const sortedLinks = Array.from(uniqueLinks.values()).sort((a, b) => {
-const cleanA = a.text.replace(/^[^\w\s]*\s*/, '');
-const cleanB = b.text.replace(/^[^\w\s]*\s*/, '');
-return cleanA.localeCompare(cleanB);
-});
-sortedLinks.forEach(linkData => {
-const listItem = document.createElement('li');
-const anchor = document.createElement('a');
-anchor.href = linkData.url;
-anchor.textContent = linkData.text;
-listItem.appendChild(anchor);
-dropdown.appendChild(listItem);
-});
-toggleButton.addEventListener('click', () => {
-dropdown.classList.toggle('hidden');
-toggleButton.textContent = dropdown.classList.contains('hidden') ? 'Sitemap (All Links)' : '❌ Close Sitemap';
-});
-document.addEventListener('click', (event) => {
-const isClickInside = document.getElementById('smart-menu-container').contains(event.target);
-if (!isClickInside && !dropdown.classList.contains('hidden')) {
-dropdown.classList.add('hidden');
-toggleButton.textContent = 'Sitemap (All Links)';
-}
-});
+  const toggleButton = document.getElementById('smart-menu-toggle');
+  const dropdown = document.getElementById('smart-menu-dropdown');
+  if (!toggleButton || !dropdown) return;
+  const allLinks = Array.from(document.querySelectorAll('a[href]:not([href=""])'));
+  const uniqueLinks = new Map();
+  allLinks.forEach(linkElement => {
+    const url = linkElement.getAttribute('href');
+    let text = linkElement.textContent.trim();
+    if (text === '' && linkElement.querySelector('img')) {
+      text = '[Bilde-lenke]';
+    } else if (text === '' && linkElement.parentElement.nodeName === 'P' && linkElement.parentElement.textContent.trim().startsWith('🟢')) {
+      text = linkElement.parentElement.textContent.trim();
+    } else if (text === '') {
+      text = url;
+    }
+    if (uniqueLinks.has(url)) {
+      const existingText = uniqueLinks.get(url).text;
+      if (existingText.length < text.length) {
+        uniqueLinks.set(url, { text: text, url: url });
+      }
+    } else {
+      uniqueLinks.set(url, { text: text, url: url });
+    }
+  });
+  const sortedLinks = Array.from(uniqueLinks.values()).sort((a, b) => {
+    const cleanA = a.text.replace(/^[^\w\s]*\s*/, '');
+    const cleanB = b.text.replace(/^[^\w\s]*\s*/, '');
+    return cleanA.localeCompare(cleanB);
+  });
+  sortedLinks.forEach(linkData => {
+    const listItem = document.createElement('li');
+    const anchor = document.createElement('a');
+    anchor.href = linkData.url;
+    anchor.textContent = linkData.text;
+    listItem.appendChild(anchor);
+    dropdown.appendChild(listItem);
+  });
+  toggleButton.addEventListener('click', () => {
+    dropdown.classList.toggle('hidden');
+    toggleButton.textContent = dropdown.classList.contains('hidden') ? 'Sitemap (All Links)' : '❌ Close Sitemap';
+  });
+  document.addEventListener('click', (event) => {
+    const isClickInside = document.getElementById('smart-menu-container').contains(event.target);
+    if (!isClickInside && !dropdown.classList.contains('hidden')) {
+      dropdown.classList.add('hidden');
+      toggleButton.textContent = 'Sitemap (All Links)';
+    }
+  });
 });
 </script>
-
 </body>
 </html>

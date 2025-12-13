@@ -71,12 +71,20 @@ html, body {
   border: none;
   outline: none;
   resize: none;
-  white-space: pre;
-  overflow-wrap: normal;
+  white-space: pre !important;
+  overflow-wrap: normal !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
   font-family: var(--font-mono);
   font-size: var(--font-size);
-  padding: 15px 15px 100px 15px;
   line-height: 1.5;
+  tab-size: 2;
+  -moz-tab-size: 2;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  text-rendering: optimizeSpeed;
+  letter-spacing: 0;
+  padding: 15px 15px 100px 15px;
   margin: 0;
   background-color: transparent;
   will-change: transform, scroll-position;
@@ -100,7 +108,7 @@ textarea::selection {
   background-color: rgba(255, 200, 0, 0.4);
   color: transparent;
 }
-.token.comment { color: var(--c-comment); font-style: italic; }
+.token.comment { color: var(--c-comment); }
 .token.string { color: var(--c-string); }
 .token.number { color: var(--c-number); }
 .token.html-tag { color: var(--c-html-tag); }
@@ -282,6 +290,7 @@ bindEventListeners() {
   editor.addEventListener('scroll', this.handleEditorScroll.bind(this));
   editor.addEventListener('input', this.handleEditorInput.bind(this));
   editor.addEventListener('keydown', this.handleEditorKeyDown.bind(this));
+  editor.addEventListener('paste', this.handlePaste.bind(this));
   findInput.addEventListener('input', this.utils.debounce(this.updateSearchResults.bind(this), 300));
   helpModalCloseBtn.addEventListener('click', () => this.toggleModal('help'));
   searchModalCloseBtn.addEventListener('click', () => this.toggleModal('search'));
@@ -552,6 +561,18 @@ handleGlobalKeyDown(e) {
     this.elements.helpModal.style.display = 'none';
     this.elements.editor.focus();
   }
+},
+handlePaste(e) {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  const cleanText = text
+  .replace(/—/g, '--')
+  .replace(/–/g, '-')
+  .replace(/[“”]/g, '"')
+  .replace(/[‘’]/g, "'")
+  .replace(/…/g, '...')
+  .replace(/\u00A0/g, ' ');
+  this.insertText(cleanText);
 },
 setUnsavedChanges(isUnsaved) {
   this.state.hasUnsavedChanges = isUnsaved;
