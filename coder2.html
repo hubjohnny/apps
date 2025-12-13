@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coder 2 Beta</title>
+<title>Coder 2 RC</title>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
   :root {
@@ -187,6 +187,7 @@
     <hr class="separator">
     <li><span>Check Whitespace</span> <strong>Alt + W</strong></li>
     <li><span>Strip Empty Lines</span> <strong>Alt + L</strong></li>
+    <li><span>Clean Code</span> <strong>Ctrl + B</strong></li>
     <hr class="separator">
     <li><span>Jump to &lt;style&gt;</span> <strong>Ctrl + Shift + 1</strong></li>
     <li><span>Next Function</span> <strong>Ctrl + Shift + 2</strong></li>
@@ -249,6 +250,9 @@ const CodeEditor = {
     const urlParams = new URLSearchParams(window.location.search);
     if (!urlParams.has('quiet') && !this.elements.editor.value) {
       this.toggleModal('help');
+    }
+    if (!window.showOpenFilePicker) {
+      console.warn("File System Access API not supported in this browser.");
     }
   },
   cacheDOMElements() {
@@ -372,22 +376,22 @@ const CodeEditor = {
       return match;
     });
   },
-highlightCSS(code) {
-  try {
-    const p = /(\/\*[\s\S]*?\*\/)|(".*?"|'.*?')|((-?\d+\.?\d*|\.\d+)[a-zA-Z%]*)|([\.#][\w-]+|(?<=[\}\s]|^)[a-zA-Z][\w-]*(?=\s*[\{\,\.#]))|([a-zA-Z-]+)(?=:)|(@[\w-]+)/g;
-    return code.replace(p, (m, c, s, n, d, sel, prop, at) => {
-      if (c) return `<span class="token comment">${c}</span>`;
-      if (s) return `<span class="token string">${s}</span>`;
-      if (n) return `<span class="token number">${n}</span>`;
-      if (sel) return `<span class="token selector">${sel}</span>`;
-      if (prop) return `<span class="token property">${prop}</span>`;
-      if (at) return `<span class="token keyword">${at}</span>`;
-      return m;
-    });
-  } catch (e) {
-    return this.escapeHTML(code);
-  }
-},
+  highlightCSS(code) {
+    try {
+      const p = /(\/\*[\s\S]*?\*\/)|(".*?"|'.*?')|((-?\d+\.?\d*|\.\d+)[a-zA-Z%]*)|([\.#][\w-]+|(?<=[\}\s]|^)[a-zA-Z][\w-]*(?=\s*[\{\,\.#]))|([a-zA-Z-]+)(?=:)|(@[\w-]+)/g;
+      return code.replace(p, (m, c, s, n, d, sel, prop, at) => {
+        if (c) return `<span class="token comment">${c}</span>`;
+        if (s) return `<span class="token string">${s}</span>`;
+        if (n) return `<span class="token number">${n}</span>`;
+        if (sel) return `<span class="token selector">${sel}</span>`;
+        if (prop) return `<span class="token property">${prop}</span>`;
+        if (at) return `<span class="token keyword">${at}</span>`;
+        return m;
+      });
+    } catch (e) {
+      return this.escapeHTML(code);
+    }
+  },
   checkWhitespace() {
     const count = this.elements.editor.value.split('\n').filter(l => /[ \t]+$/.test(l)).length;
     this.showToast(count === 0 ? "No trailing whitespace found. ✨" : `${count} lines have trailing whitespace.`);
@@ -425,27 +429,14 @@ highlightCSS(code) {
     const key = e.key.toLowerCase();
     const pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
     const { selectionStart, selectionEnd, value } = this.elements.editor;
-    if (selectionStart !== selectionEnd) {
-      if (value.charAt(selectionEnd - 1) === '\n') {
-        const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-        if (selectionStart > lineStart) {
-          const isDelete = key === 'backspace' || key === 'delete';
-          const isTyping = e.key.length === 1 && !isCtrl && !isAlt;
-          const isEnter = key === 'enter';
-          const isCut = isCtrl && key === 'x';
-          if (isDelete || isTyping || isEnter || isCut) {
-            this.elements.editor.setSelectionRange(selectionStart, selectionEnd - 1);
-          }
-        }
-      }
-    }
     if (isCtrl && e.shiftKey && key === 'k') {
       e.preventDefault();
       const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
       let lineEnd = value.indexOf('\n', selectionStart);
       if (lineEnd === -1) lineEnd = value.length;
       const deletionEnd = (lineEnd < value.length) ? lineEnd + 1 : lineEnd;
-      this.elements.editor.setRangeText('', lineStart, deletionEnd, 'select');
+      this.elements.editor.setSelectionRange(lineStart, deletionEnd);
+      document.execCommand('delete');
       this.handleEditorInput();
       return;
     }
@@ -488,16 +479,21 @@ highlightCSS(code) {
         }
         let lineEnd = value.indexOf('\n', searchFrom);
         if (lineEnd === -1) lineEnd = value.length;
-        const lines = value.substring(lineStart, lineEnd).split('\n');
+        const originalText = value.substring(lineStart, lineEnd);
+        const lines = originalText.split('\n');
         const newLines = e.shiftKey
           ? lines.map(l => l.startsWith(indent) ? l.slice(indent.length) : l)
           : lines.map(l => indent + l);
-        this.elements.editor.setRangeText(newLines.join('\n'), lineStart, lineEnd, 'select');
+        const newText = newLines.join('\n');
+        this.elements.editor.setSelectionRange(lineStart, lineEnd);
+        document.execCommand('insertText', false, newText);
+        this.elements.editor.setSelectionRange(lineStart, lineStart + newText.length);
       } else {
         if (e.shiftKey) {
           const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
           if (value.substr(lineStart, indent.length) === indent) {
-            this.elements.editor.setRangeText('', lineStart, lineStart + indent.length, 'end');
+            this.elements.editor.setSelectionRange(lineStart, lineStart + indent.length);
+            document.execCommand('delete');
           }
         } else {
           this.insertText(indent);
@@ -518,6 +514,7 @@ highlightCSS(code) {
     const isModalOpen = this.elements.helpModal.style.display === 'block' || this.elements.searchModal.style.display === 'block';
     const isCtrl = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
+    if (isCtrl && key === 'b') { e.preventDefault(); this.cleanCode(); return; }
     if (isCtrl && key === 's') { e.preventDefault(); this.saveFile(); return; }
     if (isCtrl && key === 'o') { e.preventDefault(); this.openFile(); return; }
     if (e.altKey && key === 'h') { e.preventDefault(); this.toggleModal('help'); }
@@ -578,6 +575,40 @@ highlightCSS(code) {
       editor.scrollTop = 0;
     }
   },
+cleanCode() {
+    const editor = this.elements.editor;
+    const originalValue = editor.value;
+    let c = 0, l = 0, w = 0;
+    const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
+    let text = originalValue.replace(re, (match, blockComment, lineComment, stringLiteral) => {
+      if (blockComment || lineComment) {
+        c++;
+        return '';
+      }
+      return match;
+    });
+    const lines = [];
+    text.split('\n').forEach(x => {
+      const trimmedEnd = x.replace(/\s+$/, '');
+      if (x.length !== trimmedEnd.length) {
+        w++;
+      }
+      if (trimmedEnd.trim().length === 0) {
+        l++;
+      } else {
+        lines.push(trimmedEnd);
+      }
+    });
+    const newValue = lines.join('\n');
+    if (originalValue !== newValue) {
+      editor.select();
+      document.execCommand('insertText', false, newValue);
+      this.resetEditorView();
+      this.showToast(`Cleaned: ${c} comments, ${l} lines, ${w} spaces ✨`);
+    } else {
+      this.showToast("Already clean! ✨");
+    }
+  },
   previewInNewTab() {
     const win = window.open();
     if(win) {
@@ -587,32 +618,63 @@ highlightCSS(code) {
   },
   async openFile() {
     if (this.state.hasUnsavedChanges && !confirm("Lose unsaved changes?")) return;
-    try {
-      const [handle] = await window.showOpenFilePicker();
-      this.state.fileHandle = handle;
-      const file = await handle.getFile();
-      this.elements.editor.value = await file.text();
-      this.state.fileName = file.name;
-      this.resetEditorView();
-      this.highlight();
-      this.setUnsavedChanges(false);
-      this.elements.editor.focus();
-    } catch (e) {
-      console.error(e);
+    if (window.showOpenFilePicker) {
+      try {
+        const [handle] = await window.showOpenFilePicker();
+        this.state.fileHandle = handle;
+        const file = await handle.getFile();
+        this.loadFileContent(file.name, await file.text());
+      } catch (e) {}
+    } else {
+      const input = document.getElementById('file-input-fallback');
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          this.loadFileContent(file.name, evt.target.result);
+          input.value = '';
+        };
+        reader.readAsText(file);
+      };
+      input.click();
     }
+  },
+  loadFileContent(name, content) {
+    this.elements.editor.value = content;
+    this.state.fileName = name;
+    this.resetEditorView();
+    this.highlight();
+    this.setUnsavedChanges(false);
+    this.elements.editor.focus();
   },
   async saveFile() {
     try {
-      if (!this.state.fileHandle) {
-        this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
-        this.state.fileName = this.state.fileHandle.name;
+      if (window.showSaveFilePicker) {
+        if (!this.state.fileHandle) {
+          this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
+          this.state.fileName = this.state.fileHandle.name;
+        }
+        const w = await this.state.fileHandle.createWritable();
+        await w.write(this.elements.editor.value);
+        await w.close();
+      } else {
+        const blob = new Blob([this.elements.editor.value], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = this.state.fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
-      const w = await this.state.fileHandle.createWritable();
-      await w.write(this.elements.editor.value);
-      await w.close();
       this.setUnsavedChanges(false);
       this.showToast('Saved!');
-    } catch (e) {}
+    } catch (e) {
+      if (e.name !== 'AbortError') console.error(e);
+    }
   },
   newFile() {
     if (this.state.hasUnsavedChanges && !confirm("Lose unsaved changes?")) return;
@@ -750,5 +812,6 @@ highlightCSS(code) {
 };
 window.addEventListener('load', () => CodeEditor.init());
 </script>
+<input type="file" id="file-input-fallback" style="display: none;">
 </body>
 </html>
