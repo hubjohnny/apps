@@ -37,7 +37,7 @@ overflow: hidden;
 .editor-container {
 display: flex;
 height: 100vh;
-width: 100vw;
+width: 100%;
 position: relative;
 }
 #line-numbers {
@@ -82,6 +82,7 @@ background-color: transparent;
 will-change: transform, scroll-position;
 transform: translateZ(0);
 contain: content;
+overscroll-behavior-x: none;
 }
 #highlight-layer {
 z-index: 1;
@@ -217,7 +218,7 @@ hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
 <script>
 const CodeEditor = {
 config: {
-debounceDelay: 75,
+debounceDelay: 20,
 indentUnit: '  ',
 toastDuration: 2500,
 },
@@ -292,6 +293,12 @@ handleEditorScroll() {
 if (this.state.ticking) return;
 window.requestAnimationFrame(() => {
 const { editor, lineNumbers, highlightLayer } = this.elements;
+if (editor.scrollWidth <= editor.clientWidth) {
+editor.scrollLeft = 0;
+}
+else if (editor.scrollLeft > 0 && editor.scrollLeft < 5) {
+editor.scrollLeft = 0;
+}
 lineNumbers.scrollTop = editor.scrollTop;
 highlightLayer.scrollTop = editor.scrollTop;
 highlightLayer.scrollLeft = editor.scrollLeft;
@@ -403,15 +410,17 @@ const isAlt = e.altKey;
 const key = e.key.toLowerCase();
 const pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
 const { selectionStart, selectionEnd, value } = this.elements.editor;
-if ((key === 'backspace' || key === 'delete') && selectionStart !== selectionEnd) {
-const content = value.substring(selectionStart, selectionEnd);
-if (content.endsWith('\n')) {
+if (selectionStart !== selectionEnd) {
+if (value.charAt(selectionEnd - 1) === '\n') {
 const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
 if (selectionStart > lineStart) {
-e.preventDefault();
-this.elements.editor.setRangeText('', selectionStart, selectionEnd - 1, 'select');
-this.handleEditorInput();
-return;
+const isDelete = key === 'backspace' || key === 'delete';
+const isTyping = e.key.length === 1 && !isCtrl && !isAlt;
+const isEnter = key === 'enter';
+const isCut = isCtrl && key === 'x';
+if (isDelete || isTyping || isEnter || isCut) {
+this.elements.editor.setSelectionRange(selectionStart, selectionEnd - 1);
+}
 }
 }
 }
@@ -456,6 +465,10 @@ e.preventDefault();
 const indent = this.config.indentUnit;
 if (selectionStart !== selectionEnd) {
 const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+let effectiveEnd = selectionEnd;
+if (value.charAt(effectiveEnd - 1) === '\n') {
+effectiveEnd--;
+}
 let lineEnd = value.indexOf('\n', selectionEnd);
 if (lineEnd === -1) lineEnd = value.length;
 const lines = value.substring(lineStart, lineEnd).split('\n');
