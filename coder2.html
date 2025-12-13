@@ -566,12 +566,14 @@ handlePaste(e) {
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData('text');
   const cleanText = text
-  .replace(/—/g, '--')
-  .replace(/–/g, '-')
-  .replace(/[“”]/g, '"')
-  .replace(/[‘’]/g, "'")
-  .replace(/…/g, '...')
-  .replace(/\u00A0/g, ' ');
+  .replace(/--/g, '--')
+  .replace(/-/g, '-')
+  .replace(/[""]/g, '"')
+  .replace(/['']/g, "'")
+  .replace(/.../g, '...')
+  .replace(/\u00A0/g, ' ')
+  .replace(/[\u200B-\u200D\uFEFF]/g, '')
+  .replace(/\t/g, this.config.indentUnit);
   this.insertText(cleanText);
 },
 setUnsavedChanges(isUnsaved) {
