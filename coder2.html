@@ -182,7 +182,7 @@ hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
 <div id="help-modal" class="modal">
   <button id="help-modal-close-btn" class="modal-close-btn" aria-label="Close">×</button>
   <h1 id="help-main-title">Coder 2 RC</h1>
-  <p style="color: #858585; font-size: 0.9em; margin-top: -6px; margin-bottom: 20px; font-style: italic;">
+  <p style="color: #858585; font-size: 0.8em; margin-top: -6px; margin-bottom: 20px; font-style: italic;">
     A dedicated Code Editor for crafting single-file<br>Web Apps using HTML, CSS, and JavaScript.
   </p>
   <h2 id="help-title">Shortcuts</h2>
@@ -198,7 +198,14 @@ hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
     <hr class="separator">
     <li><span>Check Whitespace</span> <strong>Alt + W</strong></li>
     <li><span>Strip Empty Lines</span> <strong>Alt + L</strong></li>
-    <li><span>Clean & Beautify Code</span> <strong>Ctrl + B</strong></li>
+    <li>
+      <span style="line-height: 1.2; display: inline-block;">
+        Clean & Format
+        <br>
+        <small style="color: #858585;"><i>Remove comments, empty lines, whitespace & fix indent.</i></small>
+      </span>
+      <strong>Ctrl + B</strong>
+    </li>
     <hr class="separator">
     <li><span>Jump to &lt;style&gt;</span> <strong>Ctrl + Shift + 1</strong></li>
     <li><span>Next Function</span> <strong>Ctrl + Shift + 2</strong></li>
@@ -566,11 +573,11 @@ handlePaste(e) {
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData('text');
   const cleanText = text
-  .replace(/--/g, '--')
-  .replace(/-/g, '-')
-  .replace(/[""]/g, '"')
-  .replace(/['']/g, "'")
-  .replace(/.../g, '...')
+  .replace(/\u2014/g, '--')
+  .replace(/\u2013/g, '-')
+  .replace(/[\u201C\u201D]/g, '"')
+  .replace(/[\u2018\u2019]/g, "'")
+  .replace(/\u2026/g, '...')
   .replace(/\u00A0/g, ' ')
   .replace(/[\u200B-\u200D\uFEFF]/g, '')
   .replace(/\t/g, this.config.indentUnit);
