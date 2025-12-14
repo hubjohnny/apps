@@ -14,7 +14,7 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coder 2 RC</title>
+<title>Coder 2</title>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
 :root {
@@ -26,6 +26,7 @@
   --selection-bg: rgba(97, 175, 239, 0.25);
   --font-mono: 'Fira Code', 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
   --font-size: 15px;
+  --line-height: 24px;
   --c-comment: #6a9955;
   --c-string: #ce9178;
   --c-number: #b5cea8;
@@ -51,15 +52,10 @@ html, body {
   width: 100%;
   position: relative;
 }
-.editor-wrapper {
-  position: relative;
-  flex-grow: 1;
-  height: 100%;
-}
 #line-numbers {
   border-right: 1px solid var(--border-color);
   min-width: 65px;
-  padding: 15px 15px 100px 15px;
+  padding: 15px 15px 90vh 15px;
   box-sizing: border-box;
   text-align: right;
   color: #858585;
@@ -67,12 +63,22 @@ html, body {
   pointer-events: none;
   overflow: hidden;
   font-size: var(--font-size);
-  line-height: 1.5;
+  line-height: var(--line-height);
   background-color: var(--bg-color);
   white-space: pre;
+  font-variant-ligatures: none;
+  text-rendering: optimizeSpeed;
+  letter-spacing: 0;
+  font-family: var(--font-mono);
 }
 .line-numbers-hidden #line-numbers {
   width: 0; min-width: 0; border: none; padding: 15px 0;
+}
+.editor-wrapper {
+  position: relative;
+  flex-grow: 1;
+  height: 100%;
+  overflow: hidden;
 }
 .editor-textarea {
   position: absolute;
@@ -82,41 +88,37 @@ html, body {
   border: none;
   outline: none;
   resize: none;
-  white-space: pre !important;
-  overflow-wrap: normal !important;
-  word-wrap: normal !important;
-  word-break: normal !important;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: var(--font-size);
-  line-height: 1.5;
+  line-height: var(--line-height);
   tab-size: 2;
   -moz-tab-size: 2;
+  white-space: pre !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
   font-variant-ligatures: none;
-  font-feature-settings: "liga" 0, "calt" 0;
   text-rendering: optimizeSpeed;
   letter-spacing: 0;
-  padding: 15px 15px 100px 15px;
-  margin: 0;
-  background-color: transparent;
-  will-change: transform, scroll-position;
-  transform: translateZ(0);
-  contain: content;
-  overscroll-behavior-x: none;
-}
-#highlight-layer {
-  z-index: 1;
-  pointer-events: none;
-  overflow: hidden;
-  color: var(--text-color);
 }
 textarea#editor {
   z-index: 2;
   color: transparent;
   caret-color: var(--caret-color);
+  background-color: transparent;
   overflow: auto;
+  padding: 15px 15px 150px 15px;
+}
+#highlight-layer {
+  z-index: 1;
+  pointer-events: none;
+  color: var(--text-color);
+  background-color: transparent;
+  overflow: hidden;
+  padding: 15px 15px 180px 15px;
 }
 textarea::selection {
-  background-color: rgba(255, 200, 0, 0.4);
+  background-color: var(--selection-bg);
   color: transparent;
 }
 .token.comment { color: var(--c-comment); }
@@ -192,7 +194,7 @@ hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
 </div>
 <div id="help-modal" class="modal">
   <button id="help-modal-close-btn" class="modal-close-btn" aria-label="Close">×</button>
-  <h1 id="help-main-title">Coder 2 RC</h1>
+  <h1 id="help-main-title">Coder 2</h1>
   <p style="color: #858585; font-size: 0.8em; margin-top: -6px; margin-bottom: 20px; font-style: italic;">
     A dedicated Code Editor for crafting single-file Web Apps using<br>HTML, CSS, and JavaScript. &copy; 2025 Johnny Heggelund
   </p>
@@ -260,7 +262,6 @@ const CodeEditor = {
     toastTimer: null,
     lastLineCount: 0,
     ignoreNextInput: false,
-    ticking: false,
   },
   elements: {},
   debouncedUpdate: null,
@@ -279,9 +280,6 @@ init() {
   const urlParams = new URLSearchParams(window.location.search);
   if (!urlParams.has('quiet') && !this.elements.editor.value) {
     this.toggleModal('help');
-  }
-  if (!window.showOpenFilePicker) {
-    console.warn("File System Access API not supported in this browser.");
   }
 },
 cacheDOMElements() {
@@ -305,7 +303,11 @@ cacheDOMElements() {
 },
 bindEventListeners() {
   const { editor, findInput, helpModalCloseBtn, searchModalCloseBtn, findNextBtn, replaceBtn, replaceAllBtn } = this.elements;
-  editor.addEventListener('scroll', this.handleEditorScroll.bind(this));
+  editor.addEventListener('scroll', () => {
+    this.elements.lineNumbers.scrollTop = editor.scrollTop;
+    this.elements.highlightLayer.scrollTop = editor.scrollTop;
+    this.elements.highlightLayer.scrollLeft = editor.scrollLeft;
+  }, { passive: true });
   editor.addEventListener('input', this.handleEditorInput.bind(this));
   editor.addEventListener('keydown', this.handleEditorKeyDown.bind(this));
   editor.addEventListener('paste', this.handlePaste.bind(this));
@@ -324,22 +326,6 @@ bindEventListeners() {
       editor.focus();
     }
   });
-},
-handleEditorScroll() {
-  if (this.state.ticking) return;
-  window.requestAnimationFrame(() => {
-    const { editor, lineNumbers, highlightLayer } = this.elements;
-    if (editor.scrollWidth <= editor.clientWidth) {
-      editor.scrollLeft = 0;
-    } else if (editor.scrollLeft > 0 && editor.scrollLeft < 5) {
-      editor.scrollLeft = 0;
-    }
-    lineNumbers.scrollTop = editor.scrollTop;
-    highlightLayer.scrollTop = editor.scrollTop;
-    highlightLayer.scrollLeft = editor.scrollLeft;
-    this.state.ticking = false;
-  });
-  this.state.ticking = true;
 },
 handleEditorInput() {
   if (this.state.searchResults.indices.length > 0) {
@@ -470,9 +456,6 @@ handleEditorKeyDown(e) {
     this.handleEditorInput();
     return;
   }
-  if (e.key === 'Home') {
-    this.elements.editor.scrollLeft = 0;
-  }
   if (Object.values(pairs).includes(e.key) && selectionStart === selectionEnd && !isCtrl && !isAlt) {
     if (value.charAt(selectionStart) === e.key) {
       e.preventDefault();
@@ -541,17 +524,8 @@ insertText(text, select = false) {
   this.elements.editor.scrollLeft = scrollLeft;
   if (select) {
     this.elements.editor.setSelectionRange(start, start + text.length);
-  } else {
-    this.ensureCursorVisible();
   }
   this.handleEditorInput();
-},
-ensureCursorVisible() {
-  const { editor } = this.elements;
-  const { selectionEnd, value } = editor;
-  const lineHeight = 22.5;
-  const lines = value.substr(0, selectionEnd).split('\n').length;
-  const cursorY = lines * lineHeight;
 },
 handleGlobalKeyDown(e) {
   const isModalOpen = this.elements.helpModal.style.display === 'block' || this.elements.searchModal.style.display === 'block';
@@ -816,7 +790,7 @@ jumpTo(idx) {
   editor.focus();
   editor.setSelectionRange(idx, idx);
   const lines = editor.value.substr(0, idx).split('\n').length;
-  const lineHeight = 22.5;
+  const lineHeight = 24;
   editor.scrollTo({
     top: (lines * lineHeight) - (editor.clientHeight / 3),
     behavior: 'smooth'
