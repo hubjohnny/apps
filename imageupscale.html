@@ -1,144 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-55NB91FTK3');
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Image Upscaler</title>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
 :root {
---bg: #121212;
---card: #1e1e1e;
---text: #e0e0e0;
---accent: #00bcd4;
---accent-hover: #00acc1;
+  --bg: #121212;
+  --card: #1e1e1e;
+  --text: #e0e0e0;
+  --accent: #00bcd4;
+  --accent-hover: #00acc1;
 }
 body {
-background: var(--bg);
-color: var(--text);
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-display: flex;
-flex-direction: column;
-align-items: center;
-padding: 20px;
-margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin: 0;
 }
 .container {
-max-width: 900px;
-width: 100%;
-background: var(--card);
-padding: 2.5rem;
-border-radius: 12px;
-box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-border: 1px solid #333;
+  max-width: 900px;
+  width: 100%;
+  background: var(--card);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border: 1px solid #333;
 }
 h2 {
-text-align: center;
-color: var(--text);
-margin-top: 0;
-font-weight: 600;
+  text-align: center;
+  color: var(--text);
+  margin-top: 0;
+  font-weight: 600;
 }
 .controls {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 20px;
-margin: 20px 0;
-padding: 20px;
-background: #252525;
-border-radius: 8px;
-border: 1px solid #333;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 20px 0;
+  padding: 20px;
+  background: #252525;
+  border-radius: 8px;
+  border: 1px solid #333;
 }
 .control-group { display: flex; flex-direction: column; }
 label { margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #bbb; }
 input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--accent); }
 .buttons { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
 .btn {
-padding: 12px 24px;
-border: none;
-border-radius: 6px;
-font-weight: 600;
-font-size: 1rem;
-cursor: pointer;
-transition: all 0.2s ease;
-text-decoration: none;
-display: inline-block;
-text-align: center;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 .btn-primary {
-background: var(--accent);
-color: #000;
+  background: var(--accent);
+  color: #000;
 }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:disabled { background: #444; color: #777; cursor: not-allowed; }
 .btn-success {
-background: #198754;
-color: white;
-display: none;
+  background: #198754;
+  color: white;
+  display: none;
 }
 .btn-success:hover { background: #157347; }
 .upload-area {
-border: 2px dashed #555;
-padding: 40px;
-text-align: center;
-border-radius: 8px;
-cursor: pointer;
-transition: 0.2s;
-background: #222;
+  border: 2px dashed #555;
+  padding: 40px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  background: #222;
 }
 .upload-area:hover { border-color: var(--accent); background: #2a2a2a; }
 .upload-area p { margin: 0; color: #888; }
 .upload-area strong { color: var(--accent); }
 canvas {
-max-width: 100%;
-height: auto;
-border: 1px solid #333;
-display: block;
-margin: 0 auto;
-background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23222" d="M0 0h10v10H0zM10 10h10v10H10z"/></svg>');
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #333;
+  display: block;
+  margin: 0 auto;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23222" d="M0 0h10v10H0zM10 10h10v10H10z"/></svg>');
 }
 .status { text-align: center; height: 20px; color: #888; margin-top: 15px; font-size: 0.9rem; }
 select {
-padding: 8px;
-background: #333;
-color: white;
-border: 1px solid #555;
-border-radius: 4px;
-font-size: 1rem;
+  padding: 8px;
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 1rem;
 }
 </style>
 </head>
 <body>
 <div class="container">
-<h2>Image Upscaler</h2>
-<div class="upload-area" onclick="document.getElementById('fileIn').click()" id="dropZone">
-<p><strong>Click to browse</strong> or drag and drop an image</p>
-<input type="file" id="fileIn" accept="image/*" style="display:none">
-</div>
-<div class="controls">
-<div class="control-group">
-<label>Denoise / Smoothing Level: <span id="blurVal" style="color:var(--text)">1</span></label>
-<input type="range" id="blurRange" min="0" max="10" value="1" step="1">
-<small style="color:#666">Higher values remove grain but soften the image.</small>
-</div>
-<div class="control-group">
-<label>Edge Sharpening (Amount): <span id="sharpVal" style="color:var(--text)">0.8</span></label>
-<input type="range" id="sharpRange" min="0" max="3" value="0.8" step="0.1">
-<small style="color:#666">Restores details after smoothing.</small>
-</div>
-<div class="control-group">
-<label>Scale Factor</label>
-<select id="scaleSelect">
-<option value="2">2x (Recommended)</option>
-<option value="4">4x</option>
-</select>
-</div>
-</div>
-<div class="buttons">
-<button id="processBtn" class="btn btn-primary" disabled>Process Image</button>
-<a id="downloadLink" class="btn btn-success">Download Result</a>
-</div>
-<canvas id="canvas"></canvas>
-<div class="status" id="status">Waiting for image...</div>
+  <h2>Image Upscaler</h2>
+  <div class="upload-area" onclick="document.getElementById('fileIn').click()" id="dropZone">
+    <p><strong>Click to browse</strong> or drag and drop an image</p>
+    <input type="file" id="fileIn" accept="image/*" style="display:none">
+  </div>
+  <div class="controls">
+    <div class="control-group">
+      <label>Denoise / Smoothing Level: <span id="blurVal" style="color:var(--text)">1</span></label>
+      <input type="range" id="blurRange" min="0" max="10" value="1" step="1">
+      <small style="color:#666">Higher values remove grain but soften the image.</small>
+    </div>
+    <div class="control-group">
+      <label>Edge Sharpening (Amount): <span id="sharpVal" style="color:var(--text)">0.8</span></label>
+      <input type="range" id="sharpRange" min="0" max="3" value="0.8" step="0.1">
+      <small style="color:#666">Restores details after smoothing.</small>
+    </div>
+    <div class="control-group">
+      <label>Scale Factor</label>
+      <select id="scaleSelect">
+        <option value="2">2x (Recommended)</option>
+        <option value="4">4x</option>
+      </select>
+    </div>
+  </div>
+  <div class="buttons">
+    <button id="processBtn" class="btn btn-primary" disabled>Process Image</button>
+    <a id="downloadLink" class="btn btn-success">Download Result</a>
+  </div>
+  <canvas id="canvas"></canvas>
+  <div class="status" id="status">Waiting for image...</div>
 </div>
 <script>
 const canvas = document.getElementById('canvas');
@@ -152,120 +163,120 @@ let originalImg = new Image();
 let isLoaded = false;
 let originalFileName = "image";
 function handleFile(file) {
-if(!file) return;
-originalFileName = file.name.split('.').slice(0, -1).join('.');
-const reader = new FileReader();
-reader.onload = (e) => {
-originalImg.onload = () => {
-canvas.width = originalImg.width;
-canvas.height = originalImg.height;
-ctx.drawImage(originalImg, 0, 0);
-isLoaded = true;
-processBtn.disabled = false;
-status.textContent = `Loaded: ${file.name} (${originalImg.width}x${originalImg.height})`;
-downloadLink.style.display = 'none';
-}
-originalImg.src = e.target.result;
-};
-reader.readAsDataURL(file);
+  if(!file) return;
+  originalFileName = file.name.split('.').slice(0, -1).join('.');
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    originalImg.onload = () => {
+      canvas.width = originalImg.width;
+      canvas.height = originalImg.height;
+      ctx.drawImage(originalImg, 0, 0);
+      isLoaded = true;
+      processBtn.disabled = false;
+      status.textContent = `Loaded: ${file.name} (${originalImg.width}x${originalImg.height})`;
+      downloadLink.style.display = 'none';
+    }
+    originalImg.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 fileIn.addEventListener('change', e => handleFile(e.target.files[0]));
 dropZone.addEventListener('dragover', e => {
-e.preventDefault();
-dropZone.style.borderColor = '#00bcd4';
-dropZone.style.background = '#2a2a2a';
+  e.preventDefault();
+  dropZone.style.borderColor = '#00bcd4';
+  dropZone.style.background = '#2a2a2a';
 });
 dropZone.addEventListener('dragleave', e => {
-e.preventDefault();
-dropZone.style.borderColor = '#555';
-dropZone.style.background = '#222';
+  e.preventDefault();
+  dropZone.style.borderColor = '#555';
+  dropZone.style.background = '#222';
 });
 dropZone.addEventListener('drop', e => {
-e.preventDefault();
-dropZone.style.borderColor = '#555';
-dropZone.style.background = '#222';
-handleFile(e.dataTransfer.files[0]);
+  e.preventDefault();
+  dropZone.style.borderColor = '#555';
+  dropZone.style.background = '#222';
+  handleFile(e.dataTransfer.files[0]);
 });
 document.getElementById('blurRange').oninput = function() { document.getElementById('blurVal').innerText = this.value; }
 document.getElementById('sharpRange').oninput = function() { document.getElementById('sharpVal').innerText = this.value; }
 processBtn.addEventListener('click', () => {
-if (!isLoaded) return;
-status.textContent = "Processing... (This might take a moment)";
-processBtn.disabled = true;
-downloadLink.style.display = 'none';
-setTimeout(() => {
-const scale = parseInt(document.getElementById('scaleSelect').value);
-const blurAmount = parseInt(document.getElementById('blurRange').value);
-const sharpAmount = parseFloat(document.getElementById('sharpRange').value);
-const targetWidth = originalImg.width * scale;
-const targetHeight = originalImg.height * scale;
-canvas.width = targetWidth;
-canvas.height = targetHeight;
-ctx.imageSmoothingEnabled = true;
-ctx.imageSmoothingQuality = 'high';
-ctx.drawImage(originalImg, 0, 0, targetWidth, targetHeight);
-let imgData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-if (blurAmount > 0) {
-imgData = applyBoxBlur(imgData, targetWidth, targetHeight, blurAmount);
-}
-if (sharpAmount > 0) {
-imgData = applySharpen(imgData, targetWidth, targetHeight, sharpAmount);
-}
-ctx.putImageData(imgData, 0, 0);
-const newFileName = `${originalFileName}_upscaled_x${scale}.png`;
-downloadLink.href = canvas.toDataURL("image/png");
-downloadLink.download = newFileName;
-downloadLink.style.display = "inline-block";
-processBtn.disabled = false;
-status.textContent = "✅ Done!";
-}, 50);
+  if (!isLoaded) return;
+  status.textContent = "Processing... (This might take a moment)";
+  processBtn.disabled = true;
+  downloadLink.style.display = 'none';
+  setTimeout(() => {
+    const scale = parseInt(document.getElementById('scaleSelect').value);
+    const blurAmount = parseInt(document.getElementById('blurRange').value);
+    const sharpAmount = parseFloat(document.getElementById('sharpRange').value);
+    const targetWidth = originalImg.width * scale;
+    const targetHeight = originalImg.height * scale;
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(originalImg, 0, 0, targetWidth, targetHeight);
+    let imgData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+    if (blurAmount > 0) {
+      imgData = applyBoxBlur(imgData, targetWidth, targetHeight, blurAmount);
+    }
+    if (sharpAmount > 0) {
+      imgData = applySharpen(imgData, targetWidth, targetHeight, sharpAmount);
+    }
+    ctx.putImageData(imgData, 0, 0);
+    const newFileName = `${originalFileName}_upscaled_x${scale}.png`;
+    downloadLink.href = canvas.toDataURL("image/png");
+    downloadLink.download = newFileName;
+    downloadLink.style.display = "inline-block";
+    processBtn.disabled = false;
+    status.textContent = "✅ Done!";
+  }, 50);
 });
 function applyBoxBlur(imgData, w, h, radius) {
-if (radius < 1) return imgData;
-const tempCanvas = document.createElement('canvas');
-tempCanvas.width = w; tempCanvas.height = h;
-const tCtx = tempCanvas.getContext('2d');
-tCtx.putImageData(imgData, 0, 0);
-const finalCanvas = document.createElement('canvas');
-finalCanvas.width = w; finalCanvas.height = h;
-const fCtx = finalCanvas.getContext('2d');
-fCtx.filter = `blur(${radius * 0.5}px)`;
-fCtx.drawImage(tempCanvas, 0, 0);
-return fCtx.getImageData(0, 0, w, h);
+  if (radius < 1) return imgData;
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = w; tempCanvas.height = h;
+  const tCtx = tempCanvas.getContext('2d');
+  tCtx.putImageData(imgData, 0, 0);
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = w; finalCanvas.height = h;
+  const fCtx = finalCanvas.getContext('2d');
+  fCtx.filter = `blur(${radius * 0.5}px)`;
+  fCtx.drawImage(tempCanvas, 0, 0);
+  return fCtx.getImageData(0, 0, w, h);
 }
 function applySharpen(imgData, w, h, amount) {
-const src = imgData.data;
-const dst = new Uint8ClampedArray(src.length);
-const w4 = w * 4;
-for (let y = 1; y < h - 1; y++) {
-const rowOffset = y * w4;
-const upOffset = (y - 1) * w4;
-const downOffset = (y + 1) * w4;
-for (let x = 1; x < w - 1; x++) {
-const i = rowOffset + (x * 4);
-const up = upOffset + (x * 4);
-const down = downOffset + (x * 4);
-const left = i - 4;
-const right = i + 4;
-for (let c = 0; c < 3; c++) {
-const val = src[i + c];
-const neighbors = (src[up + c] + src[down + c] + src[left + c] + src[right + c]) * 0.25;
-dst[i + c] = val + (val - neighbors) * amount;
-}
-dst[i + 3] = src[i + 3];
-}
-}
-const finalData = new Uint8ClampedArray(src);
-for (let y = 1; y < h - 1; y++) {
-for (let x = 1; x < w - 1; x++) {
-const i = (y * w + x) * 4;
-for (let j=0; j<4; j++) finalData[i+j] = dst[i+j];
-}
-}
-for (let i = 0; i < src.length; i++) {
-imgData.data[i] = finalData[i];
-}
-return imgData;
+  const src = imgData.data;
+  const dst = new Uint8ClampedArray(src.length);
+  const w4 = w * 4;
+  for (let y = 1; y < h - 1; y++) {
+    const rowOffset = y * w4;
+    const upOffset = (y - 1) * w4;
+    const downOffset = (y + 1) * w4;
+    for (let x = 1; x < w - 1; x++) {
+      const i = rowOffset + (x * 4);
+      const up = upOffset + (x * 4);
+      const down = downOffset + (x * 4);
+      const left = i - 4;
+      const right = i + 4;
+      for (let c = 0; c < 3; c++) {
+        const val = src[i + c];
+        const neighbors = (src[up + c] + src[down + c] + src[left + c] + src[right + c]) * 0.25;
+        dst[i + c] = val + (val - neighbors) * amount;
+      }
+      dst[i + 3] = src[i + 3];
+    }
+  }
+  const finalData = new Uint8ClampedArray(src);
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = (y * w + x) * 4;
+      for (let j=0; j<4; j++) finalData[i+j] = dst[i+j];
+    }
+  }
+  for (let i = 0; i < src.length; i++) {
+    imgData.data[i] = finalData[i];
+  }
+  return imgData;
 }
 </script>
 </body>
