@@ -1,22 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-55NB91FTK3');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MonoStack Web Code Editor</title>
 <meta name="description" content="A browser-based code editor designed to craft single-file web apps using HTML, CSS, and JavaScript.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
 :root {
   --bg-color: #1e1e1e;
@@ -183,6 +171,35 @@ textarea::selection {
 }
 #toast-notification.show { opacity: 1; visibility: visible; }
 hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
+.custom-tooltip {
+  position: relative;
+  cursor: help;
+  font-size: 0.9em;
+}
+.custom-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: DarkBlue;
+  color: White;
+  border: 1px solid #454545;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 300px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.1s ease;
+}
+.custom-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
 </style>
 </head>
 <body>
@@ -214,7 +231,8 @@ hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
     <li><span>Strip Empty Lines (Outside Script)</span> <strong>Alt + L</strong></li>
     <li>
       <span style="line-height: 1.2; display: inline-block;">
-        Clean & Beautify ALL Code ✨
+        Clean & Beautify ALL Code
+        <span class="custom-tooltip" data-tooltip="Warning: Can in extremely rare cases destroy JS code. Test after using this function.">⚠️</span>
         <br>
         <small style="color: #858585;"><i>Remove comments, empty lines, whitespace & fix indent.</i></small>
       </span>
