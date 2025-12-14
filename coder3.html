@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MonoStack Engine 2.5 (Bugfix Edition)</title>
+<title>MonoStack Engine 2.6.1 (Bugfix)</title>
 <style>
   :root {
     --bg-color: #1e1e1e;
@@ -115,7 +115,7 @@
   <div id="cursor"></div>
 </div>
 
-<div id="statusbar">MonoStack V2.5 - Fixed & Ready</div>
+<div id="statusbar">MonoStack V2.6.1 - Ready</div>
 
 <script>
 // --- HISTORIE MANAGER ---
@@ -203,7 +203,23 @@ class EditorEngine {
     };
 
     this.state = {
-      lines: ["Welcome to MonoStack V2.5", "Fixed the missing render functions.", "Undo/Redo is fully operational."],
+      lines: [
+        "<html>", 
+        "", 
+        "<body>", 
+        "  <h1>Try jumping around!</h1>", 
+        "  <script>",
+        "    function test() {",
+        "      // This is a comment",
+        "      console.log('Hello');",
+        "    }",
+        "  <\/script>", 
+        "  <style>",
+        "    body { background: #333; }",
+        "  </style>",
+        "</body>",
+        "</html>"
+      ],
       cursor: { row: 0, col: 0 },
       selectionAnchor: null,
       isDragging: false,
@@ -245,7 +261,7 @@ class EditorEngine {
     this.render();
   }
 
-  // --- RENDERING & VISUALS (Dette manglet sist!) ---
+  // --- RENDERING ---
 
   onScroll() {
     this.state.scrollTop = this.dom.editor.scrollTop;
@@ -264,7 +280,6 @@ class EditorEngine {
     const topOffset = startIndex * lineHeight;
     this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
 
-    // Beregn markering
     let selStart = null, selEnd = null;
     if (selectionAnchor) {
       const anchorIsBefore = (selectionAnchor.row < cursor.row) || 
@@ -299,7 +314,6 @@ class EditorEngine {
         
         let selHTML = `<span class="selection-bg">${part2}</span>`;
         if (colEnd === text.length && i !== selEnd.row) selHTML = `<span class="selection-bg">${part2}&nbsp;</span>`;
-        
         contentSpan.innerHTML = part1 + selHTML + part3;
       } else {
         contentSpan.textContent = text;
@@ -332,6 +346,42 @@ class EditorEngine {
     }
   }
 
+  // --- NAVIGATION HELPERS ---
+
+  jumpTo(row) {
+    if (row < 0 || row >= this.state.lines.length) return;
+    this.state.cursor = { row: row, col: 0 };
+    const match = this.state.lines[row].match(/^\s*/);
+    if (match) this.state.cursor.col = match[0].length;
+    
+    this.state.selectionAnchor = null;
+    const targetScroll = (row * this.config.lineHeight) - (this.state.viewportHeight / 2);
+    this.dom.editor.scrollTop = Math.max(0, targetScroll);
+    
+    this.render();
+  }
+
+  findAndJump(regex, description) {
+    const startRow = this.state.cursor.row + 1;
+    const lines = this.state.lines;
+    
+    for (let i = startRow; i < lines.length; i++) {
+      if (regex.test(lines[i])) {
+        this.jumpTo(i);
+        this.setStatus(`Found ${description} (Forward)`);
+        return;
+      }
+    }
+    for (let i = 0; i < startRow; i++) {
+      if (regex.test(lines[i])) {
+        this.jumpTo(i);
+        this.setStatus(`Found ${description} (Cycle)`);
+        return;
+      }
+    }
+    this.setStatus(`No ${description} found`);
+  }
+
   // --- EDIT CORE ---
 
   applyChange(newText) {
@@ -346,9 +396,7 @@ class EditorEngine {
     } else {
       start = end = cursor;
     }
-
     this.applyEditInternal(start.row, start.col, end.row, end.col, newText, true);
-    
     this.state.selectionAnchor = null;
     this.updateScrollHeight();
     this.render();
@@ -357,8 +405,6 @@ class EditorEngine {
 
   applyEditInternal(startRow, startCol, endRow, endCol, newText, recordHistory) {
     const lines = this.state.lines;
-
-    // Hent gammel tekst
     let oldText = "";
     if (startRow === endRow) {
       oldText = lines[startRow].slice(startCol, endCol);
@@ -369,7 +415,6 @@ class EditorEngine {
       oldText = result.join('\n');
     }
 
-    // Endre minnet
     const textBefore = lines[startRow].slice(0, startCol);
     const textAfter = lines[endRow].slice(endCol);
     const newLines = newText.split('\n');
@@ -419,8 +464,7 @@ class EditorEngine {
     this.applyEditInternal(startRow, 0, endRow, endCol, newText, true);
     
     this.state.selectionAnchor = { row: startRow, col: 0 };
-    this.state.cursor = { row: endRow, col: lines[endRow].length }; // Refetch length
-    
+    this.state.cursor = { row: endRow, col: lines[endRow].length }; 
     this.updateScrollHeight();
     this.render();
   }
@@ -436,7 +480,6 @@ class EditorEngine {
       if (line.startsWith(" ")) return line.slice(1);
       return line;
     });
-    
     const newText = newLines.join('\n');
     const endCol = lines[endRow].length;
     
@@ -444,7 +487,6 @@ class EditorEngine {
     
     this.state.selectionAnchor = { row: startRow, col: 0 };
     this.state.cursor = { row: endRow, col: lines[endRow].length };
-    
     this.updateScrollHeight();
     this.render();
   }
@@ -638,6 +680,14 @@ class EditorEngine {
       }
     }
     if (e.altKey && key === 'g') { e.preventDefault(); this.generateStressTest(); }
+
+    // --- NAVIGATION SHORTCUTS ---
+    if (isCtrl && e.shiftKey) {
+      if (e.code === 'Digit1') { e.preventDefault(); this.findAndJump(/<body/i, '<body>'); }
+      if (e.code === 'Digit2') { e.preventDefault(); this.findAndJump(/<style/i, '<style>'); }
+      if (e.code === 'Digit3') { e.preventDefault(); this.findAndJump(/(\/\/|\/\*)/, 'Comment'); }
+      if (e.code === 'Digit4') { e.preventDefault(); this.findAndJump(/(function\s|\b\w+\s*\(.*\)\s*\{|=>|class\s)/, 'Function'); }
+    }
   }
 
   // --- FIL SYSTEM ---
@@ -690,7 +740,7 @@ class EditorEngine {
   generateStressTest() {
     setTimeout(() => {
       const arr = [];
-      for(let i=0; i<100000; i++) arr.push(`Line ${i}: Testing huge files...`);
+      for(let i=0; i<100000; i++) arr.push(`Line ${i}: Testing navigation... // Comment ${i}`);
       this.state.lines = arr;
       this.updateScrollHeight();
       this.render();
