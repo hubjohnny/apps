@@ -1,17 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-55NB91FTK3');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coder 2 RC</title>
@@ -535,10 +524,23 @@ handleEditorKeyDown(e) {
 insertText(text, select = false) {
   this.elements.editor.focus();
   const start = this.elements.editor.selectionStart;
+  const { scrollTop, scrollLeft } = this.elements.editor;
   document.execCommand('insertText', false, text);
+  this.elements.editor.scrollTop = scrollTop;
+  this.elements.editor.scrollLeft = scrollLeft;
   if (select) {
     this.elements.editor.setSelectionRange(start, start + text.length);
+  } else {
+    this.ensureCursorVisible();
   }
+  this.handleEditorInput();
+},
+ensureCursorVisible() {
+  const { editor } = this.elements;
+  const { selectionEnd, value } = editor;
+  const lineHeight = 22.5;
+  const lines = value.substr(0, selectionEnd).split('\n').length;
+  const cursorY = lines * lineHeight;
 },
 handleGlobalKeyDown(e) {
   const isModalOpen = this.elements.helpModal.style.display === 'block' || this.elements.searchModal.style.display === 'block';
@@ -584,6 +586,7 @@ handlePaste(e) {
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData('text');
   const cleanText = text
+  .replace(/\r\n/g, '\n')
   .replace(/\u2014/g, '--')
   .replace(/\u2013/g, '-')
   .replace(/[\u201C\u201D]/g, '"')
