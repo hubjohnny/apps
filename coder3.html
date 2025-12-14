@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MonoStack Engine 2.11 (Undo Fix)</title>
+<title>MonoStack Engine 2.12 (Beautifier)</title>
 <style>
   :root {
     --bg-color: #1e1e1e;
@@ -124,7 +124,7 @@
   <div id="cursor"></div>
 </div>
 
-<div id="statusbar">MonoStack V2.11 - Undo Logic Fixed</div>
+<div id="statusbar">MonoStack V2.12 - Beautifier Ready (Alt+B)</div>
 
 <script>
 class HistoryManager {
@@ -161,16 +161,7 @@ class HistoryManager {
     if (this.undoStack.length === 0) return;
     const op = this.undoStack.pop();
     this.redoStack.push(op);
-
-    // FIX: Bruk cursorAfter for å vite hvor den "nye" teksten slutter.
-    // Dette sikrer at vi sletter HELE den limte teksten, ikke bare det som ble markert (som var ingenting).
-    this.editor.applyEditInternal(
-        op.startRow, op.startCol, 
-        op.cursorAfter.row, op.cursorAfter.col, 
-        op.oldText, 
-        false
-    );
-    
+    this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.cursorAfter.col, op.oldText, false);
     this.editor.state.cursor = { ...op.cursorBefore };
     this.editor.updateScrollHeight();
     this.editor.render();
@@ -181,15 +172,7 @@ class HistoryManager {
     if (this.redoStack.length === 0) return;
     const op = this.redoStack.pop();
     this.undoStack.push(op);
-
-    // FIX: Redo bruker de originale slutt-koordinatene (det som ble erstattet).
-    this.editor.applyEditInternal(
-        op.startRow, op.startCol, 
-        op.endRow, op.endCol, 
-        op.text, 
-        false
-    );
-
+    this.editor.applyEditInternal(op.startRow, op.startCol, op.endRow, op.endCol, op.text, false);
     this.editor.state.cursor = { ...op.cursorAfter };
     this.editor.updateScrollHeight();
     this.editor.render();
@@ -202,7 +185,7 @@ class EditorEngine {
     this.config = {
       lineHeight: 24,
       charWidth: 9, 
-      xOffset: 70, // Juster denne hvis teksten ikke treffer helt
+      xOffset: 70, 
     };
 
     this.state = {
@@ -210,11 +193,13 @@ class EditorEngine {
         "<html>", 
         "", 
         "<body>", 
-        "  <h1>Cut & Paste Undo should work now!</h1>", 
-        "  <script>",
-        "    // Try selecting this line, Ctrl+X, then Paste below.",
-        "    // Then hit Ctrl+Z. It should disappear completely.",
-        "  <\/script>", 
+        "  <h1>Beautify Test</h1>", 
+        "      <script>",
+        "  // This code is messy on purpose",
+        "     function hello() {",
+        "console.log('Press Alt+B to clean!');",
+        "   }",
+        "      <\/script>", 
         "</body>",
         "</html>"
       ],
@@ -396,6 +381,99 @@ class EditorEngine {
     this.setStatus(`No ${description} found`);
   }
 
+  // --- CLEAN & BEAUTIFY CODE (Ported from Original) ---
+  
+  async cleanCode() {
+    this.setStatus("Formatting code...");
+    
+    // 1. Slå sammen til én streng for regex-prosessering
+    const originalValue = this.state.lines.join('\n');
+    let text = originalValue;
+
+    // 2. Fjern kommentarer (Original logic)
+    // NB: Dette fjerner blokk-kommentarer /* */ og linjekommentarer //
+    const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
+    text = text.replace(re, (match, blockComment, lineComment, stringLiteral) => {
+        if (blockComment || lineComment) return ''; // Fjern kommentarer
+        return match; // Behold strings
+    });
+
+    // 3. Splitt opp, trim og fjern tomme linjer
+    let lines = text.split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0);
+
+    // 4. Indentering (Original logic)
+    const formattedLines = [];
+    let currentLevel = 0;
+    const indentUnit = '  ';
+    const voidTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype'];
+    const rootTags = ['html', 'head', 'body', 'script', 'style', '!doctype'];
+
+    lines.forEach((line) => {
+        let tagName = '';
+        const tagMatch = line.match(/^<\/?([a-zA-Z0-9-]+)/);
+        if (tagMatch) tagName = tagMatch[1].toLowerCase();
+
+        // Nullstill nivå for root tags eller funksjoner
+        const isHtmlRoot = rootTags.includes(tagName);
+        const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(line);
+        const isMethodDef = /^\s*(async\s+)?(?!(if|for|while|switch|catch)\b)[a-zA-Z_$][\w$]*\s*\(.*?\)\s*\{/.test(line);
+        
+        if (isStandardDef || isMethodDef || isHtmlRoot) currentLevel = 0;
+
+        // Tell åpne/lukke symboler
+        const openBraces = (line.match(/\{/g) || []).length;
+        const closeBraces = (line.match(/\}/g) || []).length;
+        let openTags = 0;
+        let closeTags = 0;
+
+        if (/^<[a-zA-Z0-9-]+/.test(line) && !line.includes('</') && !line.endsWith('/>') && !voidTags.includes(tagName)) {
+            if (!isHtmlRoot) openTags = 1;
+        }
+        if (line.match(/^<\/[a-zA-Z0-9-]+/)) {
+            if (!isHtmlRoot) closeTags = 1;
+        }
+
+        // Juster nivå før vi printer (hvis det er en lukkende linje)
+        let printLevel = currentLevel;
+        const startsWithClosing = line.match(/^(\}|\]|\)|\<\/)/);
+        const isContinuation = /^(else|catch|finally)/.test(line);
+
+        if (startsWithClosing || isContinuation) {
+            printLevel = Math.max(0, currentLevel - 1);
+        }
+
+        formattedLines.push(indentUnit.repeat(printLevel) + line);
+
+        const netChange = (openBraces - closeBraces) + (openTags - closeTags);
+        currentLevel = Math.max(0, currentLevel + netChange);
+    });
+
+    const newValue = formattedLines.join('\n');
+
+    // 5. Send gjennom applyChange for Undo-støtte!
+    if (originalValue !== newValue) {
+        // Vi erstatter ALT innhold.
+        // For å gjøre dette riktig med applyEditInternal, må vi vite hvor siste linje slutter.
+        const lastRow = this.state.lines.length - 1;
+        const lastCol = this.state.lines[lastRow].length;
+        
+        this.applyEditInternal(0, 0, lastRow, lastCol, newValue, true);
+        
+        // Reset view
+        this.state.scrollTop = 0;
+        this.dom.editor.scrollTop = 0;
+        this.state.cursor = { row: 0, col: 0 };
+        this.updateScrollHeight();
+        this.render();
+        this.setStatus("Cleaned & Beautified! ✨");
+    } else {
+        this.setStatus("Already clean! ✨");
+    }
+  }
+
+  // --- EDIT CORE ---
   applyChange(newText) {
     const { cursor, selectionAnchor } = this.state;
     let start, end;
@@ -617,10 +695,7 @@ class EditorEngine {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top + this.dom.editor.scrollTop;
     let row = Math.floor(y / this.config.lineHeight);
-    
-    // BRUK XOFFSET HER OGSÅ:
     let col = Math.floor((x - this.config.xOffset) / this.config.charWidth);
-    
     row = Math.max(0, Math.min(row, this.state.lines.length - 1));
     col = Math.max(0, Math.min(col, this.state.lines[row].length));
     return { row, col };
@@ -656,6 +731,9 @@ class EditorEngine {
       if (e.code === 'Digit3') { e.preventDefault(); this.findAndJump(/(\/\/|\/\*)/, 'Comment'); }
       if (e.code === 'Digit4') { e.preventDefault(); this.findAndJump(/(function\s|\b\w+\s*\(.*\)\s*\{|=>|class\s)/, 'Function'); }
     }
+    
+    // NY SNARVEI: Alt + B (Beautify)
+    if (e.altKey && key === 'b') { e.preventDefault(); this.cleanCode(); }
   }
 
   getSelectionText() {
