@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MonoStack Engine 2.12 (Beautifier)</title>
+<title>MonoStack Engine 2.13</title>
 <style>
   :root {
     --bg-color: #1e1e1e;
@@ -108,7 +108,11 @@
     padding: 4px 10px;
     font-family: sans-serif;
     z-index: 100;
+    display: flex;
+    justify-content: space-between;
   }
+  
+  #file-status { font-weight: bold; }
 
   @keyframes blink {
     0%, 100% { opacity: 1; }
@@ -124,7 +128,10 @@
   <div id="cursor"></div>
 </div>
 
-<div id="statusbar">MonoStack V2.12 - Beautifier Ready (Alt+B)</div>
+<div id="statusbar">
+  <span id="file-status">Untitled.txt</span>
+  <span id="message-area">Ready</span>
+</div>
 
 <script>
 class HistoryManager {
@@ -189,27 +196,15 @@ class EditorEngine {
     };
 
     this.state = {
-      lines: [
-        "<html>", 
-        "", 
-        "<body>", 
-        "  <h1>Beautify Test</h1>", 
-        "      <script>",
-        "  // This code is messy on purpose",
-        "     function hello() {",
-        "console.log('Press Alt+B to clean!');",
-        "   }",
-        "      <\/script>", 
-        "</body>",
-        "</html>"
-      ],
+      lines: ["Welcome to MonoStack V2.13", "Try Alt+N (New), Alt+P (Preview), Alt+T (Tab)", "Try closing this tab without saving!"],
       cursor: { row: 0, col: 0 },
       selectionAnchor: null,
       isDragging: false,
       scrollTop: 0,
       viewportHeight: 0,
       fileName: 'Untitled.txt',
-      fileHandle: null
+      fileHandle: null,
+      isDirty: false // --- NYTT: Holder styr på om filen er endret
     };
 
     this.dom = {
@@ -217,7 +212,8 @@ class EditorEngine {
       phantom: document.getElementById('scroll-phantom'),
       viewport: document.getElementById('view-port'),
       cursor: document.getElementById('cursor'),
-      statusbar: document.getElementById('statusbar')
+      fileStatus: document.getElementById('file-status'),
+      messageArea: document.getElementById('message-area')
     };
 
     this.history = new HistoryManager(this);
@@ -228,6 +224,14 @@ class EditorEngine {
     this.state.viewportHeight = window.innerHeight;
     this.recalculateLayout();
     setTimeout(() => this.recalculateLayout(), 100);
+
+    // --- NYTT: Dirty check før vinduet lukkes/lastes på nytt ---
+    window.addEventListener('beforeunload', (e) => {
+      if (this.state.isDirty) {
+        e.preventDefault();
+        e.returnValue = ''; // Standard måte å trigge browserens "Leave site?" dialog
+      }
+    });
 
     this.dom.editor.addEventListener('scroll', () => this.onScroll());
     this.dom.editor.addEventListener('keydown', (e) => this.handleInput(e));
@@ -244,6 +248,59 @@ class EditorEngine {
     this.dom.editor.focus();
     this.updateScrollHeight();
     this.render();
+    this.updateTitle(); // Sett riktig tittel ved start
+  }
+
+  // --- NEW FEATURES (Shortcuts Logic) ---
+
+  newFile() {
+    if (this.state.isDirty) {
+      if (!confirm("You have unsaved changes. Create new file anyway?")) return;
+    }
+    this.state.lines = [""];
+    this.state.cursor = { row: 0, col: 0 };
+    this.state.selectionAnchor = null;
+    this.state.fileName = 'Untitled.txt';
+    this.state.fileHandle = null;
+    this.state.isDirty = false;
+    this.history.undoStack = [];
+    this.history.redoStack = [];
+    
+    this.updateScrollHeight();
+    this.render();
+    this.updateTitle();
+    this.setStatus("New file created");
+  }
+
+  previewFile() {
+    const content = this.state.lines.join('\n');
+    const win = window.open();
+    if (win) {
+      win.document.write(content);
+      win.document.close();
+    } else {
+      this.setStatus("Popup blocked! Allow popups to preview.");
+    }
+  }
+
+  openNewTab() {
+    window.open(window.location.href, '_blank');
+  }
+
+  // --- SYSTEM UTILS ---
+
+  setDirty(dirty) {
+    if (this.state.isDirty !== dirty) {
+      this.state.isDirty = dirty;
+      this.updateTitle();
+    }
+  }
+
+  updateTitle() {
+    const dirtyMarker = this.state.isDirty ? "* " : "";
+    const title = `${dirtyMarker}${this.state.fileName} - MonoStack`;
+    document.title = title;
+    this.dom.fileStatus.textContent = dirtyMarker + this.state.fileName;
   }
 
   recalculateLayout() {
@@ -266,12 +323,10 @@ class EditorEngine {
     testLine.style.width = 'auto';
     testLine.style.whiteSpace = 'pre';
     testLine.textContent = 'M'.repeat(100); 
-    
     this.dom.viewport.appendChild(testLine);
     const rect = testLine.getBoundingClientRect();
     const width = rect.width / 100;
     this.dom.viewport.removeChild(testLine);
-    
     return width;
   }
 
@@ -381,29 +436,16 @@ class EditorEngine {
     this.setStatus(`No ${description} found`);
   }
 
-  // --- CLEAN & BEAUTIFY CODE (Ported from Original) ---
-  
   async cleanCode() {
     this.setStatus("Formatting code...");
-    
-    // 1. Slå sammen til én streng for regex-prosessering
     const originalValue = this.state.lines.join('\n');
     let text = originalValue;
-
-    // 2. Fjern kommentarer (Original logic)
-    // NB: Dette fjerner blokk-kommentarer /* */ og linjekommentarer //
     const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
     text = text.replace(re, (match, blockComment, lineComment, stringLiteral) => {
-        if (blockComment || lineComment) return ''; // Fjern kommentarer
-        return match; // Behold strings
+        if (blockComment || lineComment) return ''; 
+        return match; 
     });
-
-    // 3. Splitt opp, trim og fjern tomme linjer
-    let lines = text.split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 0);
-
-    // 4. Indentering (Original logic)
+    let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     const formattedLines = [];
     let currentLevel = 0;
     const indentUnit = '  ';
@@ -414,54 +456,30 @@ class EditorEngine {
         let tagName = '';
         const tagMatch = line.match(/^<\/?([a-zA-Z0-9-]+)/);
         if (tagMatch) tagName = tagMatch[1].toLowerCase();
-
-        // Nullstill nivå for root tags eller funksjoner
         const isHtmlRoot = rootTags.includes(tagName);
         const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(line);
         const isMethodDef = /^\s*(async\s+)?(?!(if|for|while|switch|catch)\b)[a-zA-Z_$][\w$]*\s*\(.*?\)\s*\{/.test(line);
-        
         if (isStandardDef || isMethodDef || isHtmlRoot) currentLevel = 0;
-
-        // Tell åpne/lukke symboler
         const openBraces = (line.match(/\{/g) || []).length;
         const closeBraces = (line.match(/\}/g) || []).length;
         let openTags = 0;
         let closeTags = 0;
-
-        if (/^<[a-zA-Z0-9-]+/.test(line) && !line.includes('</') && !line.endsWith('/>') && !voidTags.includes(tagName)) {
-            if (!isHtmlRoot) openTags = 1;
-        }
-        if (line.match(/^<\/[a-zA-Z0-9-]+/)) {
-            if (!isHtmlRoot) closeTags = 1;
-        }
-
-        // Juster nivå før vi printer (hvis det er en lukkende linje)
+        if (/^<[a-zA-Z0-9-]+/.test(line) && !line.includes('</') && !line.endsWith('/>') && !voidTags.includes(tagName)) { if (!isHtmlRoot) openTags = 1; }
+        if (line.match(/^<\/[a-zA-Z0-9-]+/)) { if (!isHtmlRoot) closeTags = 1; }
         let printLevel = currentLevel;
         const startsWithClosing = line.match(/^(\}|\]|\)|\<\/)/);
         const isContinuation = /^(else|catch|finally)/.test(line);
-
-        if (startsWithClosing || isContinuation) {
-            printLevel = Math.max(0, currentLevel - 1);
-        }
-
+        if (startsWithClosing || isContinuation) { printLevel = Math.max(0, currentLevel - 1); }
         formattedLines.push(indentUnit.repeat(printLevel) + line);
-
         const netChange = (openBraces - closeBraces) + (openTags - closeTags);
         currentLevel = Math.max(0, currentLevel + netChange);
     });
 
     const newValue = formattedLines.join('\n');
-
-    // 5. Send gjennom applyChange for Undo-støtte!
     if (originalValue !== newValue) {
-        // Vi erstatter ALT innhold.
-        // For å gjøre dette riktig med applyEditInternal, må vi vite hvor siste linje slutter.
         const lastRow = this.state.lines.length - 1;
         const lastCol = this.state.lines[lastRow].length;
-        
         this.applyEditInternal(0, 0, lastRow, lastCol, newValue, true);
-        
-        // Reset view
         this.state.scrollTop = 0;
         this.dom.editor.scrollTop = 0;
         this.state.cursor = { row: 0, col: 0 };
@@ -494,6 +512,12 @@ class EditorEngine {
   }
 
   applyEditInternal(startRow, startCol, endRow, endCol, newText, recordHistory) {
+    // --- NYTT: Sett dirty state når innhold endres (og det logges til historie) ---
+    if (recordHistory) {
+        this.setDirty(true);
+    }
+    // -----------------------------------------------------------------------------
+
     const lines = this.state.lines;
     let oldText = "";
     if (startRow === endRow) {
@@ -706,6 +730,14 @@ class EditorEngine {
     const key = e.key.toLowerCase();
     if (isCtrl && key === 'z') { e.preventDefault(); this.history.undo(); this.setStatus("Undo"); }
     if ((isCtrl && key === 'y') || (isCtrl && e.shiftKey && key === 'z')) { e.preventDefault(); this.history.redo(); this.setStatus("Redo"); }
+    
+    // Alt Shortcuts
+    if (e.altKey && key === 'n') { e.preventDefault(); this.newFile(); }
+    if (e.altKey && key === 'p') { e.preventDefault(); this.previewFile(); }
+    if (e.altKey && key === 't') { e.preventDefault(); this.openNewTab(); }
+    if (e.altKey && key === 'b') { e.preventDefault(); this.cleanCode(); }
+    if (e.altKey && key === 'g') { e.preventDefault(); this.generateStressTest(); }
+
     if (isCtrl && key === 'o') { e.preventDefault(); await this.openFile(); }
     if (isCtrl && key === 's') { e.preventDefault(); await this.saveFile(); }
     if (isCtrl && key === 'a') {
@@ -724,16 +756,12 @@ class EditorEngine {
         this.setStatus(key === 'c' ? "Copied" : "Cut");
       }
     }
-    if (e.altKey && key === 'g') { e.preventDefault(); this.generateStressTest(); }
     if (isCtrl && e.shiftKey) {
       if (e.code === 'Digit1') { e.preventDefault(); this.findAndJump(/<body/i, '<body>'); }
       if (e.code === 'Digit2') { e.preventDefault(); this.findAndJump(/<style/i, '<style>'); }
       if (e.code === 'Digit3') { e.preventDefault(); this.findAndJump(/(\/\/|\/\*)/, 'Comment'); }
       if (e.code === 'Digit4') { e.preventDefault(); this.findAndJump(/(function\s|\b\w+\s*\(.*\)\s*\{|=>|class\s)/, 'Function'); }
     }
-    
-    // NY SNARVEI: Alt + B (Beautify)
-    if (e.altKey && key === 'b') { e.preventDefault(); this.cleanCode(); }
   }
 
   getSelectionText() {
@@ -749,6 +777,10 @@ class EditorEngine {
   }
 
   async openFile() {
+    // Check dirty first
+    if (this.state.isDirty) {
+        if (!confirm("You have unsaved changes. Open file anyway?")) return;
+    }
     try {
       const [handle] = await window.showOpenFilePicker();
       this.state.fileHandle = handle;
@@ -759,6 +791,9 @@ class EditorEngine {
       this.state.cursor = { row: 0, col: 0 };
       this.state.selectionAnchor = null;
       this.history.undoStack = []; this.history.redoStack = [];
+      
+      this.setDirty(false); // Reset dirty
+      
       this.updateScrollHeight(); this.render();
       this.setStatus(`Opened: ${file.name}`);
     } catch (e) {}
@@ -770,6 +805,7 @@ class EditorEngine {
       const w = await this.state.fileHandle.createWritable();
       await w.write(this.state.lines.join('\n'));
       await w.close();
+      this.setDirty(false); // Clean!
       this.setStatus("Saved!");
     } catch (e) { this.setStatus("Save failed"); }
   }
@@ -785,8 +821,8 @@ class EditorEngine {
   }
 
   setStatus(msg) {
-    this.dom.statusbar.textContent = msg;
-    setTimeout(() => this.dom.statusbar.textContent = 'Ready', 3000);
+    this.dom.messageArea.textContent = msg;
+    setTimeout(() => this.dom.messageArea.textContent = 'Ready', 3000);
   }
   
   escapeHTML(str) {
