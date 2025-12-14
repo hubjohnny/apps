@@ -204,7 +204,7 @@ hr.separator { border: 0; border-top: 1px solid #3c3c3c; margin: 8px 0; }
         <br>
         <small style="color: #858585;"><i>Remove comments, empty lines, whitespace & fix indent.</i></small>
       </span>
-      <strong>Ctrl + B</strong>
+      <strong>Alt + B</strong>
     </li>
     <hr class="separator">
     <li><span>Jump to &lt;style&gt;</span> <strong>Ctrl + Shift + 1</strong></li>
@@ -533,7 +533,7 @@ handleGlobalKeyDown(e) {
   const isModalOpen = this.elements.helpModal.style.display === 'block' || this.elements.searchModal.style.display === 'block';
   const isCtrl = e.ctrlKey || e.metaKey;
   const key = e.key.toLowerCase();
-  if (isCtrl && key === 'b') { e.preventDefault(); this.cleanCode(); return; }
+  if (e.altKey && key === 'b') { e.preventDefault(); this.cleanCode(); }
   if (isCtrl && key === 's') { e.preventDefault(); this.saveFile(); return; }
   if (isCtrl && key === 'o') { e.preventDefault(); this.openFile(); return; }
   if (e.altKey && key === 'h') { e.preventDefault(); this.toggleModal('help'); }
