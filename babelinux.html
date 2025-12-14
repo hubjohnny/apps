@@ -1,21 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-55NB91FTK3');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BabeLinux</title>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
 :root {
   --terminal-color: #33FF33;
@@ -196,7 +184,6 @@ body {
 .terminal.theme-rose {
   color: #FFC0CB;
 }
-
 .sticky-link {
   position: fixed;
   bottom: 8px;
@@ -227,7 +214,6 @@ body {
     box-shadow: 0 0 10px rgba(237, 231, 246, 0.8);
   }
 }
-
 </style>
 </head>
 <body>
@@ -273,6 +259,7 @@ const text = {
   secretResponse: "Oh, you found my secret command..."
 };
 const introText = `AVAILABLE COMMANDS:                            GAMES:
+
 play             - Play a local media file     sokoban  - Opens a game of Sokoban
 pause            - Pause playback (audio)      snake    - Opens a game of Snake
 stop             - Stop playback (audio)       tetris   - Opens a game of Tetris
@@ -284,7 +271,9 @@ nano [filename]  - Open a simple text editor
 pic              - Simple image editor
 say [text]       - Make the terminal speak
 help             - Show this help message
+
 TAB COMMANDS:
+
 Alt + T          - New tab
 Alt + X          - Close active tab
 `;

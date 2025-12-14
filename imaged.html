@@ -1,21 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-55NB91FTK3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-55NB91FTK3');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Image Editor</title>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","author":{"@type":"Person","name":"Johnny Heggelund"}}</script>
 <style>
 :root {
   --bg-color: #1e1e1e;
@@ -293,7 +281,6 @@ canvas {
   min-width: 25px;
   text-align: right;
 }
-
 .sticky-link {
   position: fixed;
   bottom: 8px;
@@ -324,13 +311,10 @@ canvas {
     box-shadow: 0 0 10px rgba(237, 231, 246, 0.8);
   }
 }
-
 </style>
 </head>
 <body>
-
-<a href="index.html" target="_blank" rel="noopener noreferrer" class="sticky-link">My Apps</a>
-
+<a href="index.html" class="sticky-link">My Apps</a>
 <input type="file" id="file-input" accept="image/*" style="display: none;">
 <input type="file" id="project-input" accept=".json" style="display: none;">
 <div class="options-bar">
