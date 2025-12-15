@@ -1,5 +1,1 @@
-## Copyright and License
-
-&copy; 2025 Johnny Heggelund. All rights reserved.
-
-The content of this repository is the intellectual property of Johnny Heggelund. You are welcome to view the code for educational purposes or to evaluate my work, but you are **not** permitted to copy, distribute, modify, or use any part of this code in your own projects without my explicit written permission.
+📘 [Facebook](https://www.facebook.com/heggelund666) 🐱 [GitHub](https://github.com/hubjohnny) 💩 [Reddit](https://www.reddit.com/user/Leather_Interview_98/) 🍿 [YouTube](https://www.youtube.com/@heggelund666)
