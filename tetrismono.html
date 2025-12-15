@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tetris Mono</title>
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIiBmaWxsPSIjMDAwMDAwIj7wn5+pPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn5+pPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
 <style>
 :root {
   --main-color: #4CAF50;
@@ -238,45 +238,45 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastTime = 0;
   let currentRotationState = 0;
 class Piece {
-constructor(type, context) {
-  this.type = type;
-  this.shape = JSON.parse(JSON.stringify(TETROMINOS[type].shape));
-  this.context = context;
-  this.color = MAIN_COLOR;
-  this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
-  this.y = 0;
-  this.rotationIndex = 0;
-}
-draw() {
-  this.context.fillStyle = this.color;
-  this.shape.forEach((row, y) => {
-    row.forEach((value, x) => {
-      if (value > 0) {
-        this.context.fillRect(this.x + x, this.y + y, 1, 1);
-      }
-    });
-  });
-}
-drawGhost() {
-  const ghostY = this.getDropPosition();
-  this.context.globalAlpha = 0.3;
-  this.context.fillStyle = this.color;
-  this.shape.forEach((row, y) => {
-    row.forEach((value, x) => {
-      if (value > 0) {
-        this.context.fillRect(this.x + x, ghostY + y, 1, 1);
-      }
-    });
-  });
-  this.context.globalAlpha = 1.0;
-}
-getDropPosition() {
-  let testY = this.y;
-  while (isValidMove(this.shape, this.x, testY + 1)) {
-    testY++;
+  constructor(type, context) {
+    this.type = type;
+    this.shape = JSON.parse(JSON.stringify(TETROMINOS[type].shape));
+    this.context = context;
+    this.color = MAIN_COLOR;
+    this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
+    this.y = 0;
+    this.rotationIndex = 0;
   }
-  return testY;
-}
+  draw() {
+    this.context.fillStyle = this.color;
+    this.shape.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if (value > 0) {
+          this.context.fillRect(this.x + x, this.y + y, 1, 1);
+        }
+      });
+    });
+  }
+  drawGhost() {
+    const ghostY = this.getDropPosition();
+    this.context.globalAlpha = 0.3;
+    this.context.fillStyle = this.color;
+    this.shape.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if (value > 0) {
+          this.context.fillRect(this.x + x, ghostY + y, 1, 1);
+        }
+      });
+    });
+    this.context.globalAlpha = 1.0;
+  }
+  getDropPosition() {
+    let testY = this.y;
+    while (isValidMove(this.shape, this.x, testY + 1)) {
+      testY++;
+    }
+    return testY;
+  }
 }
 function createGrid(cols, rows) {
   return Array.from({ length: rows }, () => Array(cols).fill(0));

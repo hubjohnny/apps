@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Soundtracker</title>
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIiBmaWxsPSIjMDAwMDAwIj7wn462PC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn465PC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
 <style>
 :root {
   --bg-color: #1a1a2e;
@@ -341,395 +341,395 @@ input[type=range].volume-slider::-moz-range-thumb {
 </div>
 <script>
 class AudioManager {
-constructor() { this.audioCtx = null; this.noteFrequencies = {}; this.instruments = []; this.initNoteFrequencies(); this.defineInstruments(); }
-initAudioContext() { if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (this.audioCtx.state === 'suspended') this.audioCtx.resume(); }
-initNoteFrequencies() {
-  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  for (let o = 0; o < 10; o++) for (let i = 0; i < 12; i++) this.noteFrequencies[`${noteNames[i]}${o}`] = 440 * Math.pow(2, (o * 12 + i - 57) / 12);
-}
-defineInstruments() {
-  this.instruments = [
-  { name: "---", play: () => { } },
-  {
-    name: "Kick", type: "drum", play: (note, time, vol) => {
-      if (!this.audioCtx) return; const o = this.audioCtx.createOscillator(), g = this.audioCtx.createGain(); o.connect(g); g.connect(this.audioCtx.destination);
-      o.frequency.setValueAtTime(150, time); o.frequency.exponentialRampToValueAtTime(0.01, time + 0.1);
-      g.gain.setValueAtTime(vol, time); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.2); o.start(time); o.stop(time + 0.2);
-    }
-  },
-  {
-    name: "Snare", type: "drum", play: (note, time, vol) => {
-      if (!this.audioCtx) return; const n = this.audioCtx.createBufferSource(), bS = this.audioCtx.sampleRate * 0.2, b = this.audioCtx.createBuffer(1, bS, this.audioCtx.sampleRate), d = b.getChannelData(0);
-      for (let i = 0; i < bS; i++)d[i] = Math.random() * 2 - 1; n.buffer = b;
-      const nF = this.audioCtx.createBiquadFilter(); nF.type = 'highpass'; nF.frequency.value = 1000; n.connect(nF);
-      const nE = this.audioCtx.createGain(); nF.connect(nE); nE.connect(this.audioCtx.destination);
-      nE.gain.setValueAtTime(vol, time); nE.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.15); n.start(time); n.stop(time + 0.15);
-    }
-  },
-  {
-    name: "Hat C", type: "drum", play: (note, time, vol) => {
-      if (!this.audioCtx) return; const n = this.audioCtx.createBufferSource(), bS = this.audioCtx.sampleRate * 0.1, b = this.audioCtx.createBuffer(1, bS, this.audioCtx.sampleRate), d = b.getChannelData(0);
-      for (let i = 0; i < bS; i++)d[i] = Math.random() * 2 - 1; n.buffer = b;
-      const nF = this.audioCtx.createBiquadFilter(); nF.type = 'highpass'; nF.frequency.value = 7000; n.connect(nF);
-      const g = this.audioCtx.createGain(); nF.connect(g); g.connect(this.audioCtx.destination);
-      g.gain.setValueAtTime(0.3 * vol, time); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.05); n.start(time); n.stop(time + 0.05);
-    }
-  },
-  {
-    name: "Hat O", type: "drum", play: (note, time, vol) => {
-      if (!this.audioCtx) return; const n = this.audioCtx.createBufferSource(), bS = this.audioCtx.sampleRate * 0.5, b = this.audioCtx.createBuffer(1, bS, this.audioCtx.sampleRate), d = b.getChannelData(0);
-      for (let i = 0; i < bS; i++)d[i] = Math.random() * 2 - 1; n.buffer = b;
-      const nF = this.audioCtx.createBiquadFilter(); nF.type = 'highpass'; nF.frequency.value = 6000; n.connect(nF);
-      const g = this.audioCtx.createGain(); nF.connect(g); g.connect(this.audioCtx.destination);
-      g.gain.setValueAtTime(0.3 * vol, time); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.4); n.start(time); n.stop(time + 0.4);
-    }
-  },
-  {
-    name: "Tom", type: "drum", play: (note, time, vol) => {
-      if (!this.audioCtx) return; const o = this.audioCtx.createOscillator(), g = this.audioCtx.createGain(); o.connect(g); g.connect(this.audioCtx.destination);
-      o.frequency.setValueAtTime(300, time); o.frequency.exponentialRampToValueAtTime(50, time + 0.2);
-      g.gain.setValueAtTime(0.8 * vol, time); g.gain.linearRampToValueAtTime(0, time + 0.25); o.start(time); o.stop(time + 0.25);
-    }
-  },
-  {
-    name: "Bass", type: "melodic", play: (note, time, vol, dur) => {
-      if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
-      const o = this.audioCtx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, time);
-      const flt = this.audioCtx.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.setValueAtTime(400, time);
-      const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
-      g.gain.linearRampToValueAtTime(0.5 * vol, time + 0.01); g.gain.linearRampToValueAtTime(0, time + dur);
-      o.connect(flt); flt.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
-    }
-  },
-  {
-    name: "Lead", type: "melodic", play: (note, time, vol, dur) => {
-      if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
-      const o = this.audioCtx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(f, time);
-      const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
-      g.gain.linearRampToValueAtTime(0.2 * vol, time + 0.02); g.gain.linearRampToValueAtTime(0.1 * vol, time + 0.1);
-      g.gain.setValueAtTime(0.1 * vol, time + dur - 0.1); g.gain.linearRampToValueAtTime(0, time + dur);
-      o.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
-    }
-  },
-  {
-    name: "Pad", type: "melodic", play: (note, time, vol, dur) => {
-      if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
-      for (let i = 0; i < 3; i++) {
-        const o = this.audioCtx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, time); o.detune.setValueAtTime(i === 0 ? 0 : (i === 1 ? -7 : 7), time);
-        const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
-        g.gain.linearRampToValueAtTime(0.1 * vol, time + 0.2); g.gain.setValueAtTime(0.1 * vol, time + dur - 0.3);
-        g.gain.linearRampToValueAtTime(0, time + dur);
-        o.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
-      }
-    }
-  },
-  {
-    name: "Chip", type: "melodic", play: (note, time, vol, dur) => {
-      if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
-      for (let i = 0; i < 2; i++) {
-        const o = this.audioCtx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(f, time); o.detune.setValueAtTime(i === 0 ? 0 : 10, time);
-        const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
-        g.gain.linearRampToValueAtTime(0.15 * vol, time + 0.01); g.gain.setValueAtTime(0.15 * vol, time + dur - 0.01);
-        g.gain.linearRampToValueAtTime(0, time + dur);
-        o.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
-      }
-    }
-  },
-  {
-    name: "Piano", type: "melodic", play: (note, time, vol, dur) => {
-      if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
-      const o = this.audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(f, time);
-      const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
-      g.gain.linearRampToValueAtTime(0.4 * vol, time + 0.01); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + dur);
-      o.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
-    }
+  constructor() { this.audioCtx = null; this.noteFrequencies = {}; this.instruments = []; this.initNoteFrequencies(); this.defineInstruments(); }
+  initAudioContext() { if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (this.audioCtx.state === 'suspended') this.audioCtx.resume(); }
+  initNoteFrequencies() {
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    for (let o = 0; o < 10; o++) for (let i = 0; i < 12; i++) this.noteFrequencies[`${noteNames[i]}${o}`] = 440 * Math.pow(2, (o * 12 + i - 57) / 12);
   }
-];
-}
+  defineInstruments() {
+    this.instruments = [
+    { name: "---", play: () => { } },
+    {
+      name: "Kick", type: "drum", play: (note, time, vol) => {
+        if (!this.audioCtx) return; const o = this.audioCtx.createOscillator(), g = this.audioCtx.createGain(); o.connect(g); g.connect(this.audioCtx.destination);
+        o.frequency.setValueAtTime(150, time); o.frequency.exponentialRampToValueAtTime(0.01, time + 0.1);
+        g.gain.setValueAtTime(vol, time); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.2); o.start(time); o.stop(time + 0.2);
+      }
+    },
+    {
+      name: "Snare", type: "drum", play: (note, time, vol) => {
+        if (!this.audioCtx) return; const n = this.audioCtx.createBufferSource(), bS = this.audioCtx.sampleRate * 0.2, b = this.audioCtx.createBuffer(1, bS, this.audioCtx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < bS; i++)d[i] = Math.random() * 2 - 1; n.buffer = b;
+        const nF = this.audioCtx.createBiquadFilter(); nF.type = 'highpass'; nF.frequency.value = 1000; n.connect(nF);
+        const nE = this.audioCtx.createGain(); nF.connect(nE); nE.connect(this.audioCtx.destination);
+        nE.gain.setValueAtTime(vol, time); nE.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.15); n.start(time); n.stop(time + 0.15);
+      }
+    },
+    {
+      name: "Hat C", type: "drum", play: (note, time, vol) => {
+        if (!this.audioCtx) return; const n = this.audioCtx.createBufferSource(), bS = this.audioCtx.sampleRate * 0.1, b = this.audioCtx.createBuffer(1, bS, this.audioCtx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < bS; i++)d[i] = Math.random() * 2 - 1; n.buffer = b;
+        const nF = this.audioCtx.createBiquadFilter(); nF.type = 'highpass'; nF.frequency.value = 7000; n.connect(nF);
+        const g = this.audioCtx.createGain(); nF.connect(g); g.connect(this.audioCtx.destination);
+        g.gain.setValueAtTime(0.3 * vol, time); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.05); n.start(time); n.stop(time + 0.05);
+      }
+    },
+    {
+      name: "Hat O", type: "drum", play: (note, time, vol) => {
+        if (!this.audioCtx) return; const n = this.audioCtx.createBufferSource(), bS = this.audioCtx.sampleRate * 0.5, b = this.audioCtx.createBuffer(1, bS, this.audioCtx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < bS; i++)d[i] = Math.random() * 2 - 1; n.buffer = b;
+        const nF = this.audioCtx.createBiquadFilter(); nF.type = 'highpass'; nF.frequency.value = 6000; n.connect(nF);
+        const g = this.audioCtx.createGain(); nF.connect(g); g.connect(this.audioCtx.destination);
+        g.gain.setValueAtTime(0.3 * vol, time); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.4); n.start(time); n.stop(time + 0.4);
+      }
+    },
+    {
+      name: "Tom", type: "drum", play: (note, time, vol) => {
+        if (!this.audioCtx) return; const o = this.audioCtx.createOscillator(), g = this.audioCtx.createGain(); o.connect(g); g.connect(this.audioCtx.destination);
+        o.frequency.setValueAtTime(300, time); o.frequency.exponentialRampToValueAtTime(50, time + 0.2);
+        g.gain.setValueAtTime(0.8 * vol, time); g.gain.linearRampToValueAtTime(0, time + 0.25); o.start(time); o.stop(time + 0.25);
+      }
+    },
+    {
+      name: "Bass", type: "melodic", play: (note, time, vol, dur) => {
+        if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
+        const o = this.audioCtx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, time);
+        const flt = this.audioCtx.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.setValueAtTime(400, time);
+        const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
+        g.gain.linearRampToValueAtTime(0.5 * vol, time + 0.01); g.gain.linearRampToValueAtTime(0, time + dur);
+        o.connect(flt); flt.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
+      }
+    },
+    {
+      name: "Lead", type: "melodic", play: (note, time, vol, dur) => {
+        if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
+        const o = this.audioCtx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(f, time);
+        const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
+        g.gain.linearRampToValueAtTime(0.2 * vol, time + 0.02); g.gain.linearRampToValueAtTime(0.1 * vol, time + 0.1);
+        g.gain.setValueAtTime(0.1 * vol, time + dur - 0.1); g.gain.linearRampToValueAtTime(0, time + dur);
+        o.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
+      }
+    },
+    {
+      name: "Pad", type: "melodic", play: (note, time, vol, dur) => {
+        if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
+        for (let i = 0; i < 3; i++) {
+          const o = this.audioCtx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, time); o.detune.setValueAtTime(i === 0 ? 0 : (i === 1 ? -7 : 7), time);
+          const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
+          g.gain.linearRampToValueAtTime(0.1 * vol, time + 0.2); g.gain.setValueAtTime(0.1 * vol, time + dur - 0.3);
+          g.gain.linearRampToValueAtTime(0, time + dur);
+          o.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
+        }
+      }
+    },
+    {
+      name: "Chip", type: "melodic", play: (note, time, vol, dur) => {
+        if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
+        for (let i = 0; i < 2; i++) {
+          const o = this.audioCtx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(f, time); o.detune.setValueAtTime(i === 0 ? 0 : 10, time);
+          const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
+          g.gain.linearRampToValueAtTime(0.15 * vol, time + 0.01); g.gain.setValueAtTime(0.15 * vol, time + dur - 0.01);
+          g.gain.linearRampToValueAtTime(0, time + dur);
+          o.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
+        }
+      }
+    },
+    {
+      name: "Piano", type: "melodic", play: (note, time, vol, dur) => {
+        if (!this.audioCtx) return; const f = this.noteFrequencies[note]; if (!f) return;
+        const o = this.audioCtx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(f, time);
+        const g = this.audioCtx.createGain(); g.gain.setValueAtTime(0, time);
+        g.gain.linearRampToValueAtTime(0.4 * vol, time + 0.01); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + dur);
+        o.connect(g); g.connect(this.audioCtx.destination); o.start(time); o.stop(time + dur);
+      }
+    }
+  ];
+  }
 }
 class Sequencer {
-constructor(audioManager, ui) {
-  this.audioManager = audioManager; this.ui = ui; this.config = { tracks: 8 };
-  this.state = { isPlaying: false, isRecording: false, isPaused: false, loopStartTime: 0, currentPattern: 0, currentRow: 0, timerId: null, lookahead: 25.0, scheduleAheadTime: 0.1, nextNoteTime: 0.0 };
-  this.song = this.createEmptySong(); this.loadDefaultSong();
-}
-createEmptySong() { return { bpm: 120, trackVolumes: Array(this.config.tracks).fill(1.0), patterns: [this.createEmptyPattern(64)] }; }
-createEmptyPattern(rows) { return { rows: rows, data: Array(rows).fill(0).map(() => Array(this.config.tracks).fill(null)) }; }
-loadDefaultSong() {
-  this.song.trackVolumes[0] = 0.8; this.song.trackVolumes[1] = 0.7; this.song.trackVolumes[2] = 0.5;
-  const p = this.song.patterns[0].data;
-  p[0][0] = { note: 'C2', inst: 6 }; p[4][0] = { note: 'G1', inst: 6 }; p[8][0] = { note: 'A#1', inst: 6 }; p[12][0] = { note: 'A1', inst: 6 };
-  p[4][1] = { note: 'C4', inst: 2 }; p[12][1] = { note: 'C4', inst: 2 };
-  for (let i = 0; i < 16; i += 4) p[i][0] = { note: 'C4', inst: 1 };
-  for (let i = 2; i < 16; i += 2) p[i][2] = { note: 'C4', inst: 3 };
-}
-setPatternLength(newLength) {
-  const pattern = this.song.patterns[this.state.currentPattern]; const oldLength = pattern.rows;
-  if (newLength > oldLength) {
-    for (let i = oldLength; i < newLength; i++) pattern.data.push(Array(this.config.tracks).fill(null));
-  } else pattern.data.length = newLength;
-  pattern.rows = newLength;
-}
-record() {
-  if (this.state.isPlaying) this.stop();
-  this.state.isRecording = true;
-  this.state.isPaused = false;
-  this.state.currentRow = 0;
-  this.play();
-}
-play() {
-  this.audioManager.initAudioContext(); if (this.state.isPlaying) return;
-  this.state.isPlaying = true;
-  this.state.isRecording = this.state.isRecording && !this.state.isPaused;
-  if (this.state.isPaused) {
-    const timeDelta = this.audioManager.audioCtx.currentTime - this.state.nextNoteTime;
-    this.state.loopStartTime += timeDelta;
-    this.state.nextNoteTime = this.audioManager.audioCtx.currentTime + 0.05;
+  constructor(audioManager, ui) {
+    this.audioManager = audioManager; this.ui = ui; this.config = { tracks: 8 };
+    this.state = { isPlaying: false, isRecording: false, isPaused: false, loopStartTime: 0, currentPattern: 0, currentRow: 0, timerId: null, lookahead: 25.0, scheduleAheadTime: 0.1, nextNoteTime: 0.0 };
+    this.song = this.createEmptySong(); this.loadDefaultSong();
+  }
+  createEmptySong() { return { bpm: 120, trackVolumes: Array(this.config.tracks).fill(1.0), patterns: [this.createEmptyPattern(64)] }; }
+  createEmptyPattern(rows) { return { rows: rows, data: Array(rows).fill(0).map(() => Array(this.config.tracks).fill(null)) }; }
+  loadDefaultSong() {
+    this.song.trackVolumes[0] = 0.8; this.song.trackVolumes[1] = 0.7; this.song.trackVolumes[2] = 0.5;
+    const p = this.song.patterns[0].data;
+    p[0][0] = { note: 'C2', inst: 6 }; p[4][0] = { note: 'G1', inst: 6 }; p[8][0] = { note: 'A#1', inst: 6 }; p[12][0] = { note: 'A1', inst: 6 };
+    p[4][1] = { note: 'C4', inst: 2 }; p[12][1] = { note: 'C4', inst: 2 };
+    for (let i = 0; i < 16; i += 4) p[i][0] = { note: 'C4', inst: 1 };
+    for (let i = 2; i < 16; i += 2) p[i][2] = { note: 'C4', inst: 3 };
+  }
+  setPatternLength(newLength) {
+    const pattern = this.song.patterns[this.state.currentPattern]; const oldLength = pattern.rows;
+    if (newLength > oldLength) {
+      for (let i = oldLength; i < newLength; i++) pattern.data.push(Array(this.config.tracks).fill(null));
+    } else pattern.data.length = newLength;
+    pattern.rows = newLength;
+  }
+  record() {
+    if (this.state.isPlaying) this.stop();
+    this.state.isRecording = true;
     this.state.isPaused = false;
-  } else {
     this.state.currentRow = 0;
-    this.state.loopStartTime = this.audioManager.audioCtx.currentTime + 0.1;
-    this.state.nextNoteTime = this.state.loopStartTime;
+    this.play();
   }
-  this.state.timerId = setInterval(() => this.scheduler(), this.state.lookahead);
-  this.ui.setPlaybackState(true, this.state.isRecording);
-}
-pause() {
-  if (!this.state.isPlaying) return;
-  this.state.isPlaying = false;
-  this.state.isPaused = true;
-  clearInterval(this.state.timerId);
-  this.state.timerId = null;
-  this.ui.setPlaybackState(false, this.state.isRecording);
-}
-stop() {
-  if (!this.state.isPlaying && !this.state.isPaused) return;
-  this.state.isPlaying = false;
-  this.state.isRecording = false;
-  this.state.isPaused = false;
-  clearInterval(this.state.timerId); this.state.timerId = null;
-  this.ui.setPlaybackState(false, false);
-}
-scheduler() { while (this.state.nextNoteTime < this.audioManager.audioCtx.currentTime + this.state.scheduleAheadTime) { this.scheduleRow(); this.advanceRow(); } }
-advanceRow() {
-  const secondsPerRow = 60.0 / this.song.bpm / 4.0; this.state.nextNoteTime += secondsPerRow;
-  this.state.currentRow++;
-  if (this.state.currentRow >= this.song.patterns[this.state.currentPattern].rows) {
-    this.state.currentRow = 0;
-    this.state.loopStartTime = this.state.nextNoteTime;
+  play() {
+    this.audioManager.initAudioContext(); if (this.state.isPlaying) return;
+    this.state.isPlaying = true;
+    this.state.isRecording = this.state.isRecording && !this.state.isPaused;
+    if (this.state.isPaused) {
+      const timeDelta = this.audioManager.audioCtx.currentTime - this.state.nextNoteTime;
+      this.state.loopStartTime += timeDelta;
+      this.state.nextNoteTime = this.audioManager.audioCtx.currentTime + 0.05;
+      this.state.isPaused = false;
+    } else {
+      this.state.currentRow = 0;
+      this.state.loopStartTime = this.audioManager.audioCtx.currentTime + 0.1;
+      this.state.nextNoteTime = this.state.loopStartTime;
+    }
+    this.state.timerId = setInterval(() => this.scheduler(), this.state.lookahead);
+    this.ui.setPlaybackState(true, this.state.isRecording);
   }
-}
-scheduleRow() {
-  const pattern = this.song.patterns[this.state.currentPattern]; const row = pattern.data[this.state.currentRow]; if (!row) return;
-  for (let i = 0; i < this.config.tracks; i++) {
-    const cell = row[i];
-    if (cell && cell.inst && cell.note && this.audioManager.instruments[cell.inst]) {
-      const vol = this.song.trackVolumes[i];
-      const instType = this.audioManager.instruments[cell.inst].type;
-      const dur = (instType === 'drum') ? 0.2 : (60.0 / this.song.bpm / 4.0);
-      this.audioManager.instruments[cell.inst].play(cell.note, this.state.nextNoteTime, vol, dur);
+  pause() {
+    if (!this.state.isPlaying) return;
+    this.state.isPlaying = false;
+    this.state.isPaused = true;
+    clearInterval(this.state.timerId);
+    this.state.timerId = null;
+    this.ui.setPlaybackState(false, this.state.isRecording);
+  }
+  stop() {
+    if (!this.state.isPlaying && !this.state.isPaused) return;
+    this.state.isPlaying = false;
+    this.state.isRecording = false;
+    this.state.isPaused = false;
+    clearInterval(this.state.timerId); this.state.timerId = null;
+    this.ui.setPlaybackState(false, false);
+  }
+  scheduler() { while (this.state.nextNoteTime < this.audioManager.audioCtx.currentTime + this.state.scheduleAheadTime) { this.scheduleRow(); this.advanceRow(); } }
+  advanceRow() {
+    const secondsPerRow = 60.0 / this.song.bpm / 4.0; this.state.nextNoteTime += secondsPerRow;
+    this.state.currentRow++;
+    if (this.state.currentRow >= this.song.patterns[this.state.currentPattern].rows) {
+      this.state.currentRow = 0;
+      this.state.loopStartTime = this.state.nextNoteTime;
     }
   }
-  requestAnimationFrame(() => this.ui.updatePlayhead(this.state.currentRow));
-}
+  scheduleRow() {
+    const pattern = this.song.patterns[this.state.currentPattern]; const row = pattern.data[this.state.currentRow]; if (!row) return;
+    for (let i = 0; i < this.config.tracks; i++) {
+      const cell = row[i];
+      if (cell && cell.inst && cell.note && this.audioManager.instruments[cell.inst]) {
+        const vol = this.song.trackVolumes[i];
+        const instType = this.audioManager.instruments[cell.inst].type;
+        const dur = (instType === 'drum') ? 0.2 : (60.0 / this.song.bpm / 4.0);
+        this.audioManager.instruments[cell.inst].play(cell.note, this.state.nextNoteTime, vol, dur);
+      }
+    }
+    requestAnimationFrame(() => this.ui.updatePlayhead(this.state.currentRow));
+  }
 }
 class UI {
-constructor() {
-  this.dom = {
-    grid: document.getElementById('tracker-grid'), trackerContainer: document.getElementById('tracker-container'),
-    playBtn: document.getElementById('play-btn'), stopBtn: document.getElementById('stop-btn'), recordBtn: document.getElementById('record-btn'),
-    bpmInput: document.getElementById('bpm-input'), octaveInput: document.getElementById('octave-input'),
-    patternDisplay: document.getElementById('pattern-display'), prevPatternBtn: document.getElementById('prev-pattern-btn'),
-    nextPatternBtn: document.getElementById('next-pattern-btn'), patternLengthInput: document.getElementById('pattern-length-input'),
-    instrumentGrid: document.getElementById('instrument-grid'), exportJsonBtn: document.getElementById('export-json-btn'),
-    exportHtmlBtn: document.getElementById('export-html-btn'), importBtn: document.getElementById('import-btn'),
-    ioTextarea: document.getElementById('io-textarea'), helpBtn: document.getElementById('help-btn'),
-    helpModal: document.getElementById('help-modal'), modalClose: document.getElementById('modal-close'),
-  };
-  this.cursor = { row: 0, col: 0 }; this.selectedInstrument = 1; this.baseOctave = 4;
-}
-init(sequencer, audioManager) {
-  this.sequencer = sequencer; this.audioManager = audioManager;
-  this.createTrackerGrid(); this.createInstrumentList(); this.addEventListeners();
-  this.updatePatternDisplay(); this.updateGrid(); this.updateCursor(); this.selectInstrument(1);
-}
-createTrackerGrid() {
-  const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
-  let thead = '<thead><tr id="volume-sliders">';
-  thead += '<th>VOL</th>';
-  for (let i = 0; i < this.sequencer.config.tracks; i++) {
-    thead += `<th><input type="range" class="volume-slider" data-track="${i}" min="0" max="1" step="0.01" value="${this.sequencer.song.trackVolumes[i]}"></th>`;
+  constructor() {
+    this.dom = {
+      grid: document.getElementById('tracker-grid'), trackerContainer: document.getElementById('tracker-container'),
+      playBtn: document.getElementById('play-btn'), stopBtn: document.getElementById('stop-btn'), recordBtn: document.getElementById('record-btn'),
+      bpmInput: document.getElementById('bpm-input'), octaveInput: document.getElementById('octave-input'),
+      patternDisplay: document.getElementById('pattern-display'), prevPatternBtn: document.getElementById('prev-pattern-btn'),
+      nextPatternBtn: document.getElementById('next-pattern-btn'), patternLengthInput: document.getElementById('pattern-length-input'),
+      instrumentGrid: document.getElementById('instrument-grid'), exportJsonBtn: document.getElementById('export-json-btn'),
+      exportHtmlBtn: document.getElementById('export-html-btn'), importBtn: document.getElementById('import-btn'),
+      ioTextarea: document.getElementById('io-textarea'), helpBtn: document.getElementById('help-btn'),
+      helpModal: document.getElementById('help-modal'), modalClose: document.getElementById('modal-close'),
+    };
+    this.cursor = { row: 0, col: 0 }; this.selectedInstrument = 1; this.baseOctave = 4;
   }
-  thead += '</tr><tr><th>Row</th>';
-  for (let i = 0; i < this.sequencer.config.tracks; i++) thead += `<th>Track ${i + 1}</th>`;
-  thead += '</tr></thead>';
-  let tbody = '<tbody>';
-  for (let i = 0; i < pattern.rows; i++) {
-    tbody += `<tr data-row="${i}"><td class="row-header">${i.toString(16).toUpperCase().padStart(2, '0')}</td>`;
-    for (let j = 0; j < this.sequencer.config.tracks; j++) tbody += `<td data-row="${i}" data-col="${j}">--- --</td>`;
-    tbody += '</tr>';
+  init(sequencer, audioManager) {
+    this.sequencer = sequencer; this.audioManager = audioManager;
+    this.createTrackerGrid(); this.createInstrumentList(); this.addEventListeners();
+    this.updatePatternDisplay(); this.updateGrid(); this.updateCursor(); this.selectInstrument(1);
   }
-  tbody += '</tbody>'; this.dom.grid.innerHTML = thead + tbody;
-  this.dom.grid.querySelectorAll('.volume-slider').forEach(slider => slider.addEventListener('input', (e) => this.sequencer.song.trackVolumes[e.target.dataset.track] = parseFloat(e.target.value)));
-}
-createInstrumentList() {
-  this.dom.instrumentGrid.innerHTML = this.audioManager.instruments
-  .map((inst, i) => i > 0 ? `<li data-inst="${i}">${i === 10 ? 0 : i}: ${inst.name}</li>` : '').join('');
-  this.dom.instrumentGrid.querySelectorAll('li').forEach(li => li.addEventListener('click', () => this.selectInstrument(parseInt(li.dataset.inst))));
-}
-updateGrid() {
-  const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
-  if (!pattern) return;
-  for (let i = 0; i < pattern.rows; i++) {
-    for (let j = 0; j < this.sequencer.config.tracks; j++) {
-      const cellData = pattern.data[i] ? pattern.data[i][j] : null;
-      const cellEl = this.dom.grid.querySelector(`td[data-row="${i}"][data-col="${j}"]`);
-      if (cellEl) {
-        if (cellData) {
-          const noteStr = cellData.note ? cellData.note.padEnd(3, '-') : '---';
-          const instStr = (cellData.inst === 10 ? 0 : cellData.inst).toString().padStart(2, '0');
-          cellEl.innerHTML = `<span class="note">${noteStr}</span> <span class="instrument">${instStr}</span>`;
-        } else {
-          cellEl.innerHTML = `--- --`;
+  createTrackerGrid() {
+    const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
+    let thead = '<thead><tr id="volume-sliders">';
+    thead += '<th>VOL</th>';
+    for (let i = 0; i < this.sequencer.config.tracks; i++) {
+      thead += `<th><input type="range" class="volume-slider" data-track="${i}" min="0" max="1" step="0.01" value="${this.sequencer.song.trackVolumes[i]}"></th>`;
+    }
+    thead += '</tr><tr><th>Row</th>';
+    for (let i = 0; i < this.sequencer.config.tracks; i++) thead += `<th>Track ${i + 1}</th>`;
+    thead += '</tr></thead>';
+    let tbody = '<tbody>';
+    for (let i = 0; i < pattern.rows; i++) {
+      tbody += `<tr data-row="${i}"><td class="row-header">${i.toString(16).toUpperCase().padStart(2, '0')}</td>`;
+      for (let j = 0; j < this.sequencer.config.tracks; j++) tbody += `<td data-row="${i}" data-col="${j}">--- --</td>`;
+      tbody += '</tr>';
+    }
+    tbody += '</tbody>'; this.dom.grid.innerHTML = thead + tbody;
+    this.dom.grid.querySelectorAll('.volume-slider').forEach(slider => slider.addEventListener('input', (e) => this.sequencer.song.trackVolumes[e.target.dataset.track] = parseFloat(e.target.value)));
+  }
+  createInstrumentList() {
+    this.dom.instrumentGrid.innerHTML = this.audioManager.instruments
+    .map((inst, i) => i > 0 ? `<li data-inst="${i}">${i === 10 ? 0 : i}: ${inst.name}</li>` : '').join('');
+    this.dom.instrumentGrid.querySelectorAll('li').forEach(li => li.addEventListener('click', () => this.selectInstrument(parseInt(li.dataset.inst))));
+  }
+  updateGrid() {
+    const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
+    if (!pattern) return;
+    for (let i = 0; i < pattern.rows; i++) {
+      for (let j = 0; j < this.sequencer.config.tracks; j++) {
+        const cellData = pattern.data[i] ? pattern.data[i][j] : null;
+        const cellEl = this.dom.grid.querySelector(`td[data-row="${i}"][data-col="${j}"]`);
+        if (cellEl) {
+          if (cellData) {
+            const noteStr = cellData.note ? cellData.note.padEnd(3, '-') : '---';
+            const instStr = (cellData.inst === 10 ? 0 : cellData.inst).toString().padStart(2, '0');
+            cellEl.innerHTML = `<span class="note">${noteStr}</span> <span class="instrument">${instStr}</span>`;
+          } else {
+            cellEl.innerHTML = `--- --`;
+          }
         }
       }
     }
   }
-}
-updatePlayhead(row) {
-  this.dom.grid.querySelectorAll('.playhead').forEach(td => td.classList.remove('playhead'));
-  this.dom.grid.querySelectorAll(`tr[data-row="${row}"] td`).forEach(td => td.classList.add('playhead'));
-}
-updateCursor() {
-  this.dom.grid.querySelectorAll('.cursor').forEach(td => td.classList.remove('cursor'));
-  const cell = this.dom.grid.querySelector(`td[data-row="${this.cursor.row}"][data-col="${this.cursor.col}"]`);
-  if (cell) { cell.classList.add('cursor'); cell.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
-}
-selectInstrument(instIndex) {
-  this.selectedInstrument = instIndex;
-  this.dom.instrumentGrid.querySelectorAll('li').forEach(li => li.classList.toggle('selected', parseInt(li.dataset.inst) === instIndex));
-}
-addEventListeners() {
-  this.dom.recordBtn.addEventListener('click', () => this.sequencer.record());
-  this.dom.playBtn.addEventListener('click', () => this.sequencer.state.isPlaying ? this.sequencer.pause() : this.sequencer.play());
-  this.dom.stopBtn.addEventListener('click', () => { this.sequencer.stop(); this.sequencer.state.currentRow = 0; this.updatePlayhead(-1); });
-  this.dom.bpmInput.addEventListener('change', (e) => this.sequencer.song.bpm = parseInt(e.target.value));
-  this.dom.grid.addEventListener('click', (e) => { const c = e.target.closest('td'); if (c && c.dataset.row) { this.cursor.row = parseInt(c.dataset.row); this.cursor.col = parseInt(c.dataset.col); this.updateCursor(); } });
-  window.addEventListener('keydown', (e) => this.handleKeyboard(e));
-  this.dom.prevPatternBtn.addEventListener('click', () => this.changePattern(-1));
-  this.dom.nextPatternBtn.addEventListener('click', () => this.changePattern(1));
-  this.dom.patternLengthInput.addEventListener('change', (e) => { this.sequencer.setPatternLength(parseInt(e.target.value)); this.createTrackerGrid(); this.updateGrid(); this.updateCursor(); });
-  this.dom.exportJsonBtn.addEventListener('click', () => {
-    this.sequencer.song.bpm = parseInt(this.dom.bpmInput.value);
-    this.dom.ioTextarea.value = JSON.stringify(this.sequencer.song, null, 2)
-  });
-  this.dom.exportHtmlBtn.addEventListener('click', () => this.exportToHtml());
-  this.dom.importBtn.addEventListener('click', () => {
-    try {
-      const s = JSON.parse(this.dom.ioTextarea.value);
-      if (s.patterns && s.trackVolumes) {
-        this.sequencer.song = s;
-        this.dom.bpmInput.value = s.bpm || 120;
-        this.sequencer.state.currentPattern = 0;
-        this.audioManager.initAudioContext();
-        this.changePattern(0);
-        alert('Song imported!');
+  updatePlayhead(row) {
+    this.dom.grid.querySelectorAll('.playhead').forEach(td => td.classList.remove('playhead'));
+    this.dom.grid.querySelectorAll(`tr[data-row="${row}"] td`).forEach(td => td.classList.add('playhead'));
+  }
+  updateCursor() {
+    this.dom.grid.querySelectorAll('.cursor').forEach(td => td.classList.remove('cursor'));
+    const cell = this.dom.grid.querySelector(`td[data-row="${this.cursor.row}"][data-col="${this.cursor.col}"]`);
+    if (cell) { cell.classList.add('cursor'); cell.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+  }
+  selectInstrument(instIndex) {
+    this.selectedInstrument = instIndex;
+    this.dom.instrumentGrid.querySelectorAll('li').forEach(li => li.classList.toggle('selected', parseInt(li.dataset.inst) === instIndex));
+  }
+  addEventListeners() {
+    this.dom.recordBtn.addEventListener('click', () => this.sequencer.record());
+    this.dom.playBtn.addEventListener('click', () => this.sequencer.state.isPlaying ? this.sequencer.pause() : this.sequencer.play());
+    this.dom.stopBtn.addEventListener('click', () => { this.sequencer.stop(); this.sequencer.state.currentRow = 0; this.updatePlayhead(-1); });
+    this.dom.bpmInput.addEventListener('change', (e) => this.sequencer.song.bpm = parseInt(e.target.value));
+    this.dom.grid.addEventListener('click', (e) => { const c = e.target.closest('td'); if (c && c.dataset.row) { this.cursor.row = parseInt(c.dataset.row); this.cursor.col = parseInt(c.dataset.col); this.updateCursor(); } });
+    window.addEventListener('keydown', (e) => this.handleKeyboard(e));
+    this.dom.prevPatternBtn.addEventListener('click', () => this.changePattern(-1));
+    this.dom.nextPatternBtn.addEventListener('click', () => this.changePattern(1));
+    this.dom.patternLengthInput.addEventListener('change', (e) => { this.sequencer.setPatternLength(parseInt(e.target.value)); this.createTrackerGrid(); this.updateGrid(); this.updateCursor(); });
+    this.dom.exportJsonBtn.addEventListener('click', () => {
+      this.sequencer.song.bpm = parseInt(this.dom.bpmInput.value);
+      this.dom.ioTextarea.value = JSON.stringify(this.sequencer.song, null, 2)
+    });
+    this.dom.exportHtmlBtn.addEventListener('click', () => this.exportToHtml());
+    this.dom.importBtn.addEventListener('click', () => {
+      try {
+        const s = JSON.parse(this.dom.ioTextarea.value);
+        if (s.patterns && s.trackVolumes) {
+          this.sequencer.song = s;
+          this.dom.bpmInput.value = s.bpm || 120;
+          this.sequencer.state.currentPattern = 0;
+          this.audioManager.initAudioContext();
+          this.changePattern(0);
+          alert('Song imported!');
+        }
+      } catch (err) { alert('Invalid JSON.'); console.error(err); }
+    });
+    this.dom.helpBtn.addEventListener('click', () => this.dom.helpModal.style.display = 'flex');
+    this.dom.modalClose.addEventListener('click', () => this.dom.helpModal.style.display = 'none');
+    this.dom.helpModal.addEventListener('click', (e) => { if (e.target === this.dom.helpModal) this.dom.helpModal.style.display = 'none'; });
+  }
+  setPlaybackState(isPlaying, isRecording) {
+    this.dom.playBtn.textContent = isPlaying ? "Pause" : "Play";
+    this.dom.trackerContainer.classList.toggle('recording', isPlaying && isRecording);
+  }
+  changePattern(delta) {
+    let newIdx = this.sequencer.state.currentPattern + delta; if (newIdx < 0) return;
+    const currentPatternLength = this.sequencer.song.patterns[this.sequencer.state.currentPattern].rows;
+    while (newIdx >= this.sequencer.song.patterns.length) this.sequencer.song.patterns.push(this.sequencer.createEmptyPattern(currentPatternLength));
+    this.sequencer.state.currentPattern = newIdx;
+    this.updatePatternDisplay(); this.createTrackerGrid(); this.updateGrid(); this.updateCursor();
+  }
+  updatePatternDisplay() {
+    const p = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
+    this.dom.patternDisplay.textContent = this.sequencer.state.currentPattern;
+    this.dom.patternLengthInput.value = p.rows;
+  }
+  handleKeyboard(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || this.dom.helpModal.style.display === 'flex') return;
+    switch (e.key) {
+      case 'ArrowUp': this.cursor.row = Math.max(0, this.cursor.row - 1); break;
+      case 'ArrowDown': this.cursor.row = Math.min(this.sequencer.song.patterns[this.sequencer.state.currentPattern].rows - 1, this.cursor.row + 1); break;
+      case 'ArrowLeft': this.cursor.col = Math.max(0, this.cursor.col - 1); break;
+      case 'ArrowRight': this.cursor.col = Math.min(this.sequencer.config.tracks - 1, this.cursor.col + 1); break;
+      case 'Delete': case 'Backspace':
+      if (this.sequencer.state.isRecording) return;
+      this.sequencer.song.patterns[this.sequencer.state.currentPattern].data[this.cursor.row][this.cursor.col] = null;
+      this.updateGrid(); break;
+      default: this.handleNoteInput(e.key); break;
+    }
+    this.updateCursor(); if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+  }
+  createNoteInputMap() {
+    const octaveShift = parseInt(this.dom.octaveInput.value);
+    const baseOctave = this.baseOctave + octaveShift;
+    const keys1 = 'zsxdcvgbhnjm';
+    const keys2 = 'q2w3er5t6y7u';
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const map = {};
+    keys1.split('').forEach((key, i) => {
+      if (notes[i % 12]) map[key] = notes[i % 12] + (baseOctave);
+    });
+    keys2.split('').forEach((key, i) => {
+      if (notes[i % 12]) map[key] = notes[i % 12] + (baseOctave + 1);
+    });
+    return map;
+  }
+  handleNoteInput(key) {
+    this.audioManager.initAudioContext();
+    const noteMap = this.createNoteInputMap();
+    const note = noteMap[key.toLowerCase()];
+    const instNum = key === '0' ? 10 : parseInt(key);
+    if (note) {
+      const vol = this.sequencer.song.trackVolumes[this.cursor.col];
+      this.audioManager.instruments[this.selectedInstrument].play(note, this.audioManager.audioCtx.currentTime, vol, 0.25);
+      if (this.sequencer.state.isRecording) {
+        const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
+        const secondsPerRow = 60.0 / this.sequencer.song.bpm / 4.0;
+        const patternDuration = pattern.rows * secondsPerRow;
+        const timeInCurrentLoop = (this.audioManager.audioCtx.currentTime - this.sequencer.state.loopStartTime) % patternDuration;
+        let quantizedRow = Math.round(timeInCurrentLoop / secondsPerRow);
+        if (quantizedRow >= pattern.rows) quantizedRow = 0;
+        quantizedRow = Math.min(pattern.rows - 1, Math.max(0, quantizedRow));
+        pattern.data[quantizedRow][this.cursor.col] = { note: note, inst: this.selectedInstrument };
+        this.updateGrid();
+      } else {
+        const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
+        pattern.data[this.cursor.row][this.cursor.col] = { note: note, inst: this.selectedInstrument };
+        this.cursor.row = Math.min(pattern.rows - 1, this.cursor.row + 1);
+        this.updateGrid();
       }
-    } catch (err) { alert('Invalid JSON.'); console.error(err); }
-  });
-  this.dom.helpBtn.addEventListener('click', () => this.dom.helpModal.style.display = 'flex');
-  this.dom.modalClose.addEventListener('click', () => this.dom.helpModal.style.display = 'none');
-  this.dom.helpModal.addEventListener('click', (e) => { if (e.target === this.dom.helpModal) this.dom.helpModal.style.display = 'none'; });
-}
-setPlaybackState(isPlaying, isRecording) {
-  this.dom.playBtn.textContent = isPlaying ? "Pause" : "Play";
-  this.dom.trackerContainer.classList.toggle('recording', isPlaying && isRecording);
-}
-changePattern(delta) {
-  let newIdx = this.sequencer.state.currentPattern + delta; if (newIdx < 0) return;
-  const currentPatternLength = this.sequencer.song.patterns[this.sequencer.state.currentPattern].rows;
-  while (newIdx >= this.sequencer.song.patterns.length) this.sequencer.song.patterns.push(this.sequencer.createEmptyPattern(currentPatternLength));
-  this.sequencer.state.currentPattern = newIdx;
-  this.updatePatternDisplay(); this.createTrackerGrid(); this.updateGrid(); this.updateCursor();
-}
-updatePatternDisplay() {
-  const p = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
-  this.dom.patternDisplay.textContent = this.sequencer.state.currentPattern;
-  this.dom.patternLengthInput.value = p.rows;
-}
-handleKeyboard(e) {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || this.dom.helpModal.style.display === 'flex') return;
-  switch (e.key) {
-    case 'ArrowUp': this.cursor.row = Math.max(0, this.cursor.row - 1); break;
-    case 'ArrowDown': this.cursor.row = Math.min(this.sequencer.song.patterns[this.sequencer.state.currentPattern].rows - 1, this.cursor.row + 1); break;
-    case 'ArrowLeft': this.cursor.col = Math.max(0, this.cursor.col - 1); break;
-    case 'ArrowRight': this.cursor.col = Math.min(this.sequencer.config.tracks - 1, this.cursor.col + 1); break;
-    case 'Delete': case 'Backspace':
-    if (this.sequencer.state.isRecording) return;
-    this.sequencer.song.patterns[this.sequencer.state.currentPattern].data[this.cursor.row][this.cursor.col] = null;
-    this.updateGrid(); break;
-    default: this.handleNoteInput(e.key); break;
-  }
-  this.updateCursor(); if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
-}
-createNoteInputMap() {
-  const octaveShift = parseInt(this.dom.octaveInput.value);
-  const baseOctave = this.baseOctave + octaveShift;
-  const keys1 = 'zsxdcvgbhnjm';
-  const keys2 = 'q2w3er5t6y7u';
-  const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const map = {};
-  keys1.split('').forEach((key, i) => {
-    if (notes[i % 12]) map[key] = notes[i % 12] + (baseOctave);
-  });
-  keys2.split('').forEach((key, i) => {
-    if (notes[i % 12]) map[key] = notes[i % 12] + (baseOctave + 1);
-  });
-  return map;
-}
-handleNoteInput(key) {
-  this.audioManager.initAudioContext();
-  const noteMap = this.createNoteInputMap();
-  const note = noteMap[key.toLowerCase()];
-  const instNum = key === '0' ? 10 : parseInt(key);
-  if (note) {
-    const vol = this.sequencer.song.trackVolumes[this.cursor.col];
-    this.audioManager.instruments[this.selectedInstrument].play(note, this.audioManager.audioCtx.currentTime, vol, 0.25);
-    if (this.sequencer.state.isRecording) {
+    } else if (!isNaN(instNum) && instNum >= 0 && instNum < this.audioManager.instruments.length) {
+      if (this.sequencer.state.isRecording) return;
       const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
-      const secondsPerRow = 60.0 / this.sequencer.song.bpm / 4.0;
-      const patternDuration = pattern.rows * secondsPerRow;
-      const timeInCurrentLoop = (this.audioManager.audioCtx.currentTime - this.sequencer.state.loopStartTime) % patternDuration;
-      let quantizedRow = Math.round(timeInCurrentLoop / secondsPerRow);
-      if (quantizedRow >= pattern.rows) quantizedRow = 0;
-      quantizedRow = Math.min(pattern.rows - 1, Math.max(0, quantizedRow));
-      pattern.data[quantizedRow][this.cursor.col] = { note: note, inst: this.selectedInstrument };
-      this.updateGrid();
-    } else {
-      const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
-      pattern.data[this.cursor.row][this.cursor.col] = { note: note, inst: this.selectedInstrument };
-      this.cursor.row = Math.min(pattern.rows - 1, this.cursor.row + 1);
+      let cell = pattern.data[this.cursor.row][this.cursor.col];
+      if (!cell) {
+        cell = { note: null, inst: instNum };
+        pattern.data[this.cursor.row][this.cursor.col] = cell;
+      } else {
+        cell.inst = instNum;
+      }
+      this.selectInstrument(instNum);
       this.updateGrid();
     }
-  } else if (!isNaN(instNum) && instNum >= 0 && instNum < this.audioManager.instruments.length) {
-    if (this.sequencer.state.isRecording) return;
-    const pattern = this.sequencer.song.patterns[this.sequencer.state.currentPattern];
-    let cell = pattern.data[this.cursor.row][this.cursor.col];
-    if (!cell) {
-      cell = { note: null, inst: instNum };
-      pattern.data[this.cursor.row][this.cursor.col] = cell;
-    } else {
-      cell.inst = instNum;
-    }
-    this.selectInstrument(instNum);
-    this.updateGrid();
   }
-}
-exportToHtml() {
-  this.sequencer.song.bpm = parseInt(this.dom.bpmInput.value);
-  const songJSON = JSON.stringify(this.sequencer.song);
-  const playerCode = document.getElementById('player-template').textContent;
-  const htmlContent = `
+  exportToHtml() {
+    this.sequencer.song.bpm = parseInt(this.dom.bpmInput.value);
+    const songJSON = JSON.stringify(this.sequencer.song);
+    const playerCode = document.getElementById('player-template').textContent;
+    const htmlContent = `
   <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>My Music</title><style>
   body { font-family: sans-serif; background-color: #1a1a2e; color: #dcdcdc; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
   h1 { color: #e94560; } #playButton { font-size: 2em; padding: 20px 40px; cursor: pointer; border: 2px solid #16c79a; background-color: #0f3460; color: #dcdcdc; border-radius: 10px; }
@@ -747,16 +747,16 @@ document.getElementById('playButton').addEventListener('click', (e) => {
   }
 });
 <\/script></body></html>`;
-const blob = new Blob([htmlContent.trim()], { type: 'text/html' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = 'my-music.html';
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-URL.revokeObjectURL(url);
-}
+    const blob = new Blob([htmlContent.trim()], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'my-music.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 }
 document.addEventListener('DOMContentLoaded', () => {
   const audioManager = new AudioManager();
@@ -767,61 +767,61 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script id="player-template" type="text/template">
 class WebAudioMusicPlayer {
-constructor() {
-  this.audioCtx = null; this.songData = null; this.instruments = []; this.noteFrequencies = {};
-  this.isPlaying = false; this.currentRow = 0; this.currentPattern = 0;
-  this.timerId = null; this.nextNoteTime = 0.0; this.lookahead = 25.0; this.scheduleAheadTime = 0.1;
-  this._initNoteFrequencies(); this._defineInstruments();
-}
-loadSong(jsonData) { this.songData = jsonData; }
-play() {
-  if (this.isPlaying || !this.songData) return;
-  if (!this.audioCtx) this._initAudioContext();
-  this.audioCtx.resume(); this.isPlaying = true; this.currentRow = 0; this.currentPattern = 0;
-  this.nextNoteTime = this.audioCtx.currentTime + 0.1;
-  this.timerId = setInterval(() => this._scheduler(), this.lookahead);
-}
-stop() { if (!this.isPlaying) return; this.isPlaying = false; clearInterval(this.timerId); this.timerId = null; }
-_initAudioContext() { this.audioCtx = new(window.AudioContext || window.webkitAudioContext)(); }
-_scheduler() { while (this.nextNoteTime < this.audioCtx.currentTime + this.scheduleAheadTime) { this._scheduleRow(); this._advanceRow(); } }
-_advanceRow() {
-  const pattern = this.songData.patterns[this.currentPattern]; const bpm = this.songData.bpm || 120;
-  const secondsPerRow = 60.0 / bpm / 4.0; this.nextNoteTime += secondsPerRow; this.currentRow++;
-  if (this.currentRow >= pattern.rows) {
-    this.currentRow = 0; this.currentPattern = (this.currentPattern + 1) % this.songData.patterns.length;
+  constructor() {
+    this.audioCtx = null; this.songData = null; this.instruments = []; this.noteFrequencies = {};
+    this.isPlaying = false; this.currentRow = 0; this.currentPattern = 0;
+    this.timerId = null; this.nextNoteTime = 0.0; this.lookahead = 25.0; this.scheduleAheadTime = 0.1;
+    this._initNoteFrequencies(); this._defineInstruments();
   }
-}
-_scheduleRow() {
-  const pattern = this.songData.patterns[this.currentPattern]; const rowData = pattern.data[this.currentRow]; if (!rowData) return;
-  for (let track = 0; track < this.songData.trackVolumes.length; track++) {
-    const cell = rowData[track];
-    if (cell && cell.inst && cell.note && this.instruments[cell.inst]) {
-      const vol = this.songData.trackVolumes[track]; const bpm = this.songData.bpm || 120;
-      const instType = this.instruments[cell.inst].type;
-      const dur = (instType === 'drum') ? 0.2 : (60.0 / bpm / 4.0);
-      this.instruments[cell.inst].play(cell.note, this.nextNoteTime, vol, dur);
+  loadSong(jsonData) { this.songData = jsonData; }
+  play() {
+    if (this.isPlaying || !this.songData) return;
+    if (!this.audioCtx) this._initAudioContext();
+    this.audioCtx.resume(); this.isPlaying = true; this.currentRow = 0; this.currentPattern = 0;
+    this.nextNoteTime = this.audioCtx.currentTime + 0.1;
+    this.timerId = setInterval(() => this._scheduler(), this.lookahead);
+  }
+  stop() { if (!this.isPlaying) return; this.isPlaying = false; clearInterval(this.timerId); this.timerId = null; }
+  _initAudioContext() { this.audioCtx = new(window.AudioContext || window.webkitAudioContext)(); }
+  _scheduler() { while (this.nextNoteTime < this.audioCtx.currentTime + this.scheduleAheadTime) { this._scheduleRow(); this._advanceRow(); } }
+  _advanceRow() {
+    const pattern = this.songData.patterns[this.currentPattern]; const bpm = this.songData.bpm || 120;
+    const secondsPerRow = 60.0 / bpm / 4.0; this.nextNoteTime += secondsPerRow; this.currentRow++;
+    if (this.currentRow >= pattern.rows) {
+      this.currentRow = 0; this.currentPattern = (this.currentPattern + 1) % this.songData.patterns.length;
     }
   }
-}
-_initNoteFrequencies() {
-  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  for (let o = 0; o < 10; o++) for (let i = 0; i < 12; i++) this.noteFrequencies[`${noteNames[i]}${o}`] = 440 * Math.pow(2, (o * 12 + i - 57) / 12);
-}
-_defineInstruments() {
-  this.instruments = [
-  { name: "---", play: () => {} },
-  { name: "Kick", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const o = this.audioCtx.createOscillator(), g = this.audioCtx.createGain(); o.connect(g); g.connect(this.audioCtx.destination); o.frequency.setValueAtTime(150, time); o.frequency.exponentialRampToValueAtTime(0.01, time + 0.1); g.gain.setValueAtTime(vol, time); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.2); o.start(time); o.stop(time + 0.2); }},
-  { name: "Snare", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const n = this.audioCtx.createBufferSource(), bS = this.audioCtx.sampleRate*0.2, b=this.audioCtx.createBuffer(1,bS,this.audioCtx.sampleRate),d=b.getChannelData(0); for (let i=0;i<bS;i++)d[i]=Math.random()*2-1; n.buffer=b; const nF=this.audioCtx.createBiquadFilter();nF.type='highpass';nF.frequency.value=1000;n.connect(nF); const nE=this.audioCtx.createGain();nF.connect(nE);nE.connect(this.audioCtx.destination); nE.gain.setValueAtTime(vol, time); nE.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.15); n.start(time); n.stop(time + 0.15); }},
-  { name: "Hat C", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const n=this.audioCtx.createBufferSource(),bS=this.audioCtx.sampleRate*0.1,b=this.audioCtx.createBuffer(1,bS,this.audioCtx.sampleRate),d=b.getChannelData(0); for(let i=0;i<bS;i++)d[i]=Math.random()*2-1;n.buffer=b; const nF=this.audioCtx.createBiquadFilter();nF.type='highpass';nF.frequency.value=7000;n.connect(nF); const g=this.audioCtx.createGain();nF.connect(g);g.connect(this.audioCtx.destination); g.gain.setValueAtTime(0.3*vol,time);g.gain.exponentialRampToValueAtTime(0.01*vol,time+0.05); n.start(time);n.stop(time+0.05); }},
-  { name: "Hat O", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const n=this.audioCtx.createBufferSource(),bS=this.audioCtx.sampleRate*0.5,b=this.audioCtx.createBuffer(1,bS,this.audioCtx.sampleRate),d=b.getChannelData(0); for(let i=0;i<bS;i++)d[i]=Math.random()*2-1;n.buffer=b; const nF=this.audioCtx.createBiquadFilter();nF.type='highpass';nF.frequency.value=6000;n.connect(nF); const g=this.audioCtx.createGain();nF.connect(g);g.connect(this.audioCtx.destination); g.gain.setValueAtTime(0.3*vol,time);g.gain.exponentialRampToValueAtTime(0.01*vol,time+0.4);n.start(time);n.stop(time+0.4); }},
-  { name: "Tom", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const o=this.audioCtx.createOscillator(),g=this.audioCtx.createGain();o.connect(g);g.connect(this.audioCtx.destination); o.frequency.setValueAtTime(300,time);o.frequency.exponentialRampToValueAtTime(50,time+0.2); g.gain.setValueAtTime(0.8*vol,time);g.gain.linearRampToValueAtTime(0,time+0.25);o.start(time);o.stop(time+0.25); }},
-  { name: "Bass", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; const o=this.audioCtx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,time); const flt=this.audioCtx.createBiquadFilter();flt.type='lowpass';flt.frequency.setValueAtTime(400,time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.5*vol,time+0.01);g.gain.linearRampToValueAtTime(0,time+dur); o.connect(flt);flt.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }},
-  { name: "Lead", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; const o=this.audioCtx.createOscillator();o.type='square';o.frequency.setValueAtTime(f,time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.2*vol,time+0.02);g.gain.linearRampToValueAtTime(0.1*vol,time+0.1); g.gain.setValueAtTime(0.1*vol,time+dur-0.1);g.gain.linearRampToValueAtTime(0,time+dur); o.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }},
-  { name: "Pad", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; for(let i=0;i<3;i++){ const o=this.audioCtx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,time);o.detune.setValueAtTime(i===0?0:(i===1?-7:7),time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.1*vol,time+0.2);g.gain.setValueAtTime(0.1*vol,time+dur-0.3); g.gain.linearRampToValueAtTime(0,time+dur); o.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }}},
-  { name: "Chip", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; for(let i=0;i<2;i++){ const o=this.audioCtx.createOscillator();o.type='square';o.frequency.setValueAtTime(f,time);o.detune.setValueAtTime(i===0?0:10,time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.15*vol,time+0.01);g.gain.setValueAtTime(0.15*vol,time+dur-0.01); g.gain.linearRampToValueAtTime(0,time+dur); o.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }}},
-  { name: "Piano", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; const o=this.audioCtx.createOscillator();o.type='sine';o.frequency.setValueAtTime(f,time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.4*vol,time+0.01);g.gain.exponentialRampToValueAtTime(0.01*vol,time+dur); o.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }}
-];
-}
+  _scheduleRow() {
+    const pattern = this.songData.patterns[this.currentPattern]; const rowData = pattern.data[this.currentRow]; if (!rowData) return;
+    for (let track = 0; track < this.songData.trackVolumes.length; track++) {
+      const cell = rowData[track];
+      if (cell && cell.inst && cell.note && this.instruments[cell.inst]) {
+        const vol = this.songData.trackVolumes[track]; const bpm = this.songData.bpm || 120;
+        const instType = this.instruments[cell.inst].type;
+        const dur = (instType === 'drum') ? 0.2 : (60.0 / bpm / 4.0);
+        this.instruments[cell.inst].play(cell.note, this.nextNoteTime, vol, dur);
+      }
+    }
+  }
+  _initNoteFrequencies() {
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    for (let o = 0; o < 10; o++) for (let i = 0; i < 12; i++) this.noteFrequencies[`${noteNames[i]}${o}`] = 440 * Math.pow(2, (o * 12 + i - 57) / 12);
+  }
+  _defineInstruments() {
+    this.instruments = [
+    { name: "---", play: () => {} },
+    { name: "Kick", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const o = this.audioCtx.createOscillator(), g = this.audioCtx.createGain(); o.connect(g); g.connect(this.audioCtx.destination); o.frequency.setValueAtTime(150, time); o.frequency.exponentialRampToValueAtTime(0.01, time + 0.1); g.gain.setValueAtTime(vol, time); g.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.2); o.start(time); o.stop(time + 0.2); }},
+    { name: "Snare", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const n = this.audioCtx.createBufferSource(), bS = this.audioCtx.sampleRate*0.2, b=this.audioCtx.createBuffer(1,bS,this.audioCtx.sampleRate),d=b.getChannelData(0); for (let i=0;i<bS;i++)d[i]=Math.random()*2-1; n.buffer=b; const nF=this.audioCtx.createBiquadFilter();nF.type='highpass';nF.frequency.value=1000;n.connect(nF); const nE=this.audioCtx.createGain();nF.connect(nE);nE.connect(this.audioCtx.destination); nE.gain.setValueAtTime(vol, time); nE.gain.exponentialRampToValueAtTime(0.01 * vol, time + 0.15); n.start(time); n.stop(time + 0.15); }},
+    { name: "Hat C", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const n=this.audioCtx.createBufferSource(),bS=this.audioCtx.sampleRate*0.1,b=this.audioCtx.createBuffer(1,bS,this.audioCtx.sampleRate),d=b.getChannelData(0); for(let i=0;i<bS;i++)d[i]=Math.random()*2-1;n.buffer=b; const nF=this.audioCtx.createBiquadFilter();nF.type='highpass';nF.frequency.value=7000;n.connect(nF); const g=this.audioCtx.createGain();nF.connect(g);g.connect(this.audioCtx.destination); g.gain.setValueAtTime(0.3*vol,time);g.gain.exponentialRampToValueAtTime(0.01*vol,time+0.05); n.start(time);n.stop(time+0.05); }},
+    { name: "Hat O", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const n=this.audioCtx.createBufferSource(),bS=this.audioCtx.sampleRate*0.5,b=this.audioCtx.createBuffer(1,bS,this.audioCtx.sampleRate),d=b.getChannelData(0); for(let i=0;i<bS;i++)d[i]=Math.random()*2-1;n.buffer=b; const nF=this.audioCtx.createBiquadFilter();nF.type='highpass';nF.frequency.value=6000;n.connect(nF); const g=this.audioCtx.createGain();nF.connect(g);g.connect(this.audioCtx.destination); g.gain.setValueAtTime(0.3*vol,time);g.gain.exponentialRampToValueAtTime(0.01*vol,time+0.4);n.start(time);n.stop(time+0.4); }},
+    { name: "Tom", type: "drum", play: (note, time, vol) => { if(!this.audioCtx) return; const o=this.audioCtx.createOscillator(),g=this.audioCtx.createGain();o.connect(g);g.connect(this.audioCtx.destination); o.frequency.setValueAtTime(300,time);o.frequency.exponentialRampToValueAtTime(50,time+0.2); g.gain.setValueAtTime(0.8*vol,time);g.gain.linearRampToValueAtTime(0,time+0.25);o.start(time);o.stop(time+0.25); }},
+    { name: "Bass", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; const o=this.audioCtx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,time); const flt=this.audioCtx.createBiquadFilter();flt.type='lowpass';flt.frequency.setValueAtTime(400,time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.5*vol,time+0.01);g.gain.linearRampToValueAtTime(0,time+dur); o.connect(flt);flt.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }},
+    { name: "Lead", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; const o=this.audioCtx.createOscillator();o.type='square';o.frequency.setValueAtTime(f,time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.2*vol,time+0.02);g.gain.linearRampToValueAtTime(0.1*vol,time+0.1); g.gain.setValueAtTime(0.1*vol,time+dur-0.1);g.gain.linearRampToValueAtTime(0,time+dur); o.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }},
+    { name: "Pad", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; for(let i=0;i<3;i++){ const o=this.audioCtx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,time);o.detune.setValueAtTime(i===0?0:(i===1?-7:7),time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.1*vol,time+0.2);g.gain.setValueAtTime(0.1*vol,time+dur-0.3); g.gain.linearRampToValueAtTime(0,time+dur); o.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }}},
+    { name: "Chip", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; for(let i=0;i<2;i++){ const o=this.audioCtx.createOscillator();o.type='square';o.frequency.setValueAtTime(f,time);o.detune.setValueAtTime(i===0?0:10,time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.15*vol,time+0.01);g.gain.setValueAtTime(0.15*vol,time+dur-0.01); g.gain.linearRampToValueAtTime(0,time+dur); o.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }}},
+    { name: "Piano", type: "melodic", play: (note, time, vol, dur) => { if(!this.audioCtx) return; const f=this.noteFrequencies[note];if(!f)return; const o=this.audioCtx.createOscillator();o.type='sine';o.frequency.setValueAtTime(f,time); const g=this.audioCtx.createGain();g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(0.4*vol,time+0.01);g.gain.exponentialRampToValueAtTime(0.01*vol,time+dur); o.connect(g);g.connect(this.audioCtx.destination);o.start(time);o.stop(time+dur); }}
+  ];
+  }
 }
 </script>
 </body>
