@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adventure</title>
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIiBmaWxsPSIjMDAwMDAwIj7wn5SRPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn5SRPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
 <style>
 body,
 html {
@@ -618,607 +618,607 @@ const audioManager = {
   birdChirpTimer: null,
   owlHootTimer: null,
   soundCooldowns: {},
-  init: function () {
-    if (this.isInitialized) return;
-    try {
-      this.context = new (window.AudioContext || window.webkitAudioContext)();
-      this.mainGain = this.context.createGain();
-      this.mainGain.connect(this.context.destination);
-      this.mainGain.gain.setValueAtTime(1.0, this.context.currentTime);
-      this.isInitialized = true;
-      console.log("Audio Context er initialisert.");
-    } catch (e) {
-      console.error("Web Audio API støttes ikke i denne nettleseren.", e);
-    }
-  },
-  sounds: {
-    'tree_chop': (ctx, dest) => {
-      const bufferSize = ctx.sampleRate * 0.1;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1000, ctx.currentTime);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-      noise.connect(filter).connect(gain).connect(dest);
-      noise.start(ctx.currentTime);
-      noise.stop(ctx.currentTime + 0.1);
-    },
-    'item_pickup': (ctx, dest) => {
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, ctx.currentTime);
-      osc.frequency.linearRampToValueAtTime(1200, ctx.currentTime + 0.1);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-      osc.connect(gain).connect(dest);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.1);
-    },
-    'wind_ambiance': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const bufferSize = 5 * ctx.sampleRate;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = (Math.random() * 2 - 1) * 0.3;
-      }
-      const fadeLength = Math.floor(ctx.sampleRate * 0.01);
-      for (let i = 0; i < fadeLength; i++) {
-        output[i] *= (i / fadeLength);
-        output[bufferSize - 1 - i] *= (i / fadeLength);
-      }
-      const noiseNode = ctx.createBufferSource();
-      noiseNode.buffer = buffer;
-      noiseNode.loop = true;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(300, t);
-      filter.Q.setValueAtTime(1, t);
-      const lfoFilterSlow = ctx.createOscillator();
-      lfoFilterSlow.type = 'sine';
-      lfoFilterSlow.frequency.setValueAtTime(0.08, t);
-      const lfoFilterSlowGain = ctx.createGain();
-      lfoFilterSlowGain.gain.setValueAtTime(100, t);
-      lfoFilterSlow.connect(lfoFilterSlowGain).connect(filter.frequency);
-      const lfoFilterFast = ctx.createOscillator();
-      lfoFilterFast.type = 'sine';
-      lfoFilterFast.frequency.setValueAtTime(0.3, t);
-      const lfoFilterFastGain = ctx.createGain();
-      lfoFilterFastGain.gain.setValueAtTime(50, t);
-      lfoFilterFast.connect(lfoFilterFastGain).connect(filter.frequency);
-      const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(0.8, t);
-      const lfoVolume = ctx.createOscillator();
-      lfoVolume.type = 'sine';
-      lfoVolume.frequency.setValueAtTime(0.11, t);
-      const lfoVolumeGain = ctx.createGain();
-      lfoVolumeGain.gain.setValueAtTime(0.2, t);
-      lfoVolume.connect(lfoVolumeGain).connect(masterGain.gain);
-      noiseNode.connect(filter).connect(masterGain).connect(dest);
-      lfoFilterSlow.start(t);
-      lfoFilterFast.start(t);
-      lfoVolume.start(t);
-      noiseNode.start(t);
-      return {
-        lfo: lfoFilterSlow,
-        lfoFilterSlow,
-        lfoFilterFast,
-        lfoVolume,
-        noiseNode
-      };
-    },
-    'bird_chirp_1': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.08, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-      gain.connect(dest);
-      const osc1 = ctx.createOscillator();
-      osc1.type = 'triangle';
-      osc1.frequency.setValueAtTime(3500, t);
-      osc1.frequency.linearRampToValueAtTime(2800, t + 0.08);
-      const osc2 = ctx.createOscillator();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(3520, t);
-      osc2.frequency.linearRampToValueAtTime(2820, t + 0.08);
-      osc1.connect(gain);
-      osc2.connect(gain);
-      osc1.start(t);
-      osc2.start(t);
-      osc1.stop(t + 0.08);
-      osc2.stop(t + 0.08);
-    },
-    'bird_chirp_2': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(3000, t);
-      osc.frequency.linearRampToValueAtTime(3800, t + 0.04);
-      osc.frequency.linearRampToValueAtTime(3200, t + 0.08);
-      osc.frequency.linearRampToValueAtTime(3900, t + 0.12);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.07, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.12);
-    },
-    'bird_chirp_3': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const totalDuration = 0.5;
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(4000, t);
-      osc.frequency.linearRampToValueAtTime(3500, t + totalDuration);
-      const lfo = ctx.createOscillator();
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(30, t);
-      lfo.frequency.linearRampToValueAtTime(20, t + totalDuration);
-      const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(100, t);
-      lfo.connect(lfoGain).connect(osc.frequency);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.06, t + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + totalDuration);
-      osc.connect(gain).connect(dest);
-      lfo.start(t);
-      osc.start(t);
-      lfo.stop(t + totalDuration);
-      osc.stop(t + totalDuration);
-    },
-    'player_attack_unarmed': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(180, t);
-      osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.4, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.1);
-    },
-    'player_attack_sword': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1500, t);
-      filter.Q.setValueAtTime(10, t);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-      noise.connect(filter).connect(gain).connect(dest);
-      noise.start(t);
-      noise.stop(t + 0.15);
-    },
-    'player_attack_sledge': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(120, t);
-      osc.frequency.exponentialRampToValueAtTime(80, t + 0.15);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.4, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.15);
-    },
-    'arrow_shoot_swoosh': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(3000, t);
-      filter.Q.setValueAtTime(5, t);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-      noise.connect(filter).connect(gain).connect(dest);
-      noise.start(t);
-      noise.stop(t + 0.2);
-    },
-    'arrow_hit_thud': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(150, t);
-      osc.frequency.exponentialRampToValueAtTime(100, t + 0.08);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.5, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.08);
-    },
-    'monster_die_xp': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
-      const data = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = noiseBuffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1000, t);
-      filter.frequency.exponentialRampToValueAtTime(200, t + 0.2);
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.3, t);
-      noiseGain.gain.linearRampToValueAtTime(0.001, t + 0.2);
-      noise.connect(filter).connect(noiseGain).connect(dest);
-      noise.start(t);
-      noise.stop(t + 0.2);
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(800, t + 0.1);
-      osc.frequency.linearRampToValueAtTime(1500, t + 0.2);
-      const xpGain = ctx.createGain();
-      xpGain.gain.setValueAtTime(0, t + 0.1);
-      xpGain.gain.linearRampToValueAtTime(0.2, t + 0.11);
-      xpGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-      osc.connect(xpGain).connect(dest);
-      osc.start(t + 0.1);
-      osc.stop(t + 0.2);
-    },
-    'player_walk': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(400, t);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.1, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-      noise.connect(filter).connect(gain).connect(dest);
-      noise.start(t);
-      noise.stop(t + 0.08);
-    },
-    'gather_stone': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.setValueAtTime(1500, t);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.3, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-      noise.connect(filter).connect(gain).connect(dest);
-      noise.start(t);
-      noise.stop(t + 0.05);
-    },
-    'gather_gem': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(2000, t);
-      osc.frequency.linearRampToValueAtTime(2500, t + 0.1);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.2, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.1);
-    },
-    'gather_herb': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(2500, t);
-      filter.Q.setValueAtTime(10, t);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.15, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      noise.connect(filter).connect(gain).connect(dest);
-      noise.start(t);
-      noise.stop(t + 0.1);
-    },
-    'night_ambiance': (ctx, dest) => {
-      const bufferSize = 2 * ctx.sampleRate;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = (Math.random() * 2 - 1) * 0.3;
-        if (i > 0) output[i] = (output[i - 1] + (0.08 * output[i])) / 1.08;
-      }
-      const noiseNode = ctx.createBufferSource();
-      noiseNode.buffer = buffer;
-      noiseNode.loop = true;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(200, ctx.currentTime);
-      filter.Q.setValueAtTime(1, ctx.currentTime);
-      const lfo = ctx.createOscillator();
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(0.05, ctx.currentTime);
-      const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(100, ctx.currentTime);
-      lfo.connect(lfoGain).connect(filter.frequency);
-      noiseNode.connect(filter).connect(dest);
-      lfo.start(ctx.currentTime);
-      noiseNode.start(ctx.currentTime);
-      return { lfo, noiseNode };
-    },
-    'owl_hoot': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(500, t);
-      osc.frequency.linearRampToValueAtTime(400, t + 0.2);
-      osc.frequency.setValueAtTime(450, t + 0.25);
-      osc.frequency.linearRampToValueAtTime(350, t + 0.45);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.2, t + 0.05);
-      gain.gain.setValueAtTime(0.2, t + 0.4);
-      gain.gain.linearRampToValueAtTime(0, t + 0.45);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.5);
-    },
-    'ghost_spawn': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(150, t);
-      osc.frequency.linearRampToValueAtTime(250, t + 1.0);
-      const lfo = ctx.createOscillator();
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(5, t);
-      const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(10, t);
-      lfo.connect(lfoGain).connect(osc.frequency);
-      const buffer = ctx.createBuffer(1, ctx.sampleRate * 1.0, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(800, t);
-      filter.Q.setValueAtTime(5, t);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.2, t + 0.3);
-      gain.gain.setValueAtTime(0.2, t + 0.7);
-      gain.gain.linearRampToValueAtTime(0, t + 1.0);
-      osc.connect(gain).connect(dest);
-      noise.connect(filter).connect(gain).connect(dest);
-      lfo.start(t);
-      osc.start(t);
-      noise.start(t);
-      lfo.stop(t + 1.0);
-      osc.stop(t + 1.0);
-      noise.stop(t + 1.0);
-    },
-    'ambiance_rain': (ctx, dest) => {
-      const bufferSize = 2 * ctx.sampleRate;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      const noiseNode = ctx.createBufferSource();
-      noiseNode.buffer = buffer;
-      noiseNode.loop = true;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.setValueAtTime(1000, ctx.currentTime);
-      noiseNode.connect(filter).connect(dest);
-      noiseNode.start(ctx.currentTime);
-      return { noiseNode };
-    },
-    'effect_thunder': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const duration = 2.5;
-      const bufferSize = ctx.sampleRate * duration;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-      let lastOut = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        output[i] = (lastOut + (0.02 * white)) / 1.02;
-        lastOut = output[i];
-        output[i] *= 3.5;
-      }
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(120, t);
-      filter.frequency.linearRampToValueAtTime(40, t + duration);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(1.0, t + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + duration);
-      noise.connect(filter).connect(gain).connect(dest);
-      noise.start(t);
-      noise.stop(t + duration);
-    },
-    'player_take_damage': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(120, t);
-      osc.frequency.exponentialRampToValueAtTime(80, t + 0.15);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.15);
-    },
-    'door_open_creak': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(120, t);
-      osc.frequency.linearRampToValueAtTime(150, t + 0.4);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.2, t + 0.1);
-      gain.gain.setValueAtTime(0.2, t + 0.4);
-      gain.gain.linearRampToValueAtTime(0, t + 0.5);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.5);
-    },
-    'key_pickup': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1200, t);
-      osc.frequency.linearRampToValueAtTime(1800, t + 0.15);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.15);
-    },
-    'swan_heal': (ctx, dest) => {
-      const t = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(1500, t);
-      osc.frequency.exponentialRampToValueAtTime(3000, t + 0.3);
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.4, t + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-      osc.connect(gain).connect(dest);
-      osc.start(t);
-      osc.stop(t + 0.3);
-    }
-  },
-  playSound: function (name) {
-    if (!this.isInitialized) this.init();
-    if (!this.isInitialized || !this.sounds[name]) return;
-    this.sounds[name](this.context, this.mainGain);
-  },
-  playSoundThrottled: function (name, delay) {
-    if (!this.isInitialized || this.soundCooldowns[name]) {
-      return;
-    }
-    this.playSound(name);
-    this.soundCooldowns[name] = true;
-    setTimeout(() => {
-      this.soundCooldowns[name] = false;
-    }, delay);
-  },
-  startAmbiance: function (name) {
-    if (!this.isInitialized) this.init();
-    if (!this.isInitialized || !this.sounds[name] || this.activeAmbiance[name]) return;
-    console.log('Starter atmosfære:', name);
-    const gain = this.context.createGain();
-    gain.connect(this.mainGain);
-    gain.gain.setValueAtTime(0, this.context.currentTime);
-    let targetVolume = 0.4;
-    if (name === 'night_ambiance') targetVolume = 0.3;
-    if (name === 'ambiance_rain') targetVolume = 0.008;
-    gain.gain.linearRampToValueAtTime(targetVolume, this.context.currentTime + 3);
-    const nodes = this.sounds[name](this.context, gain);
-    this.activeAmbiance[name] = { ...nodes, gainNode: gain };
-  },
-  stopAmbiance: function (name) {
-    if (!this.isInitialized || !this.activeAmbiance[name]) return;
-    console.log('Stopper atmosfære:', name);
-    const nodes = this.activeAmbiance[name];
-    const fadeTime = this.context.currentTime + 2;
-    nodes.gainNode.gain.cancelScheduledValues(this.context.currentTime);
-    nodes.gainNode.gain.linearRampToValueAtTime(0.001, fadeTime);
-    setTimeout(() => {
-      if (nodes.noiseNode) nodes.noiseNode.stop();
-      if (nodes.lfo) nodes.lfo.stop();
-      nodes.gainNode.disconnect();
-    }, 2100);
-    delete this.activeAmbiance[name];
-  },
-  startBirdSounds: function () {
-    if (!this.isInitialized || this.birdChirpTimer) return;
-    console.log("Starter fuglelyder...");
-    const birdSounds = ['bird_chirp_1', 'bird_chirp_2', 'bird_chirp_3'];
-    const loop = () => {
-      const randomDelay = Math.random() * 10000 + 5000;
-      this.birdChirpTimer = setTimeout(() => {
-        if (!this.isInitialized) return;
-        const soundName = birdSounds[Math.floor(Math.random() * birdSounds.length)];
-        this.playSound(soundName);
-        loop();
-      }, randomDelay);
-    };
-    loop();
-  },
-  stopBirdSounds: function () {
-    if (this.birdChirpTimer) {
-      console.log("Stopper fuglelyder...");
-      clearTimeout(this.birdChirpTimer);
-      this.birdChirpTimer = null;
-    }
-  },
-  startNightSounds: function () {
-    if (!this.isInitialized) return;
-    this.startAmbiance('night_ambiance');
-    if (this.owlHootTimer) return;
-    console.log("Starter uglelyder...");
-    const loop = () => {
-      const randomDelay = Math.random() * 15000 + 15000;
-      this.owlHootTimer = setTimeout(() => {
-        if (!this.isInitialized) return;
-        this.playSound('owl_hoot');
-        loop();
-      }, randomDelay);
-    };
-    loop();
-  },
-  stopNightSounds: function () {
-    this.stopAmbiance('night_ambiance');
-    if (this.owlHootTimer) {
-      console.log("Stopper uglelyder...");
-      clearTimeout(this.owlHootTimer);
-      this.owlHootTimer = null;
-    }
+init: function () {
+  if (this.isInitialized) return;
+  try {
+    this.context = new (window.AudioContext || window.webkitAudioContext)();
+    this.mainGain = this.context.createGain();
+    this.mainGain.connect(this.context.destination);
+    this.mainGain.gain.setValueAtTime(1.0, this.context.currentTime);
+    this.isInitialized = true;
+    console.log("Audio Context er initialisert.");
+  } catch (e) {
+    console.error("Web Audio API støttes ikke i denne nettleseren.", e);
   }
+},
+sounds: {
+  'tree_chop': (ctx, dest) => {
+    const bufferSize = ctx.sampleRate * 0.1;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1000, ctx.currentTime);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    noise.connect(filter).connect(gain).connect(dest);
+    noise.start(ctx.currentTime);
+    noise.stop(ctx.currentTime + 0.1);
+  },
+  'item_pickup': (ctx, dest) => {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(1200, ctx.currentTime + 0.1);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.connect(gain).connect(dest);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.1);
+  },
+  'wind_ambiance': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const bufferSize = 5 * ctx.sampleRate;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * 0.3;
+    }
+    const fadeLength = Math.floor(ctx.sampleRate * 0.01);
+    for (let i = 0; i < fadeLength; i++) {
+      output[i] *= (i / fadeLength);
+      output[bufferSize - 1 - i] *= (i / fadeLength);
+    }
+    const noiseNode = ctx.createBufferSource();
+    noiseNode.buffer = buffer;
+    noiseNode.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(300, t);
+    filter.Q.setValueAtTime(1, t);
+    const lfoFilterSlow = ctx.createOscillator();
+    lfoFilterSlow.type = 'sine';
+    lfoFilterSlow.frequency.setValueAtTime(0.08, t);
+    const lfoFilterSlowGain = ctx.createGain();
+    lfoFilterSlowGain.gain.setValueAtTime(100, t);
+    lfoFilterSlow.connect(lfoFilterSlowGain).connect(filter.frequency);
+    const lfoFilterFast = ctx.createOscillator();
+    lfoFilterFast.type = 'sine';
+    lfoFilterFast.frequency.setValueAtTime(0.3, t);
+    const lfoFilterFastGain = ctx.createGain();
+    lfoFilterFastGain.gain.setValueAtTime(50, t);
+    lfoFilterFast.connect(lfoFilterFastGain).connect(filter.frequency);
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.8, t);
+    const lfoVolume = ctx.createOscillator();
+    lfoVolume.type = 'sine';
+    lfoVolume.frequency.setValueAtTime(0.11, t);
+    const lfoVolumeGain = ctx.createGain();
+    lfoVolumeGain.gain.setValueAtTime(0.2, t);
+    lfoVolume.connect(lfoVolumeGain).connect(masterGain.gain);
+    noiseNode.connect(filter).connect(masterGain).connect(dest);
+    lfoFilterSlow.start(t);
+    lfoFilterFast.start(t);
+    lfoVolume.start(t);
+    noiseNode.start(t);
+    return {
+      lfo: lfoFilterSlow,
+      lfoFilterSlow,
+      lfoFilterFast,
+      lfoVolume,
+      noiseNode
+    };
+  },
+  'bird_chirp_1': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.08, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    gain.connect(dest);
+    const osc1 = ctx.createOscillator();
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(3500, t);
+    osc1.frequency.linearRampToValueAtTime(2800, t + 0.08);
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(3520, t);
+    osc2.frequency.linearRampToValueAtTime(2820, t + 0.08);
+    osc1.connect(gain);
+    osc2.connect(gain);
+    osc1.start(t);
+    osc2.start(t);
+    osc1.stop(t + 0.08);
+    osc2.stop(t + 0.08);
+  },
+  'bird_chirp_2': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(3000, t);
+    osc.frequency.linearRampToValueAtTime(3800, t + 0.04);
+    osc.frequency.linearRampToValueAtTime(3200, t + 0.08);
+    osc.frequency.linearRampToValueAtTime(3900, t + 0.12);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.07, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.12);
+  },
+  'bird_chirp_3': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const totalDuration = 0.5;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(4000, t);
+    osc.frequency.linearRampToValueAtTime(3500, t + totalDuration);
+    const lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(30, t);
+    lfo.frequency.linearRampToValueAtTime(20, t + totalDuration);
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.setValueAtTime(100, t);
+    lfo.connect(lfoGain).connect(osc.frequency);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.06, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + totalDuration);
+    osc.connect(gain).connect(dest);
+    lfo.start(t);
+    osc.start(t);
+    lfo.stop(t + totalDuration);
+    osc.stop(t + totalDuration);
+  },
+  'player_attack_unarmed': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(180, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.4, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.1);
+  },
+  'player_attack_sword': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1500, t);
+    filter.Q.setValueAtTime(10, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    noise.connect(filter).connect(gain).connect(dest);
+    noise.start(t);
+    noise.stop(t + 0.15);
+  },
+  'player_attack_sledge': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.15);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.4, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.15);
+  },
+  'arrow_shoot_swoosh': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(3000, t);
+    filter.Q.setValueAtTime(5, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    noise.connect(filter).connect(gain).connect(dest);
+    noise.start(t);
+    noise.stop(t + 0.2);
+  },
+  'arrow_hit_thud': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.08);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.5, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.08);
+  },
+  'monster_die_xp': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1000, t);
+    filter.frequency.exponentialRampToValueAtTime(200, t + 0.2);
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.3, t);
+    noiseGain.gain.linearRampToValueAtTime(0.001, t + 0.2);
+    noise.connect(filter).connect(noiseGain).connect(dest);
+    noise.start(t);
+    noise.stop(t + 0.2);
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, t + 0.1);
+    osc.frequency.linearRampToValueAtTime(1500, t + 0.2);
+    const xpGain = ctx.createGain();
+    xpGain.gain.setValueAtTime(0, t + 0.1);
+    xpGain.gain.linearRampToValueAtTime(0.2, t + 0.11);
+    xpGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    osc.connect(xpGain).connect(dest);
+    osc.start(t + 0.1);
+    osc.stop(t + 0.2);
+  },
+  'player_walk': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(400, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.1, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    noise.connect(filter).connect(gain).connect(dest);
+    noise.start(t);
+    noise.stop(t + 0.08);
+  },
+  'gather_stone': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(1500, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.3, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    noise.connect(filter).connect(gain).connect(dest);
+    noise.start(t);
+    noise.stop(t + 0.05);
+  },
+  'gather_gem': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2000, t);
+    osc.frequency.linearRampToValueAtTime(2500, t + 0.1);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.1);
+  },
+  'gather_herb': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2500, t);
+    filter.Q.setValueAtTime(10, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    noise.connect(filter).connect(gain).connect(dest);
+    noise.start(t);
+    noise.stop(t + 0.1);
+  },
+  'night_ambiance': (ctx, dest) => {
+    const bufferSize = 2 * ctx.sampleRate;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * 0.3;
+      if (i > 0) output[i] = (output[i - 1] + (0.08 * output[i])) / 1.08;
+    }
+    const noiseNode = ctx.createBufferSource();
+    noiseNode.buffer = buffer;
+    noiseNode.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(200, ctx.currentTime);
+    filter.Q.setValueAtTime(1, ctx.currentTime);
+    const lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(0.05, ctx.currentTime);
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.setValueAtTime(100, ctx.currentTime);
+    lfo.connect(lfoGain).connect(filter.frequency);
+    noiseNode.connect(filter).connect(dest);
+    lfo.start(ctx.currentTime);
+    noiseNode.start(ctx.currentTime);
+    return { lfo, noiseNode };
+  },
+  'owl_hoot': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(500, t);
+    osc.frequency.linearRampToValueAtTime(400, t + 0.2);
+    osc.frequency.setValueAtTime(450, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(350, t + 0.45);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.2, t + 0.05);
+    gain.gain.setValueAtTime(0.2, t + 0.4);
+    gain.gain.linearRampToValueAtTime(0, t + 0.45);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.5);
+  },
+  'ghost_spawn': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.linearRampToValueAtTime(250, t + 1.0);
+    const lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(5, t);
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.setValueAtTime(10, t);
+    lfo.connect(lfoGain).connect(osc.frequency);
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 1.0, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(800, t);
+    filter.Q.setValueAtTime(5, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.2, t + 0.3);
+    gain.gain.setValueAtTime(0.2, t + 0.7);
+    gain.gain.linearRampToValueAtTime(0, t + 1.0);
+    osc.connect(gain).connect(dest);
+    noise.connect(filter).connect(gain).connect(dest);
+    lfo.start(t);
+    osc.start(t);
+    noise.start(t);
+    lfo.stop(t + 1.0);
+    osc.stop(t + 1.0);
+    noise.stop(t + 1.0);
+  },
+  'ambiance_rain': (ctx, dest) => {
+    const bufferSize = 2 * ctx.sampleRate;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const noiseNode = ctx.createBufferSource();
+    noiseNode.buffer = buffer;
+    noiseNode.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(1000, ctx.currentTime);
+    noiseNode.connect(filter).connect(dest);
+    noiseNode.start(ctx.currentTime);
+    return { noiseNode };
+  },
+  'effect_thunder': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const duration = 2.5;
+    const bufferSize = ctx.sampleRate * duration;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      output[i] = (lastOut + (0.02 * white)) / 1.02;
+      lastOut = output[i];
+      output[i] *= 3.5;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(120, t);
+    filter.frequency.linearRampToValueAtTime(40, t + duration);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(1.0, t + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + duration);
+    noise.connect(filter).connect(gain).connect(dest);
+    noise.start(t);
+    noise.stop(t + duration);
+  },
+  'player_take_damage': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.15);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.15);
+  },
+  'door_open_creak': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.linearRampToValueAtTime(150, t + 0.4);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.2, t + 0.1);
+    gain.gain.setValueAtTime(0.2, t + 0.4);
+    gain.gain.linearRampToValueAtTime(0, t + 0.5);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.5);
+  },
+  'key_pickup': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, t);
+    osc.frequency.linearRampToValueAtTime(1800, t + 0.15);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.15);
+  },
+  'swan_heal': (ctx, dest) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1500, t);
+    osc.frequency.exponentialRampToValueAtTime(3000, t + 0.3);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.4, t + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    osc.connect(gain).connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.3);
+  }
+},
+playSound: function (name) {
+  if (!this.isInitialized) this.init();
+  if (!this.isInitialized || !this.sounds[name]) return;
+  this.sounds[name](this.context, this.mainGain);
+},
+playSoundThrottled: function (name, delay) {
+  if (!this.isInitialized || this.soundCooldowns[name]) {
+    return;
+  }
+  this.playSound(name);
+  this.soundCooldowns[name] = true;
+  setTimeout(() => {
+    this.soundCooldowns[name] = false;
+  }, delay);
+},
+startAmbiance: function (name) {
+  if (!this.isInitialized) this.init();
+  if (!this.isInitialized || !this.sounds[name] || this.activeAmbiance[name]) return;
+  console.log('Starter atmosfære:', name);
+  const gain = this.context.createGain();
+  gain.connect(this.mainGain);
+  gain.gain.setValueAtTime(0, this.context.currentTime);
+  let targetVolume = 0.4;
+  if (name === 'night_ambiance') targetVolume = 0.3;
+  if (name === 'ambiance_rain') targetVolume = 0.008;
+  gain.gain.linearRampToValueAtTime(targetVolume, this.context.currentTime + 3);
+  const nodes = this.sounds[name](this.context, gain);
+  this.activeAmbiance[name] = { ...nodes, gainNode: gain };
+},
+stopAmbiance: function (name) {
+  if (!this.isInitialized || !this.activeAmbiance[name]) return;
+  console.log('Stopper atmosfære:', name);
+  const nodes = this.activeAmbiance[name];
+  const fadeTime = this.context.currentTime + 2;
+  nodes.gainNode.gain.cancelScheduledValues(this.context.currentTime);
+  nodes.gainNode.gain.linearRampToValueAtTime(0.001, fadeTime);
+  setTimeout(() => {
+    if (nodes.noiseNode) nodes.noiseNode.stop();
+    if (nodes.lfo) nodes.lfo.stop();
+    nodes.gainNode.disconnect();
+  }, 2100);
+  delete this.activeAmbiance[name];
+},
+startBirdSounds: function () {
+  if (!this.isInitialized || this.birdChirpTimer) return;
+  console.log("Starter fuglelyder...");
+  const birdSounds = ['bird_chirp_1', 'bird_chirp_2', 'bird_chirp_3'];
+  const loop = () => {
+    const randomDelay = Math.random() * 10000 + 5000;
+    this.birdChirpTimer = setTimeout(() => {
+      if (!this.isInitialized) return;
+      const soundName = birdSounds[Math.floor(Math.random() * birdSounds.length)];
+      this.playSound(soundName);
+      loop();
+    }, randomDelay);
+  };
+  loop();
+},
+stopBirdSounds: function () {
+  if (this.birdChirpTimer) {
+    console.log("Stopper fuglelyder...");
+    clearTimeout(this.birdChirpTimer);
+    this.birdChirpTimer = null;
+  }
+},
+startNightSounds: function () {
+  if (!this.isInitialized) return;
+  this.startAmbiance('night_ambiance');
+  if (this.owlHootTimer) return;
+  console.log("Starter uglelyder...");
+  const loop = () => {
+    const randomDelay = Math.random() * 15000 + 15000;
+    this.owlHootTimer = setTimeout(() => {
+      if (!this.isInitialized) return;
+      this.playSound('owl_hoot');
+      loop();
+    }, randomDelay);
+  };
+  loop();
+},
+stopNightSounds: function () {
+  this.stopAmbiance('night_ambiance');
+  if (this.owlHootTimer) {
+    console.log("Stopper uglelyder...");
+    clearTimeout(this.owlHootTimer);
+    this.owlHootTimer = null;
+  }
+}
 };
 document.addEventListener('DOMContentLoaded', () => {
   const WORLD_SIZE = {

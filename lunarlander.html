@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lander Rescue</title>
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIiBmaWxsPSIjMDAwMDAwIj7wn5qAPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn5qAPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
 <style>
 body {
   margin: 0;
@@ -133,13 +133,13 @@ const PEOPLE_PER_TRIP = 5;
 const audioManager = {
   audioCtx: null,
   thrustNode: null,
-init() { if (!this.audioCtx) { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } },
-startThrust() { if (!this.audioCtx || this.thrustNode) return; const noiseSource = this.audioCtx.createBufferSource(); const bufferSize = this.audioCtx.sampleRate * 2; const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate); const output = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; } noiseSource.buffer = buffer; noiseSource.loop = true; const filter = this.audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 800; filter.Q.value = 15; const gainNode = this.audioCtx.createGain(); gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.3, this.audioCtx.currentTime + 0.1); noiseSource.connect(filter).connect(gainNode).connect(this.audioCtx.destination); noiseSource.start(); this.thrustNode = { noiseSource, gainNode }; },
-stopThrust() { if (!this.thrustNode) return; this.thrustNode.gainNode.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.2); this.thrustNode.noiseSource.stop(this.audioCtx.currentTime + 0.2); this.thrustNode = null; },
-playExplosion() { if (!this.audioCtx) return; const noiseSource = this.audioCtx.createBufferSource(); const bufferSize = this.audioCtx.sampleRate; const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate); const output = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; } noiseSource.buffer = buffer; const gainNode = this.audioCtx.createGain(); gainNode.gain.setValueAtTime(0.5, this.audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 1.0); noiseSource.connect(gainNode).connect(this.audioCtx.destination); noiseSource.start(); },
-playLand() { if (!this.audioCtx) return; const osc = this.audioCtx.createOscillator(); const gain = this.audioCtx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(150, this.audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, this.audioCtx.currentTime + 0.2); gain.gain.setValueAtTime(0.4, this.audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3); osc.connect(gain).connect(this.audioCtx.destination); osc.start(); osc.stop(this.audioCtx.currentTime + 0.3); },
-playPickup() { if (!this.audioCtx) return; const osc = this.audioCtx.createOscillator(); const gain = this.audioCtx.createGain(); osc.type = 'square'; osc.frequency.setValueAtTime(400, this.audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(800, this.audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.2); osc.connect(gain).connect(this.audioCtx.destination); osc.start(); osc.stop(this.audioCtx.currentTime + 0.2); },
-playDropoff() { if (!this.audioCtx) return; const osc = this.audioCtx.createOscillator(); const gain = this.audioCtx.createGain(); osc.type = 'triangle'; osc.frequency.setValueAtTime(800, this.audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(400, this.audioCtx.currentTime + 0.2); gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3); osc.connect(gain).connect(this.audioCtx.destination); osc.start(); osc.stop(this.audioCtx.currentTime + 0.3); }
+  init() { if (!this.audioCtx) { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } },
+  startThrust() { if (!this.audioCtx || this.thrustNode) return; const noiseSource = this.audioCtx.createBufferSource(); const bufferSize = this.audioCtx.sampleRate * 2; const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate); const output = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; } noiseSource.buffer = buffer; noiseSource.loop = true; const filter = this.audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 800; filter.Q.value = 15; const gainNode = this.audioCtx.createGain(); gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.3, this.audioCtx.currentTime + 0.1); noiseSource.connect(filter).connect(gainNode).connect(this.audioCtx.destination); noiseSource.start(); this.thrustNode = { noiseSource, gainNode }; },
+  stopThrust() { if (!this.thrustNode) return; this.thrustNode.gainNode.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.2); this.thrustNode.noiseSource.stop(this.audioCtx.currentTime + 0.2); this.thrustNode = null; },
+  playExplosion() { if (!this.audioCtx) return; const noiseSource = this.audioCtx.createBufferSource(); const bufferSize = this.audioCtx.sampleRate; const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate); const output = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; } noiseSource.buffer = buffer; const gainNode = this.audioCtx.createGain(); gainNode.gain.setValueAtTime(0.5, this.audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 1.0); noiseSource.connect(gainNode).connect(this.audioCtx.destination); noiseSource.start(); },
+  playLand() { if (!this.audioCtx) return; const osc = this.audioCtx.createOscillator(); const gain = this.audioCtx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(150, this.audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, this.audioCtx.currentTime + 0.2); gain.gain.setValueAtTime(0.4, this.audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3); osc.connect(gain).connect(this.audioCtx.destination); osc.start(); osc.stop(this.audioCtx.currentTime + 0.3); },
+  playPickup() { if (!this.audioCtx) return; const osc = this.audioCtx.createOscillator(); const gain = this.audioCtx.createGain(); osc.type = 'square'; osc.frequency.setValueAtTime(400, this.audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(800, this.audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.2); osc.connect(gain).connect(this.audioCtx.destination); osc.start(); osc.stop(this.audioCtx.currentTime + 0.2); },
+  playDropoff() { if (!this.audioCtx) return; const osc = this.audioCtx.createOscillator(); const gain = this.audioCtx.createGain(); osc.type = 'triangle'; osc.frequency.setValueAtTime(800, this.audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(400, this.audioCtx.currentTime + 0.2); gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3); osc.connect(gain).connect(this.audioCtx.destination); osc.start(); osc.stop(this.audioCtx.currentTime + 0.3); }
 };
 const keys = { ArrowUp: false, ArrowLeft: false, ArrowRight: false, };
 window.addEventListener('keydown', (e) => {
@@ -167,231 +167,231 @@ window.addEventListener('keyup', (e) => {
   }
 });
 class Lander {
-constructor(x, y) {
-  this.startX = x;
-  this.startY = y;
-  this.reset();
-  this.width = 20;
-  this.height = 20;
-}
-reset() {
-  this.x = this.startX;
-  this.y = this.startY;
-  this.vx = 0.5;
-  this.vy = 0;
-  this.angle = 0;
-  this.thrusting = false;
-  this.crashed = false;
-  this.landed = false;
-  this.fuel = FUEL_START - (level - 1) * 50;
-  if (this.fuel < 300) this.fuel = 300;
-  this.people = 0;
-}
-applyThrust() {
-  if (this.fuel > 0) {
-    this.landed = false;
-    this.vx += Math.sin(this.angle) * THRUST_POWER;
-    this.vy -= Math.cos(this.angle) * THRUST_POWER;
-    this.fuel--;
-    this.thrusting = true;
-  } else {
+  constructor(x, y) {
+    this.startX = x;
+    this.startY = y;
+    this.reset();
+    this.width = 20;
+    this.height = 20;
+  }
+  reset() {
+    this.x = this.startX;
+    this.y = this.startY;
+    this.vx = 0.5;
+    this.vy = 0;
+    this.angle = 0;
     this.thrusting = false;
-    audioManager.stopThrust();
+    this.crashed = false;
+    this.landed = false;
+    this.fuel = FUEL_START - (level - 1) * 50;
+    if (this.fuel < 300) this.fuel = 300;
+    this.people = 0;
   }
-}
-rotate(direction) {
-  this.angle += ROTATION_SPEED * direction;
-}
-update() {
-  if (this.crashed || this.landed) return;
-  this.vy += GRAVITY;
-  this.x += this.vx;
-  this.y += this.vy;
-}
-draw() {
-  ctx.save();
-  ctx.translate(this.x, this.y);
-  ctx.rotate(this.angle);
-  const w = this.width;
-  const h = this.height;
-  const bodyColor = this.crashed ? 'darkred' : (this.people > 0 ? '#ddd' : 'lightgrey');
-  const finColor = this.crashed ? '#a00' : '#b0b0b0';
-  const windowColor = this.crashed ? '#ff0000' : (this.people > 0 ? '#0f0' : '#00ffff');
-  if (this.thrusting) {
+  applyThrust() {
+    if (this.fuel > 0) {
+      this.landed = false;
+      this.vx += Math.sin(this.angle) * THRUST_POWER;
+      this.vy -= Math.cos(this.angle) * THRUST_POWER;
+      this.fuel--;
+      this.thrusting = true;
+    } else {
+      this.thrusting = false;
+      audioManager.stopThrust();
+    }
+  }
+  rotate(direction) {
+    this.angle += ROTATION_SPEED * direction;
+  }
+  update() {
+    if (this.crashed || this.landed) return;
+    this.vy += GRAVITY;
+    this.x += this.vx;
+    this.y += this.vy;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    const w = this.width;
+    const h = this.height;
+    const bodyColor = this.crashed ? 'darkred' : (this.people > 0 ? '#ddd' : 'lightgrey');
+    const finColor = this.crashed ? '#a00' : '#b0b0b0';
+    const windowColor = this.crashed ? '#ff0000' : (this.people > 0 ? '#0f0' : '#00ffff');
+    if (this.thrusting) {
+      ctx.beginPath();
+      const flameHeight = h * 0.9 + Math.random() * h * 0.4;
+      const flameWidth = w * 0.8;
+      ctx.moveTo(-flameWidth / 2, h / 2);
+      ctx.lineTo(flameWidth / 2, h / 2);
+      ctx.lineTo(0, h / 2 + flameHeight);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(255, 165, 0, 0.8)';
+      ctx.fill();
+      ctx.beginPath();
+      const innerFlameHeight = h * 0.6 + Math.random() * h * 0.3;
+      const innerFlameWidth = w * 0.5;
+      ctx.moveTo(-innerFlameWidth / 2, h / 2);
+      ctx.lineTo(innerFlameWidth / 2, h / 2);
+      ctx.lineTo(0, h / 2 + innerFlameHeight);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(255, 255, 0, 0.9)';
+      ctx.fill();
+    }
     ctx.beginPath();
-    const flameHeight = h * 0.9 + Math.random() * h * 0.4;
-    const flameWidth = w * 0.8;
-    ctx.moveTo(-flameWidth / 2, h / 2);
-    ctx.lineTo(flameWidth / 2, h / 2);
-    ctx.lineTo(0, h / 2 + flameHeight);
+    ctx.moveTo(-w / 2, h / 4);
+    ctx.lineTo(-w, h / 2);
+    ctx.lineTo(-w / 2, h / 2);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(255, 165, 0, 0.8)';
+    ctx.fillStyle = finColor;
     ctx.fill();
     ctx.beginPath();
-    const innerFlameHeight = h * 0.6 + Math.random() * h * 0.3;
-    const innerFlameWidth = w * 0.5;
-    ctx.moveTo(-innerFlameWidth / 2, h / 2);
-    ctx.lineTo(innerFlameWidth / 2, h / 2);
-    ctx.lineTo(0, h / 2 + innerFlameHeight);
+    ctx.moveTo(w / 2, h / 4);
+    ctx.lineTo(w, h / 2);
+    ctx.lineTo(w / 2, h / 2);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(255, 255, 0, 0.9)';
+    ctx.fillStyle = finColor;
     ctx.fill();
+    ctx.beginPath();
+    ctx.rect(-w / 2, -h / 2, w, h);
+    ctx.fillStyle = bodyColor;
+    ctx.fill();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, -h / 2);
+    ctx.lineTo(w / 2, -h / 2);
+    ctx.lineTo(0, -h);
+    ctx.closePath();
+    ctx.fillStyle = bodyColor;
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, -h / 3, w / 4, 0, 2 * Math.PI);
+    ctx.fillStyle = windowColor;
+    ctx.fill();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
   }
-  ctx.beginPath();
-  ctx.moveTo(-w / 2, h / 4);
-  ctx.lineTo(-w, h / 2);
-  ctx.lineTo(-w / 2, h / 2);
-  ctx.closePath();
-  ctx.fillStyle = finColor;
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(w / 2, h / 4);
-  ctx.lineTo(w, h / 2);
-  ctx.lineTo(w / 2, h / 2);
-  ctx.closePath();
-  ctx.fillStyle = finColor;
-  ctx.fill();
-  ctx.beginPath();
-  ctx.rect(-w / 2, -h / 2, w, h);
-  ctx.fillStyle = bodyColor;
-  ctx.fill();
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-w / 2, -h / 2);
-  ctx.lineTo(w / 2, -h / 2);
-  ctx.lineTo(0, -h);
-  ctx.closePath();
-  ctx.fillStyle = bodyColor;
-  ctx.fill();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(0, -h / 3, w / 4, 0, 2 * Math.PI);
-  ctx.fillStyle = windowColor;
-  ctx.fill();
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.restore();
-}
 }
 class LandingPad {
-constructor(x, y, width, type) {
-  this.x = x;
-  this.y = y;
-  this.width = width;
-  this.type = type;
-  this.color = {
-    'rescue': '#00f',
-    'dropoff': '#0f0',
-    'fuel': '#ff0'
-  }[type];
-}
-draw() {
-  ctx.beginPath();
-  ctx.moveTo(this.x, this.y);
-  ctx.lineTo(this.x + this.width, this.y);
-  ctx.strokeStyle = this.color;
-  ctx.lineWidth = 4;
-  ctx.stroke();
-}
+  constructor(x, y, width, type) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.type = type;
+    this.color = {
+      'rescue': '#00f',
+      'dropoff': '#0f0',
+      'fuel': '#ff0'
+    }[type];
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x + this.width, this.y);
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
 }
 class EnemyLauncher {
-constructor(x, y) {
-  this.x = x;
-  this.y = y;
-  this.width = 30;
-  this.height = 15;
-  this.fireCooldown = 0;
-  this.fireRate = 200 + Math.random() * 100;
-}
-update() {
-  this.fireCooldown--;
-  if (this.fireCooldown <= 0 && lander) {
-    const dist = Math.abs(lander.x - this.x);
-    if (dist < canvas.width / 1.5) {
-      this.fire();
-      this.fireCooldown = this.fireRate;
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = 30;
+    this.height = 15;
+    this.fireCooldown = 0;
+    this.fireRate = 200 + Math.random() * 100;
+  }
+  update() {
+    this.fireCooldown--;
+    if (this.fireCooldown <= 0 && lander) {
+      const dist = Math.abs(lander.x - this.x);
+      if (dist < canvas.width / 1.5) {
+        this.fire();
+        this.fireCooldown = this.fireRate;
+      }
     }
   }
-}
-fire() {
-  const spread = canvas.width * 0.1;
-  const targetX = this.x + (Math.random() - 0.5) * spread;
-  const targetY = 0;
-  entities.push(new Projectile(this.x, this.y - this.height, targetX, targetY));
-}
-draw() {
-  ctx.fillStyle = 'red';
-  ctx.fillRect(this.x - this.width / 2, this.y - this.height, this.width, this.height);
-  ctx.beginPath();
-  ctx.arc(this.x, this.y - this.height, this.width / 3, Math.PI, 2 * Math.PI);
-  ctx.fill();
-}
+  fire() {
+    const spread = canvas.width * 0.1;
+    const targetX = this.x + (Math.random() - 0.5) * spread;
+    const targetY = 0;
+    entities.push(new Projectile(this.x, this.y - this.height, targetX, targetY));
+  }
+  draw() {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(this.x - this.width / 2, this.y - this.height, this.width, this.height);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y - this.height, this.width / 3, Math.PI, 2 * Math.PI);
+    ctx.fill();
+  }
 }
 class Projectile {
-constructor(x, y, targetX, targetY) {
-  this.x = x;
-  this.y = y;
-  const angle = Math.atan2(targetY - y, targetX - x);
-  const speed = 2 + (level * 0.1);
-  this.vx = Math.cos(angle) * speed;
-  this.vy = Math.sin(angle) * speed;
-  this.size = 3;
-  this.life = 300;
-}
-update() {
-  this.vy += GRAVITY * 0.5;
-  this.x += this.vx;
-  this.y += this.vy;
-  this.life--;
-}
-draw() {
-  ctx.fillStyle = 'orange';
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
-  ctx.fill();
-}
+  constructor(x, y, targetX, targetY) {
+    this.x = x;
+    this.y = y;
+    const angle = Math.atan2(targetY - y, targetX - x);
+    const speed = 2 + (level * 0.1);
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+    this.size = 3;
+    this.life = 300;
+  }
+  update() {
+    this.vy += GRAVITY * 0.5;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life--;
+  }
+  draw() {
+    ctx.fillStyle = 'orange';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+    ctx.fill();
+  }
 }
 class Person {
-constructor(x, y, state) {
-  this.x = x;
-  this.y = y - 5;
-  this.width = 3;
-  this.height = 5;
-  this.state = state;
-  this.targetX = x;
-  this.speed = 0.5;
-}
-update() {
-  if (this.state === 'walkingToLander' && lander) {
-    this.targetX = lander.x;
-    if (Math.abs(this.x - this.targetX) < 5) {
-      this.state = 'safe';
-      lander.people++;
-      audioManager.playPickup();
-    } else if (this.x < this.targetX) {
-      this.x += this.speed;
-    } else {
-      this.x -= this.speed;
-    }
-  } else if (this.state === 'walkingAway') {
-    if (Math.abs(this.x - this.targetX) < 5) {
-      this.state = 'safe';
-    } else if (this.x < this.targetX) {
-      this.x += this.speed;
-    } else {
-      this.x -= this.speed;
+  constructor(x, y, state) {
+    this.x = x;
+    this.y = y - 5;
+    this.width = 3;
+    this.height = 5;
+    this.state = state;
+    this.targetX = x;
+    this.speed = 0.5;
+  }
+  update() {
+    if (this.state === 'walkingToLander' && lander) {
+      this.targetX = lander.x;
+      if (Math.abs(this.x - this.targetX) < 5) {
+        this.state = 'safe';
+        lander.people++;
+        audioManager.playPickup();
+      } else if (this.x < this.targetX) {
+        this.x += this.speed;
+      } else {
+        this.x -= this.speed;
+      }
+    } else if (this.state === 'walkingAway') {
+      if (Math.abs(this.x - this.targetX) < 5) {
+        this.state = 'safe';
+      } else if (this.x < this.targetX) {
+        this.x += this.speed;
+      } else {
+        this.x -= this.speed;
+      }
     }
   }
-}
-draw() {
-  if (this.state === 'waiting' || this.state === 'walkingToLander' || this.state === 'walkingAway') {
-    ctx.fillStyle = '#00ffff';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+  draw() {
+    if (this.state === 'waiting' || this.state === 'walkingToLander' || this.state === 'walkingAway') {
+      ctx.fillStyle = '#00ffff';
+      ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
   }
-}
 }
 function generateStars() {
   stars = [];

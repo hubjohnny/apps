@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>100 Laps</title>
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIiBmaWxsPSIjMDAwMDAwIj7wn5qUPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn5qUPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
 <style>
 body {
   margin: 0;
@@ -176,120 +176,120 @@ const collisionDamage = 5;
 const policeSpeedThreshold = 450;
 const HIGH_SCORES_KEY = 'racingGameHighScores';
 class AudioManager {
-constructor() {
-  this.audioCtx = null;
-  this.engineSound = null;
-  this.sirenSound = null;
-}
-init() {
-  if (!this.audioCtx) {
-    try {
-      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (e) {
-      console.error("Browser does not support the Web Audio API.");
-    }
-  }
-}
-startEngine() {
-  if (!this.audioCtx || this.engineSound) return;
-  this.engineSound = this.audioCtx.createOscillator();
-  const gainNode = this.audioCtx.createGain();
-  this.engineSound.connect(gainNode);
-  gainNode.connect(this.audioCtx.destination);
-  this.engineSound.type = 'triangle';
-  this.engineSound.frequency.setValueAtTime(35, this.audioCtx.currentTime);
-  gainNode.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
-  this.engineSound.start();
-}
-updateEngineSound(speed) {
-  if (!this.engineSound) return;
-  const minPitch = 35;
-  const maxPitch = 70;
-  const pitch = minPitch + (speed / maxSpeed) * (maxPitch - minPitch);
-  this.engineSound.frequency.setTargetAtTime(pitch, this.audioCtx.currentTime, 0.05);
-}
-stopEngine() {
-  if (this.engineSound) {
-    this.engineSound.stop();
+  constructor() {
+    this.audioCtx = null;
     this.engineSound = null;
-  }
-}
-startSiren() {
-  if (!this.audioCtx || this.sirenSound) return;
-  const sirenNode = {
-    osc: this.audioCtx.createOscillator(),
-    gain: this.audioCtx.createGain(),
-    panner: this.audioCtx.createStereoPanner(),
-    interval: null,
-  };
-  sirenNode.osc.connect(sirenNode.gain);
-  sirenNode.gain.connect(sirenNode.panner);
-  sirenNode.panner.connect(this.audioCtx.destination);
-  sirenNode.osc.type = 'square';
-  sirenNode.gain.gain.setValueAtTime(0.04, this.audioCtx.currentTime);
-  sirenNode.osc.frequency.value = 1000;
-  sirenNode.osc.start();
-  let highTone = true;
-  sirenNode.interval = setInterval(() => {
-    const freq = highTone ? 700 : 1000;
-    sirenNode.osc.frequency.setTargetAtTime(freq, this.audioCtx.currentTime, 0.05);
-    sirenNode.panner.pan.setTargetAtTime(highTone ? -0.8 : 0.8, this.audioCtx.currentTime, 0.1);
-    highTone = !highTone;
-  }, 350);
-  this.sirenSound = sirenNode;
-}
-stopSiren() {
-  if (this.sirenSound) {
-    clearInterval(this.sirenSound.interval);
-    this.sirenSound.osc.stop();
     this.sirenSound = null;
   }
-}
-playCrashSound() {
-  if (!this.audioCtx) return;
-  const duration = 0.5;
-  const buffer = this.audioCtx.createBuffer(1, this.audioCtx.sampleRate * duration, this.audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) {
-    data[i] = Math.random() * 2 - 1;
+  init() {
+    if (!this.audioCtx) {
+      try {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        console.error("Browser does not support the Web Audio API.");
+      }
+    }
   }
-  const noiseSource = this.audioCtx.createBufferSource();
-  noiseSource.buffer = buffer;
-  const gainNode = this.audioCtx.createGain();
-  gainNode.gain.setValueAtTime(0.05, this.audioCtx.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + duration - 0.1);
-  noiseSource.connect(gainNode);
-  gainNode.connect(this.audioCtx.destination);
-  noiseSource.start();
-}
+  startEngine() {
+    if (!this.audioCtx || this.engineSound) return;
+    this.engineSound = this.audioCtx.createOscillator();
+    const gainNode = this.audioCtx.createGain();
+    this.engineSound.connect(gainNode);
+    gainNode.connect(this.audioCtx.destination);
+    this.engineSound.type = 'triangle';
+    this.engineSound.frequency.setValueAtTime(35, this.audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+    this.engineSound.start();
+  }
+  updateEngineSound(speed) {
+    if (!this.engineSound) return;
+    const minPitch = 35;
+    const maxPitch = 70;
+    const pitch = minPitch + (speed / maxSpeed) * (maxPitch - minPitch);
+    this.engineSound.frequency.setTargetAtTime(pitch, this.audioCtx.currentTime, 0.05);
+  }
+  stopEngine() {
+    if (this.engineSound) {
+      this.engineSound.stop();
+      this.engineSound = null;
+    }
+  }
+  startSiren() {
+    if (!this.audioCtx || this.sirenSound) return;
+    const sirenNode = {
+      osc: this.audioCtx.createOscillator(),
+      gain: this.audioCtx.createGain(),
+      panner: this.audioCtx.createStereoPanner(),
+      interval: null,
+    };
+    sirenNode.osc.connect(sirenNode.gain);
+    sirenNode.gain.connect(sirenNode.panner);
+    sirenNode.panner.connect(this.audioCtx.destination);
+    sirenNode.osc.type = 'square';
+    sirenNode.gain.gain.setValueAtTime(0.04, this.audioCtx.currentTime);
+    sirenNode.osc.frequency.value = 1000;
+    sirenNode.osc.start();
+    let highTone = true;
+    sirenNode.interval = setInterval(() => {
+      const freq = highTone ? 700 : 1000;
+      sirenNode.osc.frequency.setTargetAtTime(freq, this.audioCtx.currentTime, 0.05);
+      sirenNode.panner.pan.setTargetAtTime(highTone ? -0.8 : 0.8, this.audioCtx.currentTime, 0.1);
+      highTone = !highTone;
+    }, 350);
+    this.sirenSound = sirenNode;
+  }
+  stopSiren() {
+    if (this.sirenSound) {
+      clearInterval(this.sirenSound.interval);
+      this.sirenSound.osc.stop();
+      this.sirenSound = null;
+    }
+  }
+  playCrashSound() {
+    if (!this.audioCtx) return;
+    const duration = 0.5;
+    const buffer = this.audioCtx.createBuffer(1, this.audioCtx.sampleRate * duration, this.audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noiseSource = this.audioCtx.createBufferSource();
+    noiseSource.buffer = buffer;
+    const gainNode = this.audioCtx.createGain();
+    gainNode.gain.setValueAtTime(0.05, this.audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + duration - 0.1);
+    noiseSource.connect(gainNode);
+    gainNode.connect(this.audioCtx.destination);
+    noiseSource.start();
+  }
 }
 class Particle {
-constructor(x, y, color, vx, vy, lifetime) {
-  this.x = x;
-  this.y = y;
-  this.vx = vx;
-  this.vy = vy;
-  this.color = color;
-  this.lifetime = lifetime;
-  this.maxLifetime = lifetime;
-  this.radius = Math.random() * 2 + 1;
-}
-update() {
-  this.x += this.vx * deltaTime;
-  this.y += this.vy * deltaTime;
-  this.lifetime -= 1;
-  this.vx *= 0.95;
-  this.vy *= 0.95;
-}
-draw() {
-  ctx.globalAlpha = this.lifetime / this.maxLifetime;
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-  ctx.fillStyle = this.color;
-  ctx.fill();
-  ctx.closePath();
-  ctx.globalAlpha = 1.0;
-}
+  constructor(x, y, color, vx, vy, lifetime) {
+    this.x = x;
+    this.y = y;
+    this.vx = vx;
+    this.vy = vy;
+    this.color = color;
+    this.lifetime = lifetime;
+    this.maxLifetime = lifetime;
+    this.radius = Math.random() * 2 + 1;
+  }
+  update() {
+    this.x += this.vx * deltaTime;
+    this.y += this.vy * deltaTime;
+    this.lifetime -= 1;
+    this.vx *= 0.95;
+    this.vy *= 0.95;
+  }
+  draw() {
+    ctx.globalAlpha = this.lifetime / this.maxLifetime;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
+    ctx.globalAlpha = 1.0;
+  }
 }
 const canvas = document.getElementById('racingCanvas');
 const ctx = canvas.getContext('2d');
