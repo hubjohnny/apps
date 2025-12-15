@@ -1,943 +1,787 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mastodon Engine 4.4 (Deep Clean)</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mastodon Engine</title>
 <style>
-  /* Standard Editor Theme */
-  :root {
-    --bg-color: #1e1e1e;
-    --text-color: #d4d4d4;
-    --line-height: 24px;
-    --font-size: 15px;
-    --font-family: 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
-    --selection-bg: #264f78;
-    --cursor-color: #aeafad;
-    --line-num-bg: #1e1e1e;
-    --line-num-text: #858585;
-    --border-color: #333;
-    /* Syntax Colors */
-    --c-comment: #6a9955;
-    --c-string: #ce9178;
-    --c-number: #b5cea8;
-    --c-keyword: #c586c0;
-    --c-function: #dcdcaa;
-    --c-tag: #569cd6;
-    --c-attr: #9cdcfe;
-    --c-selector: #d7ba7d;
-    --c-property: #9cdcfe;
-  }
-
-  body {
-    margin: 0;
-    overflow: hidden;
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-family: var(--font-family);
-  }
-
-  #editor {
-    position: relative;
-    width: 100vw;
-    height: calc(100vh - 22px);
-    overflow: auto;
-    outline: none;
-    cursor: text;
-  }
-
-  #scroll-phantom {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: -1;
-    width: 1px;
-    height: 1px;
-  }
-
-  #view-port {
-    position: absolute;
-    top: 0;
-    left: 0;
-    min-width: 100%;
-    pointer-events: none;
-  }
-
-  .line {
-    height: var(--line-height);
-    line-height: var(--line-height);
-    font-size: var(--font-size);
-    font-family: var(--font-family);
-    white-space: pre;
-    padding-left: 0;
-    width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    position: relative;
-    font-variant-ligatures: none;
-    letter-spacing: 0px; 
-  }
-
+:root {
+  --bg-color: #1e1e1e;
+  --text-color: #d4d4d4;
+  --line-height: 24px;
+  --font-size: 15px;
+  --font-family: 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
+  --selection-bg: #264f78;
+  --cursor-color: #aeafad;
+  --line-num-bg: #1e1e1e;
+  --line-num-text: #858585;
+  --border-color: #333;
+  --c-comment: #6a9955;
+  --c-string: #ce9178;
+  --c-number: #b5cea8;
+  --c-keyword: #c586c0;
+  --c-function: #dcdcaa;
+  --c-tag: #569cd6;
+  --c-attr: #9cdcfe;
+  --c-selector: #d7ba7d;
+  --c-property: #9cdcfe;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+}
+#editor {
+  position: relative;
+  width: 100vw;
+  height: calc(100vh - 22px);
+  overflow: auto;
+  outline: none;
+  cursor: text;
+}
+#scroll-phantom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 1px;
+  height: 1px;
+}
+#view-port {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  pointer-events: none;
+}
+.line {
+  height: var(--line-height);
+  line-height: var(--line-height);
+  font-size: var(--font-size);
+  font-family: var(--font-family);
+  white-space: pre;
+  padding-left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  position: relative;
+  font-variant-ligatures: none;
+  letter-spacing: 0px;
+}
 .line-number {
-    position: sticky; /* <-- Endret fra absolute til sticky */
-    left: 0;          /* <-- Sørger for at den klistrer seg til venstre */
-    top: 0;
-    bottom: 0;
-    width: 60px;
-    min-width: 60px;  /* <-- Lagt til for sikkerhets skyld */
-    text-align: right;
-    color: var(--line-num-text);
-    background: var(--line-num-bg); /* Viktig at denne har farge, ellers ser du koden bak */
-    padding-right: 10px;
-    border-right: 1px solid var(--border-color);
-    box-sizing: border-box;
-    user-select: none;
-    z-index: 20;      /* <-- Økt litt for å være sikker */
-  }
-
-  .selection-layer {
-    position: absolute;
-    left: 65px;
-    top: 0;
-    bottom: 0;
-    background-color: transparent;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .is-selected {
-    background-color: var(--selection-bg);
-  }
-
-  .line-content {
-    padding-left: 5px;
-    position: relative;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  /* Syntax Classes */
-  .tok-com { color: var(--c-comment); }
-  .tok-str { color: var(--c-string); }
-  .tok-num { color: var(--c-number); }
-  .tok-kwd { color: var(--c-keyword); }
-  .tok-func { color: var(--c-function); }
-  .tok-tag { color: var(--c-tag); }
-  .tok-attr { color: var(--c-attr); }
-  .tok-sel { color: var(--c-selector); }
-  .tok-prop { color: var(--c-property); }
-
-  #cursor {
-    position: absolute;
-    width: 2px;
-    height: var(--line-height);
-    background-color: var(--cursor-color);
-    z-index: 10;
-    pointer-events: none;
-    transition: top 0.05s, left 0.05s;
-  }
-
-  .blink {
-    animation: blink 1s step-end infinite;
-  }
-
-  #statusbar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: #0a0807;
-    color: #d4d4d4;
-    font-size: 14px;
-    padding: 6px 10px;
-    font-family: sans-serif;
-    z-index: 100;
-    display: flex;
-    justify-content: space-between;
-    box-sizing: border-box;
-  }
-  
-  /* Ny stil for hurtigtastene i midten */
-  #shortcuts {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%); /* Justerer slik at midten av teksten treffer midten av skjermen */
-    color: #524b48; /* Mørk, varm gråfarge - diskret og subtil */
-    font-size: 14px;
-    white-space: nowrap; /* Hindrer at teksten brekker om skjermen er smal */
-    pointer-events: none; /* Lar deg klikke "gjennom" teksten om nødvendig */
-    overflow: hidden;
-    max-width: 50%; /* Sikrer at den ikke kræsjer med sidene på veldig små skjermer */
-    text-overflow: ellipsis;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
+  position: sticky;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  min-width: 60px;
+  text-align: right;
+  color: var(--line-num-text);
+  background: var(--line-num-bg);
+  padding-right: 10px;
+  border-right: 1px solid var(--border-color);
+  box-sizing: border-box;
+  user-select: none;
+  z-index: 20;
+}
+.selection-layer {
+  position: absolute;
+  left: 65px;
+  top: 0;
+  bottom: 0;
+  background-color: transparent;
+  z-index: 1;
+  pointer-events: none;
+}
+.is-selected {
+  background-color: var(--selection-bg);
+}
+.line-content {
+  padding-left: 5px;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+.tok-com { color: var(--c-comment); }
+.tok-str { color: var(--c-string); }
+.tok-num { color: var(--c-number); }
+.tok-kwd { color: var(--c-keyword); }
+.tok-func { color: var(--c-function); }
+.tok-tag { color: var(--c-tag); }
+.tok-attr { color: var(--c-attr); }
+.tok-sel { color: var(--c-selector); }
+.tok-prop { color: var(--c-property); }
+#cursor {
+  position: absolute;
+  width: 2px;
+  height: var(--line-height);
+  background-color: var(--cursor-color);
+  z-index: 10;
+  pointer-events: none;
+  transition: top 0.05s, left 0.05s;
+}
+.blink {
+  animation: blink 1s step-end infinite;
+}
+#statusbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #0a0807;
+  color: #524b48;
+  font-size: 14px;
+  padding: 6px 10px;
+  font-family: sans-serif;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+#shortcuts {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #524b48;
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  overflow: hidden;
+  max-width: 50%;
+  text-overflow: ellipsis;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 </style>
 </head>
 <body>
-  <div id="editor" tabindex="0">
-    <div id="scroll-phantom"></div>
-    <div id="view-port"></div>
-    <div id="cursor" class="blink"></div>
-  </div>
-  <div id="statusbar">
-    <span id="file-status">Untitled.txt</span>
-    <span id="shortcuts">Alt+B: Beautify &nbsp;|&nbsp; Alt+P: Preview &nbsp;|&nbsp; Alt+N: New</span>
-    <span id="message-area">Mastodon Engine 4.4</span>
-  </div>
+<div id="editor" tabindex="0">
+  <div id="scroll-phantom"></div>
+  <div id="view-port"></div>
+  <div id="cursor" class="blink"></div>
+</div>
+<div id="statusbar">
+  <span id="file-status">Untitled.txt</span>
+  <span id="shortcuts">Ctrl+O: Open &nbsp;|&nbsp; Ctrl+S: Save &nbsp;|&nbsp; Alt+B: Beautify &nbsp;|&nbsp; Alt+P: Preview &nbsp;|&nbsp; Alt+N: New</span>
+  <span id="message-area">Mastodon Engine</span>
+</div>
 <script>
-
 class SyntaxHighlighter {
-  highlight(text) {
-    if (!text) return '&nbsp;';
-    let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const tokens = [];
-    const save = (content, cls) => {
-      tokens.push(`<span class="${cls}">${content}</span>`);
-      return `§T${tokens.length - 1}T§`;
-    };
-
-    html = html.replace(/(\/\/.*|\/\*[\s\S]*?\*\/|&lt;!--[\s\S]*?--&gt;)/g, m => save(m, 'tok-com'));
-    html = html.replace(/(".*?"|'.*?'|`[^`\\]*(?:\\.[^`\\]*)*`)/g, m => save(m, 'tok-str'));
-    html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+&gt;)/g, m => save(m, 'tok-tag'));
-    html = html.replace(/(&lt;[a-zA-Z0-9-]+)(?=\s)/g, m => save(m, 'tok-tag'));
-    html = html.replace(/(\.[a-zA-Z_-][\w-]*|#[a-zA-Z_-][\w-]*)/g, m => save(m, 'tok-sel'));
-    html = html.replace(/(?<!§)\b([a-z][a-z0-9-]*)(?=\s*\{)/gi, m => save(m, 'tok-sel'));
+highlight(text) {
+  if (!text) return '&nbsp;';
+  let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const tokens = [];
+  const save = (content, cls) => {
+    tokens.push(`<span class="${cls}">${content}</span>`);
+    return `§T${tokens.length - 1}T§`;
+  };
+  html = html.replace(/(\/\/.*|\/\*[\s\S]*?\*\/|&lt;!--[\s\S]*?--&gt;)/g, m => save(m, 'tok-com'));
+  html = html.replace(/(".*?"|'.*?'|`[^`\\]*(?:\\.[^`\\]*)*`)/g, m => save(m, 'tok-str'));
+  html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+&gt;)/g, m => save(m, 'tok-tag'));
+  html = html.replace(/(&lt;[a-zA-Z0-9-]+)(?=\s)/g, m => save(m, 'tok-tag'));
+  html = html.replace(/(\.[a-zA-Z_-][\w-]*|#[a-zA-Z_-][\w-]*)/g, m => save(m, 'tok-sel'));
+  html = html.replace(/(?<!§)\b([a-z][a-z0-9-]*)(?=\s*\{)/gi, m => save(m, 'tok-sel'));
     html = html.replace(/([a-zA-Z-]+)(?=\s*:)/g, m => save(m, 'tok-prop'));
-
     const kw = /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await|try|catch|new|this|typeof|void|debugger|delete|extends|implements|interface|package|private|protected|public|static|yield|break|continue|switch|case|default)\b/g;
     html = html.replace(kw, m => save(m, 'tok-kwd'));
-
     html = html.replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\()/g, m => save(m, 'tok-func'));
     html = html.replace(/\b([a-zA-Z-]+)(?==)/g, m => save(m, 'tok-attr'));
     html = html.replace(/\b\d+(\.\d+)?([a-z%]+)?\b/gi, m => save(m, 'tok-num'));
-
     html = html.replace(/§T(\d+)T§/g, (_, i) => tokens[i]);
     return html;
   }
 }
-
 class HistoryManager {
-  constructor(editor) {
-    this.editor = editor;
-    this.undoStack = [];
-    this.redoStack = [];
-    this.lastEditTime = 0;
-  }
-
-  record(op) {
-    const now = Date.now();
-    const isTyping = op.text.length === 1 && op.oldText.length === 0;
-    const isDel = op.oldText.length === 1 && op.text.length === 0;
-
-    if (this.undoStack.length > 0 && (now - this.lastEditTime) < 500) {
-      const last = this.undoStack[this.undoStack.length - 1];
-      if (isTyping && last.type === 'ins' && last.endRow === op.startRow && last.endCol === op.startCol) {
-        last.text += op.text; last.endCol += op.text.length; last.cursorAfter = op.cursorAfter;
-        this.lastEditTime = now; return;
-      }
-      if (isDel && last.type === 'del' && op.endRow === last.startRow && op.endCol === last.startCol) {
-        last.oldText = op.oldText + last.oldText; last.startCol = op.startCol; last.cursorAfter = op.cursorAfter;
-        this.lastEditTime = now; return;
-      }
-    }
-    op.type = isTyping ? 'ins' : (isDel ? 'del' : 'blk');
-    this.undoStack.push(op);
-    this.redoStack = [];
-    this.lastEditTime = now;
-    if (this.undoStack.length > 300) this.undoStack.shift();
-  }
-
-  undo() {
-    if (this.undoStack.length === 0) return;
-    const op = this.undoStack.pop();
-    this.redoStack.push(op);
-    this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.cursorAfter.col, op.oldText, false);
-    this.editor.state.cursor = { ...op.cursorBefore };
-    this.editor.finalizeUpdate();
-  }
-
-  redo() {
-    if (this.redoStack.length === 0) return;
-    const op = this.redoStack.pop();
-    this.undoStack.push(op);
-    this.editor.applyEditInternal(op.startRow, op.startCol, op.endRow, op.endCol, op.text, false);
-    this.editor.state.cursor = { ...op.cursorAfter };
-    this.editor.finalizeUpdate();
-  }
+constructor(editor) {
+  this.editor = editor;
+  this.undoStack = [];
+  this.redoStack = [];
+  this.lastEditTime = 0;
 }
-
-class EditorEngine {
-  constructor() {
-    this.config = {
-      lineHeight: 24, 
-      charWidth: 9.02,
-      xOffset: 65,
-      viewBuffer: 15
-    };
-
-    this.state = {
-      lines: [""],
-      cursor: { row: 0, col: 0 },
-      selectionAnchor: null,
-      isDragging: false,
-      clickCount: 0,
-      lastClickTime: 0,
-      scrollTop: 0,
-      viewportHeight: 0,
-      fileName: 'Untitled.txt',
-      fileHandle: null,
-      isDirty: false,
-      desiredCol: 0
-    };
-
-    this.dom = {
-      editor: document.getElementById('editor'),
-      phantom: document.getElementById('scroll-phantom'),
-      viewport: document.getElementById('view-port'),
-      cursor: document.getElementById('cursor'),
-      fileStatus: document.getElementById('file-status'),
-      messageArea: document.getElementById('message-area')
-    };
-
-    this.history = new HistoryManager(this);
-    this.highlighter = new SyntaxHighlighter();
-    this.init();
+record(op) {
+  const now = Date.now();
+  const isTyping = op.text.length === 1 && op.oldText.length === 0;
+  const isDel = op.oldText.length === 1 && op.text.length === 0;
+  if (this.undoStack.length > 0 && (now - this.lastEditTime) < 500) {
+    const last = this.undoStack[this.undoStack.length - 1];
+    if (isTyping && last.type === 'ins' && last.endRow === op.startRow && last.endCol === op.startCol) {
+      last.text += op.text; last.endCol += op.text.length; last.cursorAfter = op.cursorAfter;
+      this.lastEditTime = now; return;
+    }
+    if (isDel && last.type === 'del' && op.endRow === last.startRow && op.endCol === last.startCol) {
+      last.oldText = op.oldText + last.oldText; last.startCol = op.startCol; last.cursorAfter = op.cursorAfter;
+      this.lastEditTime = now; return;
+    }
   }
-
-  init() {
+  op.type = isTyping ? 'ins' : (isDel ? 'del' : 'blk');
+  this.undoStack.push(op);
+  this.redoStack = [];
+  this.lastEditTime = now;
+  if (this.undoStack.length > 300) this.undoStack.shift();
+}
+undo() {
+  if (this.undoStack.length === 0) return;
+  const op = this.undoStack.pop();
+  this.redoStack.push(op);
+  this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.cursorAfter.col, op.oldText, false);
+  this.editor.state.cursor = { ...op.cursorBefore };
+  this.editor.finalizeUpdate();
+}
+redo() {
+  if (this.redoStack.length === 0) return;
+  const op = this.redoStack.pop();
+  this.undoStack.push(op);
+  this.editor.applyEditInternal(op.startRow, op.startCol, op.endRow, op.endCol, op.text, false);
+  this.editor.state.cursor = { ...op.cursorAfter };
+  this.editor.finalizeUpdate();
+}
+}
+class EditorEngine {
+constructor() {
+  this.config = {
+    lineHeight: 24,
+    charWidth: 9.02,
+    xOffset: 65,
+    viewBuffer: 15
+  };
+  this.state = {
+    lines: [""],
+    cursor: { row: 0, col: 0 },
+    selectionAnchor: null,
+    isDragging: false,
+    clickCount: 0,
+    lastClickTime: 0,
+    scrollTop: 0,
+    viewportHeight: 0,
+    fileName: 'Untitled.txt',
+    fileHandle: null,
+    isDirty: false,
+    desiredCol: 0
+  };
+  this.dom = {
+    editor: document.getElementById('editor'),
+    phantom: document.getElementById('scroll-phantom'),
+    viewport: document.getElementById('view-port'),
+    cursor: document.getElementById('cursor'),
+    fileStatus: document.getElementById('file-status'),
+    messageArea: document.getElementById('message-area')
+  };
+  this.history = new HistoryManager(this);
+  this.highlighter = new SyntaxHighlighter();
+  this.init();
+}
+init() {
+  this.state.viewportHeight = this.dom.editor.clientHeight;
+  this.recalculateLayout();
+  window.addEventListener('beforeunload', (e) => {
+    if (this.state.isDirty) { e.preventDefault(); e.returnValue = ''; }
+  });
+  this.dom.editor.addEventListener('scroll', () => this.onScroll());
+  this.dom.editor.addEventListener('keydown', (e) => this.handleInput(e));
+  this.dom.editor.addEventListener('paste', (e) => this.handlePaste(e));
+  this.dom.editor.addEventListener('copy', (e) => this.handleCopyCut(e, false));
+  this.dom.editor.addEventListener('cut', (e) => this.handleCopyCut(e, true));
+  this.dom.editor.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+  window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+  window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+  window.addEventListener('resize', () => {
     this.state.viewportHeight = this.dom.editor.clientHeight;
     this.recalculateLayout();
-    
-    window.addEventListener('beforeunload', (e) => {
-      if (this.state.isDirty) { e.preventDefault(); e.returnValue = ''; }
-    });
-
-    this.dom.editor.addEventListener('scroll', () => this.onScroll());
-    this.dom.editor.addEventListener('keydown', (e) => this.handleInput(e));
-    this.dom.editor.addEventListener('paste', (e) => this.handlePaste(e));
-    this.dom.editor.addEventListener('copy', (e) => this.handleCopyCut(e, false));
-    this.dom.editor.addEventListener('cut', (e) => this.handleCopyCut(e, true));
-    this.dom.editor.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-    window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-    window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-    window.addEventListener('resize', () => {
-      this.state.viewportHeight = this.dom.editor.clientHeight;
-      this.recalculateLayout();
-    });
-    document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
-    
-    this.dom.editor.focus();
+  });
+  document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
+  this.dom.editor.focus();
+  this.finalizeUpdate();
+}
+render() {
+  const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
+  const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
+  const firstVisibleLine = Math.floor(scrollTop / lineHeight);
+  const startIndex = Math.max(0, firstVisibleLine - viewBuffer);
+  const visibleLinesCount = Math.ceil(viewportHeight / lineHeight);
+  const endIndex = Math.min(lines.length, firstVisibleLine + visibleLinesCount + viewBuffer);
+  this.dom.viewport.innerHTML = '';
+  const topOffset = startIndex * lineHeight;
+  this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
+  let selStart = null, selEnd = null;
+  if (selectionAnchor) {
+    const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
+    (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+    selStart = anchorIsBefore ? selectionAnchor : cursor;
+    selEnd = anchorIsBefore ? cursor : selectionAnchor;
+    if (selStart.row === selEnd.row && selStart.col === selEnd.col) selStart = null;
+  }
+  const fragment = document.createDocumentFragment();
+  for (let i = startIndex; i < endIndex; i++) {
+    const lineDiv = document.createElement('div');
+    lineDiv.className = 'line';
+    const numSpan = document.createElement('div');
+    numSpan.className = 'line-number';
+    numSpan.textContent = i + 1;
+    const contentSpan = document.createElement('div');
+    contentSpan.className = 'line-content';
+    contentSpan.innerHTML = this.highlighter.highlight(lines[i]);
+    const selectionDiv = document.createElement('div');
+    selectionDiv.className = 'selection-layer';
+    if (selStart && i >= selStart.row && i <= selEnd.row) {
+      let colStart = 0;
+      let colEnd = lines[i].length;
+      if (i === selStart.row) colStart = selStart.col;
+      if (i === selEnd.row) colEnd = selEnd.col;
+      let width = (colEnd - colStart) * charWidth;
+      if (i < selEnd.row) width += charWidth * 0.5;
+      selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
+      selectionDiv.style.width = `${Math.max(0, width)}px`;
+      selectionDiv.classList.add('is-selected');
+    }
+    lineDiv.appendChild(numSpan);
+    lineDiv.appendChild(selectionDiv);
+    lineDiv.appendChild(contentSpan);
+    fragment.appendChild(lineDiv);
+  }
+  this.dom.viewport.appendChild(fragment);
+  this.updateCursor();
+}
+updateCursor() {
+  const { row, col } = this.state.cursor;
+  const { lineHeight, charWidth, xOffset } = this.config;
+  const top = row * lineHeight;
+  const left = xOffset + (col * charWidth);
+  this.dom.cursor.style.top = `${top}px`;
+  this.dom.cursor.style.left = `${left}px`;
+  this.dom.cursor.classList.remove('blink');
+  clearTimeout(this.blinkTimeout);
+  this.blinkTimeout = setTimeout(() => this.dom.cursor.classList.add('blink'), 500);
+}
+updateDimensions() {
+  const { lines, viewportHeight } = this.state;
+  const { lineHeight, charWidth, xOffset } = this.config;
+  const height = (lines.length + 5) * lineHeight;
+  const maxLen = lines.reduce((max, line) => Math.max(max, line.length), 0);
+  const width = xOffset + ((maxLen + 5) * charWidth);
+  this.dom.phantom.style.height = `${Math.max(height, viewportHeight)}px`;
+  this.dom.phantom.style.width = `${Math.max(width, window.innerWidth)}px`;
+  this.dom.viewport.style.width = `${width}px`;
+}
+finalizeUpdate() {
+  this.updateDimensions();
+  this.ensureCursorVisible();
+  this.render();
+}
+recalculateLayout() {
+  const t = document.createElement('div');
+  t.className = 'line';
+  t.style.position = 'absolute';
+  t.style.visibility = 'hidden';
+  t.style.width = 'auto';
+  t.style.padding = '0';
+  t.textContent = 'M'.repeat(1000);
+  this.dom.viewport.appendChild(t);
+  const w = t.getBoundingClientRect().width / 1000;
+  this.dom.viewport.removeChild(t);
+  if (w > 0 && Math.abs(this.config.charWidth - w) > 0.0001) {
+    this.config.charWidth = w;
     this.finalizeUpdate();
   }
-
-
-
-render() {
-    const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
-    // Henter viewBuffer fra config her
-    const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
-
-    // 1. Beregn synlig område med buffer
-    const firstVisibleLine = Math.floor(scrollTop / lineHeight);
-    
-    // Start litt før toppen (men ikke mindre enn 0)
-    const startIndex = Math.max(0, firstVisibleLine - viewBuffer);
-    
-    // Hvor mange linjer vises på skjermen?
-    const visibleLinesCount = Math.ceil(viewportHeight / lineHeight);
-    
-    // Slutt litt etter bunnen (men ikke lenger enn antall linjer i filen)
-    const endIndex = Math.min(lines.length, firstVisibleLine + visibleLinesCount + viewBuffer);
-
-    // 2. Klargjør viewport
-    this.dom.viewport.innerHTML = '';
-    
-    // Flytt innholdet ned slik at det stemmer med hvor vi starter å tegne (startIndex)
-    const topOffset = startIndex * lineHeight;
-    this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
-
-    // 3. Beregn utvalg (Selection)
-    let selStart = null, selEnd = null;
-    if (selectionAnchor) {
-      const anchorIsBefore = (selectionAnchor.row < cursor.row) || 
-                             (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
-      selStart = anchorIsBefore ? selectionAnchor : cursor;
-      selEnd = anchorIsBefore ? cursor : selectionAnchor;
-      // Hvis start og slutt er like, er det ingen markering
-      if (selStart.row === selEnd.row && selStart.col === selEnd.col) selStart = null;
-    }
-
-    // 4. Tegn linjene (Kun de innenfor buffer-området)
-    const fragment = document.createDocumentFragment();
-    
-    for (let i = startIndex; i < endIndex; i++) {
-      const lineDiv = document.createElement('div');
-      lineDiv.className = 'line';
-      
-      // Linjenummer (Sticky håndteres nå av CSS)
-      const numSpan = document.createElement('div');
-      numSpan.className = 'line-number';
-      numSpan.textContent = i + 1;
-
-      // Innhold med syntax highlighting
-      const contentSpan = document.createElement('div');
-      contentSpan.className = 'line-content';
-      contentSpan.innerHTML = this.highlighter.highlight(lines[i]);
-
-      // Markerings-lag (Selection Layer)
-      const selectionDiv = document.createElement('div');
-      selectionDiv.className = 'selection-layer';
-      
-      if (selStart && i >= selStart.row && i <= selEnd.row) {
-        let colStart = 0;
-        let colEnd = lines[i].length;
-        
-        if (i === selStart.row) colStart = selStart.col;
-        if (i === selEnd.row) colEnd = selEnd.col;
-        
-        let width = (colEnd - colStart) * charWidth;
-        // Legg til litt bredde for å markere selve linjeskiftet hvis vi markerer over flere linjer
-        if (i < selEnd.row) width += charWidth * 0.5;
-
-        // Bruker xOffset fra config for å treffe nøyaktig
-        selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
-        selectionDiv.style.width = `${Math.max(0, width)}px`;
-        selectionDiv.classList.add('is-selected');
-      }
-
-      lineDiv.appendChild(numSpan);
-      lineDiv.appendChild(selectionDiv);
-      lineDiv.appendChild(contentSpan);
-      fragment.appendChild(lineDiv);
-    }
-    
-    this.dom.viewport.appendChild(fragment);
-    
-    // Oppdater markørens posisjon til slutt
-    this.updateCursor();
+}
+onScroll() {
+  const currentLeft = this.dom.editor.scrollLeft;
+  if (currentLeft > 0 && currentLeft < 6) {
+    this.dom.editor.scrollLeft = 0;
+    return;
   }
-
-
-
-  updateCursor() {
-    const { row, col } = this.state.cursor;
-    const { lineHeight, charWidth, xOffset } = this.config;
-    const top = row * lineHeight;
-    const left = xOffset + (col * charWidth);
-    this.dom.cursor.style.top = `${top}px`;
-    this.dom.cursor.style.left = `${left}px`;
-    this.dom.cursor.classList.remove('blink');
-    clearTimeout(this.blinkTimeout);
-    this.blinkTimeout = setTimeout(() => this.dom.cursor.classList.add('blink'), 500);
+  this.state.scrollTop = this.dom.editor.scrollTop;
+  clearTimeout(this.scrollTimeout);
+  this.scrollTimeout = setTimeout(() => this.render(), 16);
+  this.render();
+}
+applyChange(txt) {
+  const { cursor, selectionAnchor } = this.state;
+  let sr = cursor.row, sc = cursor.col;
+  let er = cursor.row, ec = cursor.col;
+  if (selectionAnchor) {
+    const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
+    (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+    sr = anchorIsBefore ? selectionAnchor.row : cursor.row;
+    sc = anchorIsBefore ? selectionAnchor.col : cursor.col;
+    er = anchorIsBefore ? cursor.row : selectionAnchor.row;
+    ec = anchorIsBefore ? cursor.col : selectionAnchor.col;
   }
-
-  updateDimensions() {
-    const { lines, viewportHeight } = this.state;
-    const { lineHeight, charWidth, xOffset } = this.config;
-    const height = (lines.length + 5) * lineHeight;
-    const maxLen = lines.reduce((max, line) => Math.max(max, line.length), 0);
-    const width = xOffset + ((maxLen + 5) * charWidth);
-
-    this.dom.phantom.style.height = `${Math.max(height, viewportHeight)}px`;
-    this.dom.phantom.style.width = `${Math.max(width, window.innerWidth)}px`;
-    this.dom.viewport.style.width = `${width}px`;
+  this.applyEditInternal(sr, sc, er, ec, txt, true);
+  this.state.selectionAnchor = null;
+  this.state.desiredCol = this.state.cursor.col;
+  this.ensureCursorVisible();
+}
+applyEditInternal(sr, sc, er, ec, txt, hist) {
+  if (hist) this.setDirty(true);
+  const l = this.state.lines;
+  let old = "";
+  if (sr === er) old = l[sr].slice(sc, ec);
+else old = [l[sr].slice(sc), ...l.slice(sr + 1, er), l[er].slice(0, ec)].join('\n');
+  const prefix = l[sr].slice(0, sc);
+  const suffix = l[er].slice(ec);
+  const newSegs = txt.split('\n');
+  newSegs[0] = prefix + newSegs[0];
+  newSegs[newSegs.length - 1] += suffix;
+  if (sr === er && newSegs.length === 1) l[sr] = newSegs[0];
+else l.splice(sr, er - sr + 1, ...newSegs);
+  const nr = sr + newSegs.length - 1;
+  const nc = (newSegs.length === 1 ? sc : 0) + txt.split('\n').pop().length;
+  if (hist) {
+    this.history.record({
+      startRow: sr, startCol: sc, endRow: er, endCol: ec,
+      text: txt, oldText: old,
+      cursorBefore: { row: sr, col: sc },
+      cursorAfter: { row: nr, col: nc }
+    });
   }
-
-  finalizeUpdate() {
-    this.updateDimensions();
-    this.ensureCursorVisible();
-    this.render();
+  this.state.cursor = { row: nr, col: nc };
+  this.finalizeUpdate();
+}
+handleInput(e) {
+  const k = e.key;
+  const ctrl = e.ctrlKey || e.metaKey;
+  const { cursor: c, lines: l } = this.state;
+  if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
+  if (k === 'Tab') {
+    e.preventDefault();
+    if (e.shiftKey) this.state.selectionAnchor ? this.blockEdit(l => l.replace(/^ {1,2}/, "")) : this.blockEdit(l => l.replace(/^ {1,2}/, ""), c.row, c.row);
+  else this.state.selectionAnchor ? this.blockEdit(l => "  " + l) : this.applyChange("  ");
+    return;
   }
-
-  recalculateLayout() {
-    const t = document.createElement('div');
-    t.className = 'line';
-    t.style.position = 'absolute';
-    t.style.visibility = 'hidden';
-    t.style.width = 'auto';
-    t.style.padding = '0';
-    t.textContent = 'M'.repeat(1000);
-    this.dom.viewport.appendChild(t);
-    const w = t.getBoundingClientRect().width / 1000;
-    this.dom.viewport.removeChild(t);
-
-    if (w > 0 && Math.abs(this.config.charWidth - w) > 0.0001) {
-      this.config.charWidth = w;
+  if (k === 'Backspace') {
+    e.preventDefault();
+    if (this.state.selectionAnchor) this.applyChange("");
+  else if (c.col > 0) { this.state.selectionAnchor = { row: c.row, col: c.col - 1 }; this.applyChange(""); }
+  else if (c.row > 0) { this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length }; this.applyChange(""); }
+    return;
+  }
+  if (k === 'Delete') {
+    e.preventDefault();
+    if (this.state.selectionAnchor) this.applyChange("");
+  else if (c.col < l[c.row].length) {
+      this.state.selectionAnchor = { row: c.row, col: c.col + 1 };
+      const oldC = { ...c };
+      this.applyChange("");
+      this.state.cursor = oldC;
       this.finalizeUpdate();
     }
+  else if (c.row < l.length - 1) {
+      this.state.selectionAnchor = { row: c.row + 1, col: 0 };
+      const oldC = { ...c };
+      this.applyChange("");
+      this.state.cursor = oldC;
+      this.finalizeUpdate();
+    }
+    return;
   }
-
-onScroll() {
-    const currentLeft = this.dom.editor.scrollLeft;
-
-    // --- MAGNET LEFT FEATURE ---
-    // Hvis vi er nesten helt til venstre (mindre enn 6px), men ikke helt (0),
-    // så antar vi at det er "drifting" fra touchpad og tvinger den til 0.
-    if (currentLeft > 0 && currentLeft < 6) {
-      this.dom.editor.scrollLeft = 0;
-      return; // Vi stopper her for å ikke tegne opp "feil" posisjon
-    }
-
-    this.state.scrollTop = this.dom.editor.scrollTop;
-    
-    // Debounce render slightly for smoother scrolling performance
-    clearTimeout(this.scrollTimeout);
-    this.scrollTimeout = setTimeout(() => this.render(), 16);
-    this.render(); 
-  }
-
-  applyChange(txt) {
-    const { cursor, selectionAnchor } = this.state;
-    let sr = cursor.row, sc = cursor.col;
-    let er = cursor.row, ec = cursor.col;
-
-    if (selectionAnchor) {
-      const anchorIsBefore = (selectionAnchor.row < cursor.row) || 
-                             (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
-      sr = anchorIsBefore ? selectionAnchor.row : cursor.row;
-      sc = anchorIsBefore ? selectionAnchor.col : cursor.col;
-      er = anchorIsBefore ? cursor.row : selectionAnchor.row;
-      ec = anchorIsBefore ? cursor.col : selectionAnchor.col;
-    }
-
-    this.applyEditInternal(sr, sc, er, ec, txt, true);
-    this.state.selectionAnchor = null;
-    this.state.desiredCol = this.state.cursor.col;
-    this.ensureCursorVisible();
-  }
-
-  applyEditInternal(sr, sc, er, ec, txt, hist) {
-    if (hist) this.setDirty(true);
-    const l = this.state.lines;
-    
-    let old = "";
-    if (sr === er) old = l[sr].slice(sc, ec);
-    else old = [l[sr].slice(sc), ...l.slice(sr + 1, er), l[er].slice(0, ec)].join('\n');
-
-    const prefix = l[sr].slice(0, sc);
-    const suffix = l[er].slice(ec);
-    const newSegs = txt.split('\n');
-    
-    newSegs[0] = prefix + newSegs[0];
-    newSegs[newSegs.length - 1] += suffix;
-
-    if (sr === er && newSegs.length === 1) l[sr] = newSegs[0];
-    else l.splice(sr, er - sr + 1, ...newSegs);
-
-    const nr = sr + newSegs.length - 1;
-    const nc = (newSegs.length === 1 ? sc : 0) + txt.split('\n').pop().length; 
-    
-    if (hist) {
-      this.history.record({
-        startRow: sr, startCol: sc, endRow: er, endCol: ec,
-        text: txt, oldText: old,
-        cursorBefore: { row: sr, col: sc },
-        cursorAfter: { row: nr, col: nc }
-      });
-    }
-
-    this.state.cursor = { row: nr, col: nc };
-    this.finalizeUpdate();
-  }
-
-  handleInput(e) {
-    const k = e.key;
-    const ctrl = e.ctrlKey || e.metaKey;
-    const { cursor: c, lines: l } = this.state;
-
-    if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return; 
-    
-    if (k === 'Tab') {
-      e.preventDefault();
-      if (e.shiftKey) this.state.selectionAnchor ? this.blockEdit(l => l.replace(/^ {1,2}/, "")) : this.blockEdit(l => l.replace(/^ {1,2}/, ""), c.row, c.row);
-      else this.state.selectionAnchor ? this.blockEdit(l => "  " + l) : this.applyChange("  ");
-      return;
-    }
-
-    if (k === 'Backspace') {
-      e.preventDefault();
-      if (this.state.selectionAnchor) this.applyChange("");
-      else if (c.col > 0) { this.state.selectionAnchor = { row: c.row, col: c.col - 1 }; this.applyChange(""); }
-      else if (c.row > 0) { this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length }; this.applyChange(""); }
-      return;
-    }
-
-    if (k === 'Delete') {
-      e.preventDefault();
-      if (this.state.selectionAnchor) this.applyChange("");
-      else if (c.col < l[c.row].length) { 
-        this.state.selectionAnchor = { row: c.row, col: c.col + 1 }; 
-        const oldC = { ...c };
-        this.applyChange("");
-        this.state.cursor = oldC;
-        this.finalizeUpdate();
-      }
-      else if (c.row < l.length - 1) { 
-        this.state.selectionAnchor = { row: c.row + 1, col: 0 }; 
-        const oldC = { ...c };
-        this.applyChange("");
-        this.state.cursor = oldC;
-        this.finalizeUpdate();
-      }
-      return;
-    }
-
-    if (k === 'Enter') {
-      e.preventDefault();
-      const indent = l[c.row].match(/^\s*/)[0];
-      let extra = l[c.row].trim().endsWith('{') ? "  " : "";
+  if (k === 'Enter') {
+    e.preventDefault();
+    const indent = l[c.row].match(/^\s*/)[0];
+    let extra = l[c.row].trim().endsWith('{') ? "  " : "";
       this.applyChange("\n" + indent + extra);
       return;
     }
-
     const nav = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'];
     if (nav.includes(k)) {
       e.preventDefault();
       if (e.shiftKey) { if (!this.state.selectionAnchor) this.state.selectionAnchor = { ...c }; }
-      else this.state.selectionAnchor = null;
+    else this.state.selectionAnchor = null;
       this.handleNavigation(k, ctrl);
       this.render();
       return;
     }
-
     if (k.length === 1 && !ctrl && !e.altKey) {
       e.preventDefault();
       this.applyChange(k);
     }
   }
-
-  handleNavigation(k, wordJump) {
-    const { cursor: c, lines: l } = this.state;
-    let tr = c.row, tc = c.col;
-
-    if (k === 'ArrowUp') { if (tr > 0) tr--; tc = Math.min(this.state.desiredCol, l[tr].length); }
-    else if (k === 'ArrowDown') { if (tr < l.length - 1) tr++; tc = Math.min(this.state.desiredCol, l[tr].length); }
-    else if (k === 'ArrowLeft') {
-      if (wordJump) tc = this.findWordBoundary(tr, tc, -1);
-      else if (tc > 0) tc--;
-      else if (tr > 0) { tr--; tc = l[tr].length; }
-      this.state.desiredCol = tc;
-    } else if (k === 'ArrowRight') {
-      if (wordJump) tc = this.findWordBoundary(tr, tc, 1);
-      else if (tc < l[tr].length) tc++;
-      else if (tr < l.length - 1) { tr++; tc = 0; }
-      this.state.desiredCol = tc;
-    } else if (k === 'Home') {
-      const fc = (l[tr].match(/^\s*/) || [''])[0].length;
-      tc = (tc === fc) ? 0 : fc;
-      this.state.desiredCol = tc;
-    } else if (k === 'End') {
-      tc = l[tr].length;
-      this.state.desiredCol = tc;
-    } else if (k === 'PageUp') {
-      tr = Math.max(0, tr - Math.floor(this.state.viewportHeight / this.config.lineHeight));
-      tc = Math.min(tc, l[tr].length);
-    } else if (k === 'PageDown') {
-      tr = Math.min(l.length - 1, tr + Math.floor(this.state.viewportHeight / this.config.lineHeight));
-      tc = Math.min(tc, l[tr].length);
-    }
-    c.row = tr; c.col = tc;
-    this.ensureCursorVisible();
+handleNavigation(k, wordJump) {
+  const { cursor: c, lines: l } = this.state;
+  let tr = c.row, tc = c.col;
+  if (k === 'ArrowUp') { if (tr > 0) tr--; tc = Math.min(this.state.desiredCol, l[tr].length); }
+else if (k === 'ArrowDown') { if (tr < l.length - 1) tr++; tc = Math.min(this.state.desiredCol, l[tr].length); }
+else if (k === 'ArrowLeft') {
+    if (wordJump) tc = this.findWordBoundary(tr, tc, -1);
+  else if (tc > 0) tc--;
+  else if (tr > 0) { tr--; tc = l[tr].length; }
+    this.state.desiredCol = tc;
+  } else if (k === 'ArrowRight') {
+    if (wordJump) tc = this.findWordBoundary(tr, tc, 1);
+  else if (tc < l[tr].length) tc++;
+  else if (tr < l.length - 1) { tr++; tc = 0; }
+    this.state.desiredCol = tc;
+  } else if (k === 'Home') {
+    const fc = (l[tr].match(/^\s*/) || [''])[0].length;
+    tc = (tc === fc) ? 0 : fc;
+    this.state.desiredCol = tc;
+  } else if (k === 'End') {
+    tc = l[tr].length;
+    this.state.desiredCol = tc;
+  } else if (k === 'PageUp') {
+    tr = Math.max(0, tr - Math.floor(this.state.viewportHeight / this.config.lineHeight));
+    tc = Math.min(tc, l[tr].length);
+  } else if (k === 'PageDown') {
+    tr = Math.min(l.length - 1, tr + Math.floor(this.state.viewportHeight / this.config.lineHeight));
+    tc = Math.min(tc, l[tr].length);
   }
-
-  findWordBoundary(r, c, d) {
-    const ln = this.state.lines[r];
-    let i = c;
-    if (d > 0) {
-      if (i >= ln.length) return i;
-      const type = /\w/.test(ln[i]);
-      while (i < ln.length && /\w/.test(ln[i]) === type) i++;
-    } else {
-      if (i <= 0) return 0;
-      i--;
-      const type = /\w/.test(ln[i]);
-      while (i > 0 && /\w/.test(ln[i-1]) === type) i--;
-    }
-    return i;
+  c.row = tr; c.col = tc;
+  this.ensureCursorVisible();
+}
+findWordBoundary(r, c, d) {
+  const ln = this.state.lines[r];
+  let i = c;
+  if (d > 0) {
+    if (i >= ln.length) return i;
+    const type = /\w/.test(ln[i]);
+    while (i < ln.length && /\w/.test(ln[i]) === type) i++;
+  } else {
+    if (i <= 0) return 0;
+    i--;
+    const type = /\w/.test(ln[i]);
+    while (i > 0 && /\w/.test(ln[i-1]) === type) i--;
   }
-
-  handlePaste(e) {
+  return i;
+}
+handlePaste(e) {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  this.applyChange(text);
+}
+handleCopyCut(e, cut) {
+  const t = this.getSelectionText();
+  if (t) {
     e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    this.applyChange(text);
+    e.clipboardData.setData('text/plain', t);
+    if (cut) { this.applyChange(""); this.setStatus("Cut"); }
+  else this.setStatus("Copied");
   }
-
-  handleCopyCut(e, cut) {
-    const t = this.getSelectionText();
-    if (t) {
-      e.preventDefault();
-      e.clipboardData.setData('text/plain', t);
-      if (cut) { this.applyChange(""); this.setStatus("Klippet ut"); }
-      else this.setStatus("Kopiert");
-    }
-  }
-
-  handleMouseDown(e) {
-    if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
-    e.preventDefault();
-    const now = Date.now();
-    this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
-    this.state.lastClickTime = now;
-
-    const p = this.getPosFromMouse(e);
-    if (this.state.clickCount === 2) {
-      const s = this.findWordBoundary(p.row, p.col, -1);
-      const e = this.findWordBoundary(p.row, p.col, 1);
-      this.state.selectionAnchor = { row: p.row, col: s };
-      this.state.cursor = { row: p.row, col: e };
-      this.state.isDragging = false;
-    } else if (this.state.clickCount === 3) {
-      this.state.selectionAnchor = { row: p.row, col: 0 };
-      this.state.cursor = { row: p.row, col: this.state.lines[p.row].length };
-      this.state.isDragging = false;
-    } else {
-      this.state.cursor = { ...p };
-      this.state.selectionAnchor = { ...p };
-      this.state.isDragging = true;
-    }
-    this.state.desiredCol = this.state.cursor.col;
-    this.dom.editor.focus();
-    this.render();
-  }
-
-  handleMouseMove(e) {
-    if (!this.state.isDragging) return;
-    const p = this.getPosFromMouse(e);
-    this.state.cursor = { ...p };
-    this.state.desiredCol = p.col;
-    this.ensureCursorVisible();
-    this.render();
-  }
-
-  handleMouseUp() {
+}
+handleMouseDown(e) {
+  if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
+  e.preventDefault();
+  const now = Date.now();
+  this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
+  this.state.lastClickTime = now;
+  const p = this.getPosFromMouse(e);
+  if (this.state.clickCount === 2) {
+    const s = this.findWordBoundary(p.row, p.col, -1);
+    const e = this.findWordBoundary(p.row, p.col, 1);
+    this.state.selectionAnchor = { row: p.row, col: s };
+    this.state.cursor = { row: p.row, col: e };
     this.state.isDragging = false;
-    const { cursor, selectionAnchor } = this.state;
-    if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col) 
-      this.state.selectionAnchor = null;
-    this.render();
+  } else if (this.state.clickCount === 3) {
+    this.state.selectionAnchor = { row: p.row, col: 0 };
+    this.state.cursor = { row: p.row, col: this.state.lines[p.row].length };
+    this.state.isDragging = false;
+  } else {
+    this.state.cursor = { ...p };
+    this.state.selectionAnchor = { ...p };
+    this.state.isDragging = true;
   }
-
-  getPosFromMouse(e) {
-    const r = this.dom.editor.getBoundingClientRect();
-    const x = e.clientX - r.left + this.dom.editor.scrollLeft;
-    const y = e.clientY - r.top + this.dom.editor.scrollTop;
-    let row = Math.floor(y / this.config.lineHeight);
-    let col = Math.floor((x - this.config.xOffset) / this.config.charWidth);
-    row = Math.max(0, Math.min(row, this.state.lines.length - 1));
-    col = Math.max(0, Math.min(col, this.state.lines[row].length));
-    return { row, col };
+  this.state.desiredCol = this.state.cursor.col;
+  this.dom.editor.focus();
+  this.render();
+}
+handleMouseMove(e) {
+  if (!this.state.isDragging) return;
+  const p = this.getPosFromMouse(e);
+  this.state.cursor = { ...p };
+  this.state.desiredCol = p.col;
+  this.ensureCursorVisible();
+  this.render();
+}
+handleMouseUp() {
+  this.state.isDragging = false;
+  const { cursor, selectionAnchor } = this.state;
+  if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col)
+  this.state.selectionAnchor = null;
+  this.render();
+}
+getPosFromMouse(e) {
+  const r = this.dom.editor.getBoundingClientRect();
+  const x = e.clientX - r.left + this.dom.editor.scrollLeft;
+  const y = e.clientY - r.top + this.dom.editor.scrollTop;
+  let row = Math.floor(y / this.config.lineHeight);
+  let col = Math.floor((x - this.config.xOffset) / this.config.charWidth);
+  row = Math.max(0, Math.min(row, this.state.lines.length - 1));
+  col = Math.max(0, Math.min(col, this.state.lines[row].length));
+  return { row, col };
+}
+ensureCursorVisible() {
+  const { row, col } = this.state.cursor;
+  const { lineHeight, charWidth, xOffset } = this.config;
+  const top = row * lineHeight;
+  const bottom = top + lineHeight;
+  const vH = this.state.viewportHeight;
+  const sT = this.dom.editor.scrollTop;
+  if (top < sT) this.dom.editor.scrollTop = top;
+else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
+  const left = xOffset + (col * charWidth);
+  const sL = this.dom.editor.scrollLeft;
+  const cW = this.dom.editor.clientWidth;
+  if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
+else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
+}
+blockEdit(mod, sr = null, er = null) {
+  const { cursor: c, selectionAnchor: s, lines: l } = this.state;
+  sr = sr ?? Math.min(c.row, s ? s.row : c.row);
+  er = er ?? Math.max(c.row, s ? s.row : c.row);
+  const orig = l.slice(sr, er + 1).join('\n');
+  const modded = l.slice(sr, er + 1).map(mod).join('\n');
+  if (orig !== modded) {
+    this.applyEditInternal(sr, 0, er, l[er].length, modded, true);
+    this.state.selectionAnchor = { row: sr, col: 0 };
+    this.state.cursor = { row: er, col: l[er].length };
+    this.finalizeUpdate();
   }
-
-  ensureCursorVisible() {
-    const { row, col } = this.state.cursor;
-    const { lineHeight, charWidth, xOffset } = this.config;
-    const top = row * lineHeight;
-    const bottom = top + lineHeight;
-    const vH = this.state.viewportHeight;
-    const sT = this.dom.editor.scrollTop;
-
-    if (top < sT) this.dom.editor.scrollTop = top;
-    else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
-
-    const left = xOffset + (col * charWidth);
-    const sL = this.dom.editor.scrollLeft;
-    const cW = this.dom.editor.clientWidth;
-
-    if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
-    else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
-  }
-
-  blockEdit(mod, sr = null, er = null) {
-    const { cursor: c, selectionAnchor: s, lines: l } = this.state;
-    sr = sr ?? Math.min(c.row, s ? s.row : c.row);
-    er = er ?? Math.max(c.row, s ? s.row : c.row);
-    
-    const orig = l.slice(sr, er + 1).join('\n');
-    const modded = l.slice(sr, er + 1).map(mod).join('\n');
-    
-    if (orig !== modded) {
-      this.applyEditInternal(sr, 0, er, l[er].length, modded, true);
-      this.state.selectionAnchor = { row: sr, col: 0 };
-      this.state.cursor = { row: er, col: l[er].length };
-      this.finalizeUpdate();
-    }
-  }
-
-  cleanCode() {
-    this.setStatus("Vasker kode...");
-    const originalText = this.state.lines.join('\n');
-    
-    // 1. Remove Comments & Strings Logic (Preserve strings, delete comments)
-    const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
-    const textWithoutComments = originalText.replace(re, (match, block, line, str) => {
-      // If it matches block or line comment, return empty string. Else return the string literal.
-      if (block || line) return '';
-      return match;
-    });
-
-    // 2. Split and filter empty lines
-    let lines = textWithoutComments.split('\n')
-      .map(l => l.trim())
-      .filter(l => l.length > 0);
-
-    // 3. Apply User's Indent Logic
-    const formattedLines = [];
-    let currentLevel = 0;
-    const indentUnit = '  ';
-    const voidTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype'];
-    const rootTags = ['html', 'head', 'body', 'script', 'style', '!doctype'];
-
-    lines.forEach((line) => {
-      let tagName = '';
-      const tagMatch = line.match(/^<\/?([a-zA-Z0-9-]+)/);
-      if (tagMatch) tagName = tagMatch[1].toLowerCase();
-      
-      const isHtmlRoot = rootTags.includes(tagName);
-      const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(line);
-      const isMethodDef = /^\s*(async\s+)?(?!(if|for|while|switch|catch)\b)[a-zA-Z_$][\w$]*\s*\(.*?\)\s*\{/.test(line);
+}
+cleanCode() {
+  this.setStatus("Cleaning code...");
+  const originalText = this.state.lines.join('\n');
+  const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
+  const textWithoutComments = originalText.replace(re, (match, block, line, str) => {
+    if (block || line) return '';
+    return match;
+  });
+  let lines = textWithoutComments.split('\n')
+  .map(l => l.trim())
+  .filter(l => l.length > 0);
+  const formattedLines = [];
+  let currentLevel = 0;
+  const indentUnit = '  ';
+  const voidTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype'];
+  const rootTags = ['html', 'head', 'body', 'script', 'style', '!doctype'];
+  lines.forEach((line) => {
+    let tagName = '';
+    const tagMatch = line.match(/^<\/?([a-zA-Z0-9-]+)/);
+    if (tagMatch) tagName = tagMatch[1].toLowerCase();
+    const isHtmlRoot = rootTags.includes(tagName);
+    const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(line);
+    const isMethodDef = /^\s*(async\s+)?(?!(if|for|while|switch|catch)\b)[a-zA-Z_$][\w$]*\s*\(.*?\)\s*\{/.test(line);
       const isJsRoot = isStandardDef || isMethodDef;
-
-      // Force Root Levels to 0
       if (isJsRoot || isHtmlRoot) currentLevel = 0;
-
       const openBraces = (line.match(/\{/g) || []).length;
-      const closeBraces = (line.match(/\}/g) || []).length;
+        const closeBraces = (line.match(/\}/g) || []).length;
       let openTags = 0;
       let closeTags = 0;
-
       if (/^<[a-zA-Z0-9-]+/.test(line) && !line.includes('</') && !line.endsWith('/>') && !voidTags.includes(tagName)) {
         if (!isHtmlRoot) openTags = 1;
       }
       if (line.match(/^<\/[a-zA-Z0-9-]+/)) {
         if (!isHtmlRoot) closeTags = 1;
       }
-
       let printLevel = currentLevel;
       const startsWithClosing = line.match(/^(\}|\]|\)|\<\/)/);
-      const isContinuation = /^(else|catch|finally)/.test(line);
-
-      if (startsWithClosing || isContinuation) {
-        printLevel = Math.max(0, currentLevel - 1);
-      }
-
-      formattedLines.push(indentUnit.repeat(printLevel) + line);
-
-      const netChange = (openBraces - closeBraces) + (openTags - closeTags);
-      currentLevel = Math.max(0, currentLevel + netChange);
-    });
-
-    const newText = formattedLines.join('\n');
-    if (newText !== originalText) {
-      this.applyEditInternal(0, 0, this.state.lines.length - 1, this.state.lines[this.state.lines.length - 1].length, newText, true);
-      this.setStatus("Kode vasket og renset!");
-    } else {
-      this.setStatus("Allerede rent!");
+    const isContinuation = /^(else|catch|finally)/.test(line);
+    if (startsWithClosing || isContinuation) {
+      printLevel = Math.max(0, currentLevel - 1);
+    }
+    formattedLines.push(indentUnit.repeat(printLevel) + line);
+    const netChange = (openBraces - closeBraces) + (openTags - closeTags);
+    currentLevel = Math.max(0, currentLevel + netChange);
+  });
+  const newText = formattedLines.join('\n');
+  if (newText !== originalText) {
+    this.applyEditInternal(0, 0, this.state.lines.length - 1, this.state.lines[this.state.lines.length - 1].length, newText, true);
+    this.setStatus("Code cleaned!");
+  } else {
+    this.setStatus("Already clean!");
+  }
+}
+async handleGlobalShortcuts(e) {
+  const k = e.key.toLowerCase();
+  const ctrl = e.ctrlKey || e.metaKey;
+  if (ctrl) {
+    if (k === 'z') { e.preventDefault(); e.shiftKey ? this.history.redo() : this.history.undo(); this.setStatus(e.shiftKey ? "Redo" : "Undo"); }
+    if (k === 'y') { e.preventDefault(); this.history.redo(); this.setStatus("Redo"); }
+    if (k === 's') { e.preventDefault(); await this.saveFile(); }
+    if (k === 'o') { e.preventDefault(); await this.openFile(); }
+    if (k === 'a') {
+      e.preventDefault();
+      this.state.selectionAnchor = { row: 0, col: 0 };
+      this.state.cursor = { row: this.state.lines.length - 1, col: this.state.lines[this.state.lines.length - 1].length };
+      this.render();
     }
   }
-
-  async handleGlobalShortcuts(e) {
-    const k = e.key.toLowerCase();
-    const ctrl = e.ctrlKey || e.metaKey;
-
-    if (ctrl) {
-      if (k === 'z') { e.preventDefault(); e.shiftKey ? this.history.redo() : this.history.undo(); this.setStatus(e.shiftKey ? "Redo" : "Undo"); }
-      if (k === 'y') { e.preventDefault(); this.history.redo(); this.setStatus("Redo"); }
-      if (k === 's') { e.preventDefault(); await this.saveFile(); }
-      if (k === 'o') { e.preventDefault(); await this.openFile(); }
-      if (k === 'a') {
-        e.preventDefault();
-        this.state.selectionAnchor = { row: 0, col: 0 };
-        this.state.cursor = { row: this.state.lines.length - 1, col: this.state.lines[this.state.lines.length - 1].length };
-        this.render();
-      }
-    }
-    if (e.altKey) {
-      if (k === 'b') { e.preventDefault(); this.cleanCode(); } // Updated to use new logic
-      if (k === 'n') { e.preventDefault(); this.newFile(); }
-      if (k === 'p') { e.preventDefault(); this.previewFile(); }
-    }
+  if (e.altKey) {
+    if (k === 'b') { e.preventDefault(); this.cleanCode(); }
+    if (k === 'n') { e.preventDefault(); this.newFile(); }
+    if (k === 'p') { e.preventDefault(); this.previewFile(); }
   }
-
-  getSelectionText() {
-    const { cursor: c, selectionAnchor: s, lines: l } = this.state;
-    if (!s || (s.row === c.row && s.col === c.col)) return null;
-    const start = (s.row < c.row || (s.row === c.row && s.col < c.col)) ? s : c;
-    const end = (start === s) ? c : s;
-    if (start.row === end.row) return l[start.row].slice(start.col, end.col);
-    const r = [l[start.row].slice(start.col)];
-    for (let i = start.row + 1; i < end.row; i++) r.push(l[i]);
-    r.push(l[end.row].slice(0, end.col));
-    return r.join('\n');
-  }
-
-  newFile() {
-    if (this.state.isDirty && !confirm("Forkast endringer?")) return;
-    this.state.lines = [""];
+}
+getSelectionText() {
+  const { cursor: c, selectionAnchor: s, lines: l } = this.state;
+  if (!s || (s.row === c.row && s.col === c.col)) return null;
+  const start = (s.row < c.row || (s.row === c.row && s.col < c.col)) ? s : c;
+  const end = (start === s) ? c : s;
+  if (start.row === end.row) return l[start.row].slice(start.col, end.col);
+  const r = [l[start.row].slice(start.col)];
+  for (let i = start.row + 1; i < end.row; i++) r.push(l[i]);
+  r.push(l[end.row].slice(0, end.col));
+  return r.join('\n');
+}
+newFile() {
+  if (this.state.isDirty && !confirm("Discard changes?")) return;
+  this.state.lines = [""];
+  this.state.cursor = { row: 0, col: 0 };
+  this.state.selectionAnchor = null;
+  this.state.fileName = 'Untitled.txt';
+  this.state.fileHandle = null;
+  this.setDirty(false);
+  this.history.undoStack = [];
+  this.finalizeUpdate();
+  this.setStatus("New File");
+}
+previewFile() {
+  const win = window.open();
+  if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
+}
+setDirty(dirty) {
+  this.state.isDirty = dirty;
+  this.dom.fileStatus.textContent = (dirty ? "* " : "") + this.state.fileName;
+  document.title = this.dom.fileStatus.textContent + " - Mastodon";
+}
+setStatus(msg) {
+  this.dom.messageArea.textContent = msg;
+  clearTimeout(this.statusTimeout);
+  this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine 4.4', 3000);
+}
+async openFile() {
+  if (this.state.isDirty && !confirm("Discard changes?")) return;
+  try {
+    const [h] = await window.showOpenFilePicker();
+    const f = await h.getFile();
+    this.state.fileHandle = h;
+    this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
+    this.state.fileName = f.name;
     this.state.cursor = { row: 0, col: 0 };
     this.state.selectionAnchor = null;
-    this.state.fileName = 'Untitled.txt';
-    this.state.fileHandle = null;
     this.setDirty(false);
     this.history.undoStack = [];
     this.finalizeUpdate();
-    this.setStatus("Ny fil");
-  }
-
-  previewFile() {
-    const win = window.open();
-    if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
-  }
-
-  setDirty(dirty) {
-    this.state.isDirty = dirty;
-    this.dom.fileStatus.textContent = (dirty ? "* " : "") + this.state.fileName;
-    document.title = this.dom.fileStatus.textContent + " - Mastodon";
-  }
-
-  setStatus(msg) {
-    this.dom.messageArea.textContent = msg;
-    clearTimeout(this.statusTimeout);
-    this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine 4.4', 3000);
-  }
-
-  async openFile() {
-    if (this.state.isDirty && !confirm("Forkast endringer?")) return;
-    try {
-      const [h] = await window.showOpenFilePicker();
-      const f = await h.getFile();
-      this.state.fileHandle = h;
-      this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
-      this.state.fileName = f.name;
-      this.state.cursor = { row: 0, col: 0 };
-      this.state.selectionAnchor = null;
-      this.setDirty(false);
-      this.history.undoStack = [];
-      this.finalizeUpdate();
-      this.setStatus("Åpnet: " + f.name);
-    } catch (e) {}
-  }
-
-  async saveFile() {
-    if (!this.state.fileHandle) {
-      try {
-        this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
-        this.state.fileName = this.state.fileHandle.name;
-      } catch (e) { return; }
-    }
-    try {
-      const w = await this.state.fileHandle.createWritable();
-      await w.write(this.state.lines.join('\n'));
-      await w.close();
-      this.setDirty(false);
-      this.setStatus("Lagret!");
-    } catch (e) { this.setStatus("Feil ved lagring"); }
-  }
+    this.setStatus("Opened: " + f.name);
+  } catch (e) {}
 }
-
+async saveFile() {
+  if (!this.state.fileHandle) {
+    try {
+      this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
+      this.state.fileName = this.state.fileHandle.name;
+    } catch (e) { return; }
+  }
+  try {
+    const w = await this.state.fileHandle.createWritable();
+    await w.write(this.state.lines.join('\n'));
+    await w.close();
+    this.setDirty(false);
+    this.setStatus("Saved!");
+  } catch (e) { this.setStatus("Save failed"); }
+}
+}
 window.onload = () => { window.editor = new EditorEngine(); };
 </script>
 </body>
