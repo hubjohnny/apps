@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mastodon Engine 4.1</title>
+  <title>Mastodon Engine 4.4 (Deep Clean)</title>
 <style>
   /* Standard Editor Theme */
   :root {
@@ -17,7 +17,7 @@
     --line-num-bg: #1e1e1e;
     --line-num-text: #858585;
     --border-color: #333;
-    /* Syntax Colors - Keeping user's preferred scheme */
+    /* Syntax Colors */
     --c-comment: #6a9955;
     --c-string: #ce9178;
     --c-number: #b5cea8;
@@ -27,7 +27,6 @@
     --c-attr: #9cdcfe;
     --c-selector: #d7ba7d;
     --c-property: #9cdcfe;
-    --c-operator: #d4d4d4;
   }
 
   body {
@@ -41,7 +40,7 @@
   #editor {
     position: relative;
     width: 100vw;
-    height: calc(100vh - 22px); /* Space for status bar */
+    height: calc(100vh - 22px);
     overflow: auto;
     outline: none;
     cursor: text;
@@ -71,13 +70,12 @@
     font-family: var(--font-family);
     white-space: pre;
     padding-left: 65px;
-    padding-right: 100px;
     width: 100%;
     box-sizing: border-box;
     display: flex;
     position: relative;
     font-variant-ligatures: none;
-    letter-spacing: 0px;
+    letter-spacing: 0px; 
   }
 
   .line-number {
@@ -93,7 +91,6 @@
     border-right: 1px solid var(--border-color);
     box-sizing: border-box;
     user-select: none;
-    cursor: default;
     z-index: 5;
   }
 
@@ -117,43 +114,17 @@
     z-index: 2;
     pointer-events: none;
   }
-  /* Syntax Colors */
 
-  .tok-com {
-    color: var(--c-comment);
-  }
-
-  .tok-str {
-    color: var(--c-string);
-  }
-
-  .tok-num {
-    color: var(--c-number);
-  }
-
-  .tok-kwd {
-    color: var(--c-keyword);
-  }
-
-  .tok-func {
-    color: var(--c-function);
-  }
-
-  .tok-tag {
-    color: var(--c-tag);
-  }
-
-  .tok-attr {
-    color: var(--c-attr);
-  }
-
-  .tok-sel {
-    color: var(--c-selector);
-  }
-
-  .tok-prop {
-    color: var(--c-property);
-  }
+  /* Syntax Classes */
+  .tok-com { color: var(--c-comment); }
+  .tok-str { color: var(--c-string); }
+  .tok-num { color: var(--c-number); }
+  .tok-kwd { color: var(--c-keyword); }
+  .tok-func { color: var(--c-function); }
+  .tok-tag { color: var(--c-tag); }
+  .tok-attr { color: var(--c-attr); }
+  .tok-sel { color: var(--c-selector); }
+  .tok-prop { color: var(--c-property); }
 
   #cursor {
     position: absolute;
@@ -162,6 +133,10 @@
     background-color: var(--cursor-color);
     z-index: 10;
     pointer-events: none;
+    transition: top 0.05s, left 0.05s;
+  }
+
+  .blink {
     animation: blink 1s step-end infinite;
   }
 
@@ -181,17 +156,9 @@
     box-sizing: border-box;
   }
 
-  #file-status {
-    font-weight: bold;
-  }
-
   @keyframes blink {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
 </style>
 </head>
@@ -199,168 +166,116 @@
   <div id="editor" tabindex="0">
     <div id="scroll-phantom"></div>
     <div id="view-port"></div>
-    <div id="cursor"></div>
+    <div id="cursor" class="blink"></div>
   </div>
   <div id="statusbar">
     <span id="file-status">Untitled.txt</span>
-    <span id="message-area">Mastodon Engine 4.1</span>
+    <span id="message-area">Mastodon Engine 4.4</span>
   </div>
 <script>
-class SyntaxHighlighter {
 
+class SyntaxHighlighter {
   highlight(text) {
     if (!text) return '&nbsp;';
     let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const tokens = [];
-
     const save = (content, cls) => {
       tokens.push(`<span class="${cls}">${content}</span>`);
       return `§T${tokens.length - 1}T§`;
-    }
-    ;
-    // 1. Strings & Comments first (High priority)
-    // Updated regex to better handle nested code blocks in comments (e.g., JSDoc)
+    };
+
     html = html.replace(/(\/\/.*|\/\*[\s\S]*?\*\/|&lt;!--[\s\S]*?--&gt;)/g, m => save(m, 'tok-com'));
-    // Updated regex for strings to better handle escaped quotes
     html = html.replace(/(".*?"|'.*?'|`[^`\\]*(?:\\.[^`\\]*)*`)/g, m => save(m, 'tok-str'));
-    // 2. HTML Tags and attributes
-    // Full tags, including closing tags
     html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+&gt;)/g, m => save(m, 'tok-tag'));
-    // Opening tags with attributes (simplified)
     html = html.replace(/(&lt;[a-zA-Z0-9-]+)(?=\s)/g, m => save(m, 'tok-tag'));
-    // 3. CSS / JS Logic
-    // Selectors
     html = html.replace(/(\.[a-zA-Z_-][\w-]*|#[a-zA-Z_-][\w-]*)/g, m => save(m, 'tok-sel'));
     html = html.replace(/(?<!§)\b([a-z][a-z0-9-]*)(?=\s*\{)/gi, m => save(m, 'tok-sel'));
-    // CSS Properties (before colon)
     html = html.replace(/([a-zA-Z-]+)(?=\s*:)/g, m => save(m, 'tok-prop'));
-    // Keywords
-    const kw = /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await|try|catch|new|this|typeof|void|debugger|delete|extends|implements|interface|package|private|protected|public|static|yield)\b/g;
+
+    const kw = /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await|try|catch|new|this|typeof|void|debugger|delete|extends|implements|interface|package|private|protected|public|static|yield|break|continue|switch|case|default)\b/g;
     html = html.replace(kw, m => save(m, 'tok-kwd'));
-    // Functions (followed by parenthesis)
+
     html = html.replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\()/g, m => save(m, 'tok-func'));
-    // HTML/JS Attributes (before equals sign)
     html = html.replace(/\b([a-zA-Z-]+)(?==)/g, m => save(m, 'tok-attr'));
-    // Numbers (including optional unit)
     html = html.replace(/\b\d+(\.\d+)?([a-z%]+)?\b/gi, m => save(m, 'tok-num'));
-    // Restore tokens
-    html = html.replace(/§T(\d+)T§/g, (match, index) => tokens[index]);
+
+    html = html.replace(/§T(\d+)T§/g, (_, i) => tokens[i]);
     return html;
   }
 }
 
 class HistoryManager {
-
   constructor(editor) {
     this.editor = editor;
     this.undoStack = [];
     this.redoStack = [];
     this.lastEditTime = 0;
-    this.typingGroupThreshold = 400;
   }
 
   record(op) {
     const now = Date.now();
-    // Use op.text length and op.oldText to define "typing"
     const isTyping = op.text.length === 1 && op.oldText.length === 0;
-    const isDeletion = op.oldText.length === 1 && op.text.length === 0;
-    const isGroupable = isTyping || isDeletion;
+    const isDel = op.oldText.length === 1 && op.text.length === 0;
 
-    if (this.undoStack.length > 0 && isGroupable && (now - this.lastEditTime) < this.typingGroupThreshold) {
-      const lastOp = this.undoStack[this.undoStack.length - 1];
-
-      // Check if current op is a continuation of the last one (consecutive position)
-      let isConsecutiveTyping = isTyping && lastOp.type === 'insert-char' && lastOp.endRow === op.startRow && lastOp.endCol === op.startCol;
-      let isConsecutiveDeletion = isDeletion && lastOp.type === 'delete-char' && op.endRow === lastOp.startRow && op.endCol === lastOp.startCol;
-
-      if (isConsecutiveTyping) {
-        lastOp.text += op.text;
-        lastOp.endCol += op.text.length;
-        lastOp.cursorAfter = op.cursorAfter;
-        this.lastEditTime = now;
-        this.redoStack = [];
-        return;
-      } else if (isConsecutiveDeletion) {
-        // Reverse coordinates for deletion grouping
-        lastOp.oldText = op.oldText + lastOp.oldText;
-        lastOp.startCol = op.startCol;
-        lastOp.cursorAfter = op.cursorAfter;
-        this.lastEditTime = now;
-        this.redoStack = [];
-        return;
+    if (this.undoStack.length > 0 && (now - this.lastEditTime) < 500) {
+      const last = this.undoStack[this.undoStack.length - 1];
+      if (isTyping && last.type === 'ins' && last.endRow === op.startRow && last.endCol === op.startCol) {
+        last.text += op.text; last.endCol += op.text.length; last.cursorAfter = op.cursorAfter;
+        this.lastEditTime = now; return;
+      }
+      if (isDel && last.type === 'del' && op.endRow === last.startRow && op.endCol === last.startCol) {
+        last.oldText = op.oldText + last.oldText; last.startCol = op.startCol; last.cursorAfter = op.cursorAfter;
+        this.lastEditTime = now; return;
       }
     }
-
-    if (isTyping) op.type = 'insert-char';
-    else if (isDeletion) op.type = 'delete-char';
-
+    op.type = isTyping ? 'ins' : (isDel ? 'del' : 'blk');
     this.undoStack.push(op);
     this.redoStack = [];
     this.lastEditTime = now;
-    if (this.undoStack.length > 500) this.undoStack.shift();
+    if (this.undoStack.length > 300) this.undoStack.shift();
   }
 
   undo() {
     if (this.undoStack.length === 0) return;
     const op = this.undoStack.pop();
     this.redoStack.push(op);
-    // Apply the reverse of the recorded operation: Insert oldText at startRow/startCol, deleting up to endRow/endCol.
-    // The internal edit function handles the content replacement correctly.
     this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.cursorAfter.col, op.oldText, false);
-
-    this.editor.state.cursor = {
-      ...op.cursorBefore
-    }
-    ;
-    this.editor.updateDimensions();
-    this.editor.render();
-    this.editor.ensureCursorVisible();
+    this.editor.state.cursor = { ...op.cursorBefore };
+    this.editor.finalizeUpdate();
   }
 
   redo() {
     if (this.redoStack.length === 0) return;
     const op = this.redoStack.pop();
     this.undoStack.push(op);
-    // Apply the original operation again: Insert text at startRow/startCol, deleting up to endRow/endCol.
     this.editor.applyEditInternal(op.startRow, op.startCol, op.endRow, op.endCol, op.text, false);
-
-    this.editor.state.cursor = {
-      ...op.cursorAfter
-    }
-    ;
-    this.editor.updateDimensions();
-    this.editor.render();
-    this.editor.ensureCursorVisible();
+    this.editor.state.cursor = { ...op.cursorAfter };
+    this.editor.finalizeUpdate();
   }
 }
 
 class EditorEngine {
-
   constructor() {
-
     this.config = {
-      lineHeight: 24, charWidth: 9, xOffset: 70
-    }
-    ;
+      lineHeight: 24, 
+      charWidth: 9.02,
+      xOffset: 70
+    };
 
     this.state = {
       lines: [""],
-
-      cursor: {
-        row: 0, col: 0
-      }
-      ,
+      cursor: { row: 0, col: 0 },
       selectionAnchor: null,
       isDragging: false,
+      clickCount: 0,
+      lastClickTime: 0,
       scrollTop: 0,
       viewportHeight: 0,
       fileName: 'Untitled.txt',
       fileHandle: null,
       isDirty: false,
-      // New state for consistent vertical cursor movement
       desiredCol: 0
-    }
-    ;
+    };
 
     this.dom = {
       editor: document.getElementById('editor'),
@@ -369,197 +284,163 @@ class EditorEngine {
       cursor: document.getElementById('cursor'),
       fileStatus: document.getElementById('file-status'),
       messageArea: document.getElementById('message-area')
-    }
-    ;
+    };
+
     this.history = new HistoryManager(this);
     this.highlighter = new SyntaxHighlighter();
     this.init();
   }
 
   init() {
-    // Correct viewport height calculation
     this.state.viewportHeight = this.dom.editor.clientHeight;
     this.recalculateLayout();
-    // Debounced layout recalulation for safety
-    setTimeout(() => this.recalculateLayout(), 100);
-
+    
     window.addEventListener('beforeunload', (e) => {
-      if (this.state.isDirty) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    }
-  );
+      if (this.state.isDirty) { e.preventDefault(); e.returnValue = ''; }
+    });
+
     this.dom.editor.addEventListener('scroll', () => this.onScroll());
     this.dom.editor.addEventListener('keydown', (e) => this.handleInput(e));
     this.dom.editor.addEventListener('paste', (e) => this.handlePaste(e));
-    this.dom.editor.addEventListener('copy', (e) => this.handleCopyCut(e));
+    this.dom.editor.addEventListener('copy', (e) => this.handleCopyCut(e, false));
     this.dom.editor.addEventListener('cut', (e) => this.handleCopyCut(e, true));
     this.dom.editor.addEventListener('mousedown', (e) => this.handleMouseDown(e));
     window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
     window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-
     window.addEventListener('resize', () => {
       this.state.viewportHeight = this.dom.editor.clientHeight;
       this.recalculateLayout();
-    }
-  );
+    });
     document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
+    
     this.dom.editor.focus();
-    this.updateDimensions();
-    this.render();
-    this.updateTitle();
+    this.finalizeUpdate();
   }
-  // --- CORE RENDERING ---
 
   render() {
+    const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
+    const { lineHeight, charWidth, xOffset } = this.config;
 
-    const {
-      lines, scrollTop, viewportHeight, cursor, selectionAnchor
-    }
-    = this.state;
-
-    const {
-      lineHeight, charWidth
-    }
-    = this.config;
     const startIndex = Math.max(0, Math.floor(scrollTop / lineHeight));
-    // Render one line extra above/below for smooth scrolling
     const visibleLinesCount = Math.ceil(viewportHeight / lineHeight);
     const endIndex = Math.min(lines.length, startIndex + visibleLinesCount + 2);
 
     this.dom.viewport.innerHTML = '';
-    const topOffset = startIndex * lineHeight;
-    this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
-    let selStart = null, selEnd = null;
+    this.dom.viewport.style.transform = `translateY(${startIndex * lineHeight}px)`;
 
+    let selStart = null, selEnd = null;
     if (selectionAnchor) {
-      // Determine selection start and end points
-      const anchorIsBefore = (selectionAnchor.row < cursor.row) || (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+      const anchorIsBefore = (selectionAnchor.row < cursor.row) || 
+                             (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
       selStart = anchorIsBefore ? selectionAnchor : cursor;
       selEnd = anchorIsBefore ? cursor : selectionAnchor;
-      // If selection is empty, treat it as no selection for rendering purposes
       if (selStart.row === selEnd.row && selStart.col === selEnd.col) selStart = null;
     }
 
+    const fragment = document.createDocumentFragment();
     for (let i = startIndex; i < endIndex; i++) {
       const lineDiv = document.createElement('div');
       lineDiv.className = 'line';
+      
       const numSpan = document.createElement('div');
       numSpan.className = 'line-number';
       numSpan.textContent = i + 1;
-      const selectionDiv = document.createElement('div');
-      selectionDiv.className = 'selection-layer';
-
-      if (selStart && i >= selStart.row && i <= selEnd.row) {
-        let colStart = 0;
-        let colEnd = lines[i].length;
-
-        if (i === selStart.row) colStart = selStart.col;
-        if (i === selEnd.row) colEnd = selEnd.col;
-
-        let width = (colEnd - colStart) * charWidth;
-        // Add half-width for visual cue of selected newline on multi-line selection
-        if (i < selEnd.row) width += charWidth * 0.5;
-
-        if (i === selStart.row && i === selEnd.row && selStart.col > selEnd.col) {
-          // This should not happen with selStart/selEnd logic above, but for robustness:
-          width = (selStart.col - selEnd.col) * charWidth;
-          colStart = selEnd.col;
-        }
-
-        selectionDiv.style.left = `calc(70px + ${colStart * charWidth}px)`;
-        selectionDiv.style.width = `${Math.max(0, width)}px`;
-        selectionDiv.classList.add('is-selected');
-      }
 
       const contentSpan = document.createElement('div');
       contentSpan.className = 'line-content';
       contentSpan.innerHTML = this.highlighter.highlight(lines[i]);
+
+      const selectionDiv = document.createElement('div');
+      selectionDiv.className = 'selection-layer';
+      
+      if (selStart && i >= selStart.row && i <= selEnd.row) {
+        let colStart = 0;
+        let colEnd = lines[i].length;
+        if (i === selStart.row) colStart = selStart.col;
+        if (i === selEnd.row) colEnd = selEnd.col;
+        
+        let width = (colEnd - colStart) * charWidth;
+        if (i < selEnd.row) width += charWidth * 0.5;
+
+        selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
+        selectionDiv.style.width = `${Math.max(0, width)}px`;
+        selectionDiv.classList.add('is-selected');
+      }
+
       lineDiv.appendChild(numSpan);
       lineDiv.appendChild(selectionDiv);
       lineDiv.appendChild(contentSpan);
-      this.dom.viewport.appendChild(lineDiv);
+      fragment.appendChild(lineDiv);
     }
+    this.dom.viewport.appendChild(fragment);
     this.updateCursor();
   }
 
   updateCursor() {
-
-    const {
-      row, col
-    }
-    = this.state.cursor;
-    const top = row * this.config.lineHeight;
-    const left = this.config.xOffset + (col * this.config.charWidth);
+    const { row, col } = this.state.cursor;
+    const { lineHeight, charWidth, xOffset } = this.config;
+    const top = row * lineHeight;
+    const left = xOffset + (col * charWidth);
     this.dom.cursor.style.top = `${top}px`;
     this.dom.cursor.style.left = `${left}px`;
+    this.dom.cursor.classList.remove('blink');
+    clearTimeout(this.blinkTimeout);
+    this.blinkTimeout = setTimeout(() => this.dom.cursor.classList.add('blink'), 500);
   }
 
   updateDimensions() {
-    // 1. Height (Added extra padding at the bottom)
-    this.dom.phantom.style.height = `${this.state.lines.length * this.config.lineHeight + this.state.viewportHeight}px`;
-    // 2. Width (Find max line length for horizontal scrolling)
-    const maxLen = this.state.lines.reduce((max, line) => Math.max(max, line.length), 0);
-    const width = this.config.xOffset + (maxLen * this.config.charWidth) + 100;
-    // 3. Apply
-    this.dom.phantom.style.width = `${width}px`;
+    const { lines, viewportHeight } = this.state;
+    const { lineHeight, charWidth, xOffset } = this.config;
+    const height = (lines.length + 5) * lineHeight;
+    const maxLen = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    const width = xOffset + ((maxLen + 5) * charWidth);
+
+    this.dom.phantom.style.height = `${Math.max(height, viewportHeight)}px`;
+    this.dom.phantom.style.width = `${Math.max(width, window.innerWidth)}px`;
     this.dom.viewport.style.width = `${width}px`;
   }
 
-  recalculateLayout() {
-    const width = this.measureCharWidth();
-    if (width > 0 && Math.abs(this.config.charWidth - width) > 0.001) {
-      this.config.charWidth = width;
-      this.updateDimensions();
-      this.render();
-    }
+  finalizeUpdate() {
+    this.updateDimensions();
+    this.ensureCursorVisible();
+    this.render();
   }
 
-  measureCharWidth() {
+  recalculateLayout() {
     const t = document.createElement('div');
     t.className = 'line';
-    t.style.padding='0';
-    t.style.border='none';
-    t.style.paddingLeft='0';
-    t.style.position='absolute';
-    t.style.visibility='hidden';
-    t.style.width='auto';
-    t.style.whiteSpace='pre';
-    t.textContent='M'.repeat(100);
+    t.style.position = 'absolute';
+    t.style.visibility = 'hidden';
+    t.style.width = 'auto';
+    t.style.padding = '0';
+    t.textContent = 'M'.repeat(1000);
     this.dom.viewport.appendChild(t);
-    const w = t.getBoundingClientRect().width / 100;
+    const w = t.getBoundingClientRect().width / 1000;
     this.dom.viewport.removeChild(t);
-    return w;
+
+    if (w > 0 && Math.abs(this.config.charWidth - w) > 0.0001) {
+      this.config.charWidth = w;
+      this.finalizeUpdate();
+    }
   }
 
   onScroll() {
     this.state.scrollTop = this.dom.editor.scrollTop;
-    // Debounce render slightly for smoother scrolling performance
-    clearTimeout(this.scrollTimeout);
-    this.scrollTimeout = setTimeout(() => this.render(), 16);
-    this.render(); // Render immediately for responsiveness
+    requestAnimationFrame(() => this.render());
   }
-  // --- EDIT LOGIC ---
 
   applyChange(txt) {
-
-    const {
-      cursor, selectionAnchor
-    }
-    = this.state;
+    const { cursor, selectionAnchor } = this.state;
     let sr = cursor.row, sc = cursor.col;
     let er = cursor.row, ec = cursor.col;
 
     if (selectionAnchor) {
-      // Determine Start and End based on selection
-      const anchorIsBefore = (selectionAnchor.row < cursor.row) || (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
-      const start = anchorIsBefore ? selectionAnchor : cursor;
-      const end = anchorIsBefore ? cursor : selectionAnchor;
-      sr = start.row;
-      sc = start.col;
-      er = end.row;
-      ec = end.col;
+      const anchorIsBefore = (selectionAnchor.row < cursor.row) || 
+                             (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+      sr = anchorIsBefore ? selectionAnchor.row : cursor.row;
+      sc = anchorIsBefore ? selectionAnchor.col : cursor.col;
+      er = anchorIsBefore ? cursor.row : selectionAnchor.row;
+      ec = anchorIsBefore ? cursor.col : selectionAnchor.col;
     }
 
     this.applyEditInternal(sr, sc, er, ec, txt, true);
@@ -571,764 +452,432 @@ class EditorEngine {
   applyEditInternal(sr, sc, er, ec, txt, hist) {
     if (hist) this.setDirty(true);
     const l = this.state.lines;
+    
     let old = "";
+    if (sr === er) old = l[sr].slice(sc, ec);
+    else old = [l[sr].slice(sc), ...l.slice(sr + 1, er), l[er].slice(0, ec)].join('\n');
 
-    // 1. Get old content for history (multi-line aware)
-    if (sr === er) {
-      old = l[sr].slice(sc, ec);
-    } else {
-      const firstLine = l[sr].slice(sc);
-      const middleLines = l.slice(sr + 1, er);
-      const lastLine = l[er].slice(0, ec);
-      old = [firstLine, ...middleLines, lastLine].join('\n');
+    const prefix = l[sr].slice(0, sc);
+    const suffix = l[er].slice(ec);
+    const newSegs = txt.split('\n');
+    
+    newSegs[0] = prefix + newSegs[0];
+    newSegs[newSegs.length - 1] += suffix;
+
+    if (sr === er && newSegs.length === 1) l[sr] = newSegs[0];
+    else l.splice(sr, er - sr + 1, ...newSegs);
+
+    const nr = sr + newSegs.length - 1;
+    const nc = (newSegs.length === 1 ? sc : 0) + txt.split('\n').pop().length; 
+    
+    if (hist) {
+      this.history.record({
+        startRow: sr, startCol: sc, endRow: er, endCol: ec,
+        text: txt, oldText: old,
+        cursorBefore: { row: sr, col: sc },
+        cursorAfter: { row: nr, col: nc }
+      });
     }
 
-    // 2. Perform the edit
-    const tb = l[sr].slice(0, sc); // Text before
-    const ta = l[er].slice(ec); // Text after
-    const nl = txt.split('\n'); // New lines to insert
-
-    if (nl.length === 1) {
-      // Single-line insertion/replacement
-      l[sr] = tb + nl[0] + ta;
-      if (er > sr) l.splice(sr + 1, er - sr); // Remove middle lines if multi-line selection was replaced by single line
-    } else {
-      // Multi-line insertion/replacement
-      l[sr] = tb + nl[0];
-      nl[nl.length - 1] += ta;
-      if (er > sr) l.splice(sr + 1, er - sr); // Remove middle lines
-      l.splice(sr + 1, 0, ...nl.slice(1));
-    }
-
-    // 3. Calculate new cursor position
-    let nr = sr + nl.length - 1;
-    let nc = (nl.length === 1 ? sc : 0) + nl[nl.length - 1].length;
-
-    // Handle case where multi-line selection is replaced by a single line text.
-    if (nl.length === 1 && sr !== er) nc = sc + txt.length;
-
-    const ca = {
-      row: nr, col: nc
-    }
-    ;
-
-    // 4. Record history
-    if (hist) this.history.record( {
-
-      startRow: sr, startCol: sc, endRow: er, endCol: ec, text: txt, oldText: old, cursorBefore: {
-        row:sr, col:sc
-      }
-      , cursorAfter: ca
-    }
-  );
-
-    // 5. Update state
-    this.state.cursor = ca;
-    this.updateDimensions();
-    this.render();
+    this.state.cursor = { row: nr, col: nc };
+    this.finalizeUpdate();
   }
-  // --- INPUT & NAVIGATION ---
 
   handleInput(e) {
     const k = e.key;
+    const ctrl = e.ctrlKey || e.metaKey;
+    const { cursor: c, lines: l } = this.state;
 
-    const {
-      cursor: c, lines: l
+    if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return; 
+    
+    if (k === 'Tab') {
+      e.preventDefault();
+      if (e.shiftKey) this.state.selectionAnchor ? this.blockEdit(l => l.replace(/^ {1,2}/, "")) : this.blockEdit(l => l.replace(/^ {1,2}/, ""), c.row, c.row);
+      else this.state.selectionAnchor ? this.blockEdit(l => "  " + l) : this.applyChange("  ");
+      return;
     }
-    = this.state;
-    // Check for Ctrl/Cmd/Alt + Key combinations
-    if (e.ctrlKey || e.metaKey) {
-      // Allow Ctrl/Cmd + V, C, X, A, Z, Y, S, O, B... to be handled by global shortcuts or browser defaults
-      if (k.length === 1 && !['v', 'c', 'x', 'a', 'z', 'y', 's', 'o', 'b'].includes(k.toLowerCase())) {
-        return;
+
+    if (k === 'Backspace') {
+      e.preventDefault();
+      if (this.state.selectionAnchor) this.applyChange("");
+      else if (c.col > 0) { this.state.selectionAnchor = { row: c.row, col: c.col - 1 }; this.applyChange(""); }
+      else if (c.row > 0) { this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length }; this.applyChange(""); }
+      return;
+    }
+
+    if (k === 'Delete') {
+      e.preventDefault();
+      if (this.state.selectionAnchor) this.applyChange("");
+      else if (c.col < l[c.row].length) { 
+        this.state.selectionAnchor = { row: c.row, col: c.col + 1 }; 
+        const oldC = { ...c };
+        this.applyChange("");
+        this.state.cursor = oldC;
+        this.finalizeUpdate();
       }
-    } else if (e.altKey) {
-      // Allow Alt + N, P, T, B... to be handled by global shortcuts
-      if (k.length === 1 && ['n', 'p', 't', 'b'].includes(k.toLowerCase())) {
-        return;
+      else if (c.row < l.length - 1) { 
+        this.state.selectionAnchor = { row: c.row + 1, col: 0 }; 
+        const oldC = { ...c };
+        this.applyChange("");
+        this.state.cursor = oldC;
+        this.finalizeUpdate();
       }
+      return;
+    }
+
+    if (k === 'Enter') {
+      e.preventDefault();
+      const indent = l[c.row].match(/^\s*/)[0];
+      let extra = l[c.row].trim().endsWith('{') ? "  " : "";
+      this.applyChange("\n" + indent + extra);
+      return;
     }
 
     const nav = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'];
     if (nav.includes(k)) {
-      e.preventDefault(); // Prevent default browser navigation behavior
-      if (e.shiftKey) {
-        if (!this.state.selectionAnchor) this.state.selectionAnchor= {
-          ...c
-        }
-        ;
-      } else this.state.selectionAnchor=null;
-
-      this.handleNavigation(k, e.ctrlKey || e.metaKey);
+      e.preventDefault();
+      if (e.shiftKey) { if (!this.state.selectionAnchor) this.state.selectionAnchor = { ...c }; }
+      else this.state.selectionAnchor = null;
+      this.handleNavigation(k, ctrl);
       this.render();
       return;
     }
 
-    if (k==='Tab') {
-      e.preventDefault();
-      // Tab/Shift+Tab for block indentation
-      if (e.shiftKey) {
-        // Shift+Tab: Outdent (handle single line vs block)
-        if (this.state.selectionAnchor) this.outdentBlock();
-        else {
-          this.outdentBlock(c.row, c.row);
-        }
-      } else {
-        // Tab: Indent or insert spaces
-        if (this.state.selectionAnchor) this.indentBlock();
-        else this.applyChange("  ");
-      }
-      return;
-    }
-
-    if (k==='Backspace') {
-      e.preventDefault();
-      if (this.state.selectionAnchor) this.applyChange("");
-      else if (c.col>0) {
-        // Single char delete
-        this.state.selectionAnchor= {
-          row:c.row, col:c.col-1
-        }
-        ;
-        this.applyChange("");
-      } else if (c.row>0) {
-        // Delete newline (merge with previous line)
-        this.state.selectionAnchor= {
-          row:c.row-1, col:l[c.row-1].length
-        }
-        ;
-        this.applyChange("");
-      }
-      return;
-    }
-
-    if (k==='Delete') {
-      e.preventDefault();
-      if (this.state.selectionAnchor) this.applyChange("");
-      else if (c.col<l[c.row].length) {
-        // Single char delete forward
-        this.state.selectionAnchor= {
-          row:c.row, col:c.col+1
-        }
-        ;
-        // Temporarily store cursor position, then apply change (which moves cursor to start of deletion), then restore.
-        let oc= {
-          ...c
-        }
-        ;
-        this.applyChange("");
-        this.state.cursor=oc;
-        this.state.desiredCol=oc.col;
-        this.render();
-      } else if (c.row<l.length-1) {
-        // Delete newline (merge with next line)
-        this.state.selectionAnchor= {
-          row:c.row+1, col:0
-        }
-        ;
-        let oc= {
-          ...c
-        }
-        ;
-        this.applyChange("");
-        this.state.cursor=oc;
-        this.state.desiredCol=oc.col;
-        this.render();
-      }
-      return;
-    }
-
-    if (k==='Enter') {
-      e.preventDefault();
-      this.applyChange("\n");
-      return;
-    }
-
-    if (k.length===1) {
+    if (k.length === 1 && !ctrl && !e.altKey) {
       e.preventDefault();
       this.applyChange(k);
     }
   }
 
-  handleNavigation(k, isWordJump) {
-    const {
-      cursor: c, lines: l
+  handleNavigation(k, wordJump) {
+    const { cursor: c, lines: l } = this.state;
+    let tr = c.row, tc = c.col;
+
+    if (k === 'ArrowUp') { if (tr > 0) tr--; tc = Math.min(this.state.desiredCol, l[tr].length); }
+    else if (k === 'ArrowDown') { if (tr < l.length - 1) tr++; tc = Math.min(this.state.desiredCol, l[tr].length); }
+    else if (k === 'ArrowLeft') {
+      if (wordJump) tc = this.findWordBoundary(tr, tc, -1);
+      else if (tc > 0) tc--;
+      else if (tr > 0) { tr--; tc = l[tr].length; }
+      this.state.desiredCol = tc;
+    } else if (k === 'ArrowRight') {
+      if (wordJump) tc = this.findWordBoundary(tr, tc, 1);
+      else if (tc < l[tr].length) tc++;
+      else if (tr < l.length - 1) { tr++; tc = 0; }
+      this.state.desiredCol = tc;
+    } else if (k === 'Home') {
+      const fc = (l[tr].match(/^\s*/) || [''])[0].length;
+      tc = (tc === fc) ? 0 : fc;
+      this.state.desiredCol = tc;
+    } else if (k === 'End') {
+      tc = l[tr].length;
+      this.state.desiredCol = tc;
+    } else if (k === 'PageUp') {
+      tr = Math.max(0, tr - Math.floor(this.state.viewportHeight / this.config.lineHeight));
+      tc = Math.min(tc, l[tr].length);
+    } else if (k === 'PageDown') {
+      tr = Math.min(l.length - 1, tr + Math.floor(this.state.viewportHeight / this.config.lineHeight));
+      tc = Math.min(tc, l[tr].length);
     }
-    = this.state;
-    let targetRow = c.row;
-    let targetCol = c.col;
-
-    if (k==='ArrowUp' || k==='ArrowDown') {
-      // Use desiredCol for vertical navigation consistency
-      if (k==='ArrowUp' && c.row>0) targetRow--;
-      if (k==='ArrowDown' && c.row<l.length-1) targetRow++;
-
-      if (targetRow !== c.row) {
-        c.row = targetRow;
-        c.col = Math.min(this.state.desiredCol, l[c.row].length);
-      }
-    } else {
-      // Update desiredCol when moving horizontally
-      if (k==='ArrowLeft') {
-        if (isWordJump) {
-          targetCol = this.findWordBoundary(c.row, c.col, -1);
-        } else if (c.col>0) {
-          targetCol--;
-        } else if (c.row>0) {
-          targetRow--;
-          targetCol=l[targetRow].length;
-        }
-      } else if (k==='ArrowRight') {
-        if (isWordJump) {
-          targetCol = this.findWordBoundary(c.row, c.col, 1);
-        } else if (c.col<l[c.row].length) {
-          targetCol++;
-        } else if (c.row<l.length-1) {
-          targetRow++;
-          targetCol=0;
-        }
-      } else if (k==='Home') {
-        targetCol=0;
-        // Toggle between home (0) and start of content (first non-space char)
-        const match = l[c.row].match(/^\s*/);
-        if (match && c.col === 0 && match[0].length > 0) targetCol = match[0].length;
-        else if (match && c.col > 0) targetCol = 0;
-      } else if (k==='End') {
-        targetCol=l[c.row].length;
-      } else if (k==='PageUp') {
-        targetRow = Math.max(0, c.row - Math.floor(this.state.viewportHeight/this.config.lineHeight));
-        targetCol = Math.min(c.col, l[targetRow].length); // Clamp column to new line length
-      } else if (k==='PageDown') {
-        targetRow = Math.min(l.length-1, c.row + Math.floor(this.state.viewportHeight/this.config.lineHeight));
-        targetCol = Math.min(c.col, l[targetRow].length); // Clamp column to new line length
-      }
-
-      c.row = targetRow;
-      c.col = targetCol;
-      this.state.desiredCol = targetCol;
-    }
+    c.row = tr; c.col = tc;
     this.ensureCursorVisible();
   }
 
-  findWordBoundary(row, col, direction) {
-    const line = this.state.lines[row];
-    if (direction > 0) {
-      // Move right (skip non-word chars, then skip word chars)
-      let i = col;
-      while (i < line.length && !/\w/.test(line[i])) i++; // Skip non-word/space
-      while (i < line.length && /\w/.test(line[i])) i++; // Skip word
-      return i;
+  findWordBoundary(r, c, d) {
+    const ln = this.state.lines[r];
+    let i = c;
+    if (d > 0) {
+      if (i >= ln.length) return i;
+      const type = /\w/.test(ln[i]);
+      while (i < ln.length && /\w/.test(ln[i]) === type) i++;
     } else {
-      // Move left (skip word chars, then skip non-word chars)
-      let i = col - 1;
-      while (i >= 0 && !/\w/.test(line[i])) i--; // Skip non-word/space
-      while (i >= 0 && /\w/.test(line[i])) i--; // Skip word
-      return i + 1; // Return position *after* the word
+      if (i <= 0) return 0;
+      i--;
+      const type = /\w/.test(ln[i]);
+      while (i > 0 && /\w/.test(ln[i-1]) === type) i--;
     }
+    return i;
   }
 
   handlePaste(e) {
     e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text');
+    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     this.applyChange(text);
   }
 
-  handleCopyCut(e, isCut = false) {
+  handleCopyCut(e, cut) {
     const t = this.getSelectionText();
     if (t) {
       e.preventDefault();
       e.clipboardData.setData('text/plain', t);
-      if (isCut) {
-        this.applyChange("");
-        this.setStatus("Cut");
-      } else {
-        this.setStatus("Copied");
-      }
+      if (cut) { this.applyChange(""); this.setStatus("Klippet ut"); }
+      else this.setStatus("Kopiert");
     }
   }
 
   handleMouseDown(e) {
-    // Ignore clicks outside of the line content area (e.g. scrollbar area)
-    if (e.target===this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
+    if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
     e.preventDefault();
-    const p=this.getPosFromMouse(e);
+    const now = Date.now();
+    this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
+    this.state.lastClickTime = now;
 
-    this.state.cursor= {
-      ...p
+    const p = this.getPosFromMouse(e);
+    if (this.state.clickCount === 2) {
+      const s = this.findWordBoundary(p.row, p.col, -1);
+      const e = this.findWordBoundary(p.row, p.col, 1);
+      this.state.selectionAnchor = { row: p.row, col: s };
+      this.state.cursor = { row: p.row, col: e };
+      this.state.isDragging = false;
+    } else if (this.state.clickCount === 3) {
+      this.state.selectionAnchor = { row: p.row, col: 0 };
+      this.state.cursor = { row: p.row, col: this.state.lines[p.row].length };
+      this.state.isDragging = false;
+    } else {
+      this.state.cursor = { ...p };
+      this.state.selectionAnchor = { ...p };
+      this.state.isDragging = true;
     }
-    ;
-    this.state.selectionAnchor= {
-      ...p
-    }
-    ;
-    this.state.desiredCol=p.col;
-    this.state.isDragging=true;
+    this.state.desiredCol = this.state.cursor.col;
     this.dom.editor.focus();
     this.render();
   }
 
   handleMouseMove(e) {
     if (!this.state.isDragging) return;
-    const p=this.getPosFromMouse(e);
-
-    this.state.cursor= {
-      ...p
-    }
-    ;
-    this.state.desiredCol=p.col;
+    const p = this.getPosFromMouse(e);
+    this.state.cursor = { ...p };
+    this.state.desiredCol = p.col;
+    this.ensureCursorVisible();
     this.render();
   }
 
   handleMouseUp() {
-    this.state.isDragging=false;
+    this.state.isDragging = false;
+    const { cursor, selectionAnchor } = this.state;
+    if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col) 
+      this.state.selectionAnchor = null;
+    this.render();
   }
 
   getPosFromMouse(e) {
     const r = this.dom.editor.getBoundingClientRect();
-    // Use Math.min/max to clamp clientX/Y to the editor boundaries during dragging outside
-    const clientX = Math.max(r.left, Math.min(r.right, e.clientX));
-    const clientY = Math.max(r.top, Math.min(r.bottom, e.clientY));
-    const x = clientX - r.left + this.dom.editor.scrollLeft;
-    const y = clientY - r.top + this.dom.editor.scrollTop;
+    const x = e.clientX - r.left + this.dom.editor.scrollLeft;
+    const y = e.clientY - r.top + this.dom.editor.scrollTop;
     let row = Math.floor(y / this.config.lineHeight);
     let col = Math.floor((x - this.config.xOffset) / this.config.charWidth);
     row = Math.max(0, Math.min(row, this.state.lines.length - 1));
     col = Math.max(0, Math.min(col, this.state.lines[row].length));
-    return {
-      row, col
-    }
-    ;
+    return { row, col };
   }
 
   ensureCursorVisible() {
-    const top = this.state.cursor.row * this.config.lineHeight;
-    const bottom = top + this.config.lineHeight;
-    const scrollBottom = this.state.scrollTop + this.state.viewportHeight;
+    const { row, col } = this.state.cursor;
+    const { lineHeight, charWidth, xOffset } = this.config;
+    const top = row * lineHeight;
+    const bottom = top + lineHeight;
+    const vH = this.state.viewportHeight;
+    const sT = this.dom.editor.scrollTop;
 
-    // Vertical scroll
-    if (top < this.state.scrollTop) {
-      this.dom.editor.scrollTop = top;
-    } else if (bottom > scrollBottom) {
-      this.dom.editor.scrollTop = bottom - this.state.viewportHeight;
-    }
+    if (top < sT) this.dom.editor.scrollTop = top;
+    else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
 
-    // Horizontal scroll
-    const left = this.config.xOffset + (this.state.cursor.col * this.config.charWidth);
-    const right = left + 2; // Cursor width
-    const scrollRight = this.dom.editor.scrollLeft + this.dom.editor.clientWidth;
-    const scrollLeft = this.dom.editor.scrollLeft + 65; // Offset line numbers
+    const left = xOffset + (col * charWidth);
+    const sL = this.dom.editor.scrollLeft;
+    const cW = this.dom.editor.clientWidth;
 
-    if (left < scrollLeft) {
-      this.dom.editor.scrollLeft = left - 65;
-    } else if (right > scrollRight) {
-      this.dom.editor.scrollLeft = right - this.dom.editor.clientWidth + 20; // 20px padding
-    }
-  }
-  // --- FEATURES ---
-
-  indentBlock() {
-    this.blockEdit(l => "  " + l, 2);
+    if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
+    else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
   }
 
-  outdentBlock(startRow = null, endRow = null) {
-    this.blockEdit(l => l.replace(/^ {1,2}/, ""), -2, startRow, endRow);
+  blockEdit(mod, sr = null, er = null) {
+    const { cursor: c, selectionAnchor: s, lines: l } = this.state;
+    sr = sr ?? Math.min(c.row, s ? s.row : c.row);
+    er = er ?? Math.max(c.row, s ? s.row : c.row);
+    
+    const orig = l.slice(sr, er + 1).join('\n');
+    const modded = l.slice(sr, er + 1).map(mod).join('\n');
+    
+    if (orig !== modded) {
+      this.applyEditInternal(sr, 0, er, l[er].length, modded, true);
+      this.state.selectionAnchor = { row: sr, col: 0 };
+      this.state.cursor = { row: er, col: l[er].length };
+      this.finalizeUpdate();
+    }
   }
 
-  blockEdit(mod, dCol, startRow = null, endRow = null) {
+  cleanCode() {
+    this.setStatus("Vasker kode...");
+    const originalText = this.state.lines.join('\n');
+    
+    // 1. Remove Comments & Strings Logic (Preserve strings, delete comments)
+    const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
+    const textWithoutComments = originalText.replace(re, (match, block, line, str) => {
+      // If it matches block or line comment, return empty string. Else return the string literal.
+      if (block || line) return '';
+      return match;
+    });
 
-    const {
-      cursor: c, selectionAnchor: s, lines: l
-    }
-    = this.state;
+    // 2. Split and filter empty lines
+    let lines = textWithoutComments.split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
 
-    // Use explicit rows for single-line indent/outdent (e.g. Tab on single line)
-    const sr = startRow !== null ? startRow : Math.min(c.row, s ? s.row : c.row);
-    const er = endRow !== null ? endRow : Math.max(c.row, s ? s.row : c.row);
-
-    const orig = l.slice(sr, er + 1);
-    const modLines = orig.map(mod);
-
-    // Apply internal edit: Replace the block
-    this.applyEditInternal(sr, 0, er, l[er].length, modLines.join('\n'), true);
-
-    // Maintain selection for the block (optional: adjust selection for column change)
-    if (s) {
-      this.state.selectionAnchor = {
-        row: sr, col: 0
-      }
-      ;
-      this.state.cursor = {
-        row: er, col: l[er].length
-      }
-      ;
-    }
-    this.updateDimensions();
-    this.render();
-  }
-
-  async cleanCode() {
-    this.setStatus("Formatting...");
-    const orig = this.state.lines.join('\n');
-    let safeSrc = orig;
-    const placeholders = [];
-    const secret = "§_SECRET_TOKEN_§";
-
-    // 1. MASKERING (Protect strings, comments, and regex)
-    const protectionRegex = /(\/\*[\s\S]*?\*\/|\/\/.*|`[^`\\]*(?:\\.[^`\\]*)*`|"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|\/(?:\\.|[^/\\\n])+\/[gimuy]*)/g;
-
-    safeSrc = safeSrc.replace(protectionRegex, (match) => {
-      placeholders.push(match);
-      return secret + (placeholders.length - 1) + secret;
-    }
-  );
-
-    // 2. EKSPLOSJON (Introduce newlines for block/statement flow)
-    // Temporarily replace semicolons inside 'for' loops to prevent premature newlines
-    safeSrc = safeSrc.replace(/for\s*\(([^)]+)\)/g, (match) => match.replace(/;/g, '§FOR_SEMI§'));
-    safeSrc = safeSrc.replace(/\{/g, '{\n');
-    safeSrc = safeSrc.replace(/\}/g, '\n}\n');
-    // Introduce newline after semicolon *only* if not inside a placeholder (i.e. not a string or comment or regex)
-    safeSrc = safeSrc.replace(/;(?=([^"]*"[^"]*")*[^"]*$)(?!\n)/g, ';\n'); // Simple semicolon split, ignoring strings.
-    safeSrc = safeSrc.replace(/§FOR_SEMI§/g, ';'); // Restore 'for' semicolons
-
-    // 3. INDENTERING
-    let lines = safeSrc.split('\n')
-      .map(x => x.trim()) // Trim whitespace
-      .filter(x => x.length > 0 || /^\s+$/.test(x)); // Keep lines that were only whitespace or had content
-
-    const fmt = [];
-    let lvl = 0;
-    // HTML Void Elements (no closing tag)
-    const voids = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype'];
+    // 3. Apply User's Indent Logic
+    const formattedLines = [];
+    let currentLevel = 0;
+    const indentUnit = '  ';
+    const voidTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype'];
+    const rootTags = ['html', 'head', 'body', 'script', 'style', '!doctype'];
 
     lines.forEach((line) => {
-      let originalLine = line;
+      let tagName = '';
+      const tagMatch = line.match(/^<\/?([a-zA-Z0-9-]+)/);
+      if (tagMatch) tagName = tagMatch[1].toLowerCase();
+      
+      const isHtmlRoot = rootTags.includes(tagName);
+      const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(line);
+      const isMethodDef = /^\s*(async\s+)?(?!(if|for|while|switch|catch)\b)[a-zA-Z_$][\w$]*\s*\(.*?\)\s*\{/.test(line);
+      const isJsRoot = isStandardDef || isMethodDef;
 
-      // Check for } else { grouping
-      if (/^(else|catch|finally)\b/.test(line)) {
-        const lastIdx = fmt.length - 1;
-        if (lastIdx >= 0 && fmt[lastIdx].trim() === '}') {
-          fmt[lastIdx] = fmt[lastIdx] + ' ' + line;
-          line = ''; // Skip line to prevent double-processing
-        }
+      // Force Root Levels to 0
+      if (isJsRoot || isHtmlRoot) currentLevel = 0;
+
+      const openBraces = (line.match(/\{/g) || []).length;
+      const closeBraces = (line.match(/\}/g) || []).length;
+      let openTags = 0;
+      let closeTags = 0;
+
+      if (/^<[a-zA-Z0-9-]+/.test(line) && !line.includes('</') && !line.endsWith('/>') && !voidTags.includes(tagName)) {
+        if (!isHtmlRoot) openTags = 1;
       }
-      if (line === '') return;
-
-      // Calculate level shifts
-      const openBrace = (line.match(/\{/g) || []).length;
-      const closeBrace = (line.match(/\}/g) || []).length;
-      let openTag = 0, closeTag = 0;
-      let tagMatch = line.match(/^&lt;([a-zA-Z0-9-]+)/);
-      let tag = tagMatch ? tagMatch[1].toLowerCase() : null;
-
-      // Simple HTML Tag flow control
-      if (tag && !line.includes('&lt;/') && !line.endsWith('/&gt;') && !voids.includes(tag)) openTag = 1;
-      if (line.match(/^&lt;\/[a-zA-Z0-9-]+/)) closeTag = 1;
-
-      let prevLvl = lvl;
-      // Line starts with closing brace or tag, decrease level *before* applying indent
-      if (line.match(/^(\}|\])/) || line.match(/^&lt;\/|\s*&lt;\//) || /^(else|catch|finally)/.test(line)) {
-        prevLvl = Math.max(0, lvl - Math.max(closeBrace, closeTag));
+      if (line.match(/^<\/[a-zA-Z0-9-]+/)) {
+        if (!isHtmlRoot) closeTags = 1;
       }
 
-      // 4. DEMASKERING & Final formatting
-      let finalLine = line;
-      let safetyCounter = 0;
-      while (finalLine.includes(secret) && safetyCounter < 20) {
-        finalLine = finalLine.replace(new RegExp(secret + '(\\d+)' + secret, 'g'), (_, index) => placeholders[index]);
-        safetyCounter++;
+      let printLevel = currentLevel;
+      const startsWithClosing = line.match(/^(\}|\]|\)|\<\/)/);
+      const isContinuation = /^(else|catch|finally)/.test(line);
+
+      if (startsWithClosing || isContinuation) {
+        printLevel = Math.max(0, currentLevel - 1);
       }
 
-      // Micro-spacing improvements for cleaner look
-      finalLine = finalLine.replace(/,(\S)/g, ", $1");
-      finalLine = finalLine.replace(/\b(if|for|while|switch|catch)\s*\(/g, "$1 (");
-      finalLine = finalLine.replace(/([^\s])\{$/, "$1 {");
-      finalLine = finalLine.replace(/\s*=\s*/g, ' = '); // Standardize equals spacing
+      formattedLines.push(indentUnit.repeat(printLevel) + line);
 
-      fmt.push('  '.repeat(prevLvl) + finalLine);
-      lvl = Math.max(0, lvl + (openBrace - closeBrace) + (openTag - closeTag));
-    }
-  );
+      const netChange = (openBraces - closeBraces) + (openTags - closeTags);
+      currentLevel = Math.max(0, currentLevel + netChange);
+    });
 
-    const newVal = fmt.join('\n');
-
-    if (orig !== newVal) {
-      // Apply the change
-      this.applyEditInternal(0, 0, this.state.lines.length - 1, this.state.lines[this.state.lines.length - 1].length, newVal, true);
-      // Reset scroll and cursor
-      this.state.scrollTop = 0;
-      this.dom.editor.scrollTop = 0;
-      this.state.cursor = {
-        row: 0, col: 0
-      }
-      ;
-      this.state.selectionAnchor = null;
-      this.updateDimensions();
-      this.render();
-      this.setStatus("Cleaned!");
+    const newText = formattedLines.join('\n');
+    if (newText !== originalText) {
+      this.applyEditInternal(0, 0, this.state.lines.length - 1, this.state.lines[this.state.lines.length - 1].length, newText, true);
+      this.setStatus("Kode vasket og renset!");
     } else {
-      this.setStatus("Already clean!");
+      this.setStatus("Allerede rent!");
     }
   }
-  // --- FILE & GLOBAL ---
 
   async handleGlobalShortcuts(e) {
     const k = e.key.toLowerCase();
-    const ctrl = e.ctrlKey||e.metaKey;
+    const ctrl = e.ctrlKey || e.metaKey;
 
-    if (ctrl && k==='z') {
-      e.preventDefault();
-      this.history.undo();
-      this.setStatus("Undo");
-    }
-    if ((ctrl && k==='y')||(ctrl && e.shiftKey && k==='z')) {
-      e.preventDefault();
-      this.history.redo();
-      this.setStatus("Redo");
-    }
-
-    // Alt shortcuts
-    if (e.altKey) {
-      if (k==='n') {
-        e.preventDefault();
-        this.newFile();
-      }
-      if (k==='p') {
-        e.preventDefault();
-        this.previewFile();
-      }
-      if (k==='t') {
-        e.preventDefault();
-        this.openNewTab();
-      }
-      if (k==='b') {
-        e.preventDefault();
-        this.cleanCode();
-      }
-    }
-
-    // Ctrl/Cmd shortcuts
     if (ctrl) {
-      if (k==='o') {
+      if (k === 'z') { e.preventDefault(); e.shiftKey ? this.history.redo() : this.history.undo(); this.setStatus(e.shiftKey ? "Redo" : "Undo"); }
+      if (k === 'y') { e.preventDefault(); this.history.redo(); this.setStatus("Redo"); }
+      if (k === 's') { e.preventDefault(); await this.saveFile(); }
+      if (k === 'o') { e.preventDefault(); await this.openFile(); }
+      if (k === 'a') {
         e.preventDefault();
-        await this.openFile();
-      }
-      if (k==='s') {
-        e.preventDefault();
-        await this.saveFile();
-      }
-      if (k==='a') {
-        e.preventDefault();
-        this.state.selectionAnchor= {
-          row:0, col:0
-        }
-        ;
-        this.state.cursor= {
-          row:this.state.lines.length-1, col:this.state.lines[this.state.lines.length-1].length
-        }
-        ;
+        this.state.selectionAnchor = { row: 0, col: 0 };
+        this.state.cursor = { row: this.state.lines.length - 1, col: this.state.lines[this.state.lines.length - 1].length };
         this.render();
       }
-      // Ctrl+C and Ctrl+X are now handled by handleCopyCut listener on the editor
     }
-
-    // Ctrl/Cmd + Shift + Digit (Jump functions)
-    if (ctrl && e.shiftKey) {
-      if (e.code==='Digit1') {
-        e.preventDefault();
-        this.findAndJump(/&lt;body/i, '<body>');
-      }
-      if (e.code==='Digit2') {
-        e.preventDefault();
-        this.findAndJump(/&lt;style/i, '<style>');
-      }
-      if (e.code==='Digit3') {
-        e.preventDefault();
-        this.findAndJump(/(\/\/|\/\*)/, 'Comment');
-      }
-      if (e.code==='Digit4') {
-        e.preventDefault();
-        this.findAndJump(/(function\s|\b\w+\s*\(.*\)\s*\{|=>|class\s)/, 'Function');
-      }
+    if (e.altKey) {
+      if (k === 'b') { e.preventDefault(); this.cleanCode(); } // Updated to use new logic
+      if (k === 'n') { e.preventDefault(); this.newFile(); }
+      if (k === 'p') { e.preventDefault(); this.previewFile(); }
     }
-  }
-
-  jumpTo(row) {
-    if (row < 0 || row >= this.state.lines.length) return;
-
-    this.state.cursor = {
-      row: row, col: 0
-    }
-    ;
-    // Jump to first non-space character
-    const m = this.state.lines[row].match(/^\s*/);
-    if (m) this.state.cursor.col = m[0].length;
-    this.state.selectionAnchor = null;
-    this.state.desiredCol = this.state.cursor.col;
-    this.ensureCursorVisible();
-  }
-
-  findAndJump(regex, desc) {
-    const start = this.state.cursor.row + 1;
-    const l = this.state.lines;
-    const maxLineLength = l.length;
-
-    // Search from current line + 1 to end
-    for (let i = start; i < maxLineLength; i++) {
-      // Use original text line, not highlighted HTML
-      if (regex.test(l[i])) {
-        this.jumpTo(i);
-        this.setStatus(`Found ${desc}`);
-        return;
-      }
-    }
-    // Loop back from start to current line
-    for (let i = 0; i < start; i++) {
-      if (regex.test(l[i])) {
-        this.jumpTo(i);
-        this.setStatus(`Found ${desc} (Cycle)`);
-        return;
-      }
-    }
-    this.setStatus(`No ${desc}`);
   }
 
   getSelectionText() {
-
-    const {
-      cursor:c, selectionAnchor:s, lines:l
-    }
-    =this.state;
-    if (!s || (s.row===c.row&&s.col===c.col)) return null;
-    let p1=c, p2=c;
-    // Determine start (p1) and end (p2) of selection
-    if (s.row<c.row||(s.row===c.row&&s.col<c.col)) {
-      p1=s;
-      p2=c;
-    } else {
-    p1=c;
-    p2=s;
+    const { cursor: c, selectionAnchor: s, lines: l } = this.state;
+    if (!s || (s.row === c.row && s.col === c.col)) return null;
+    const start = (s.row < c.row || (s.row === c.row && s.col < c.col)) ? s : c;
+    const end = (start === s) ? c : s;
+    if (start.row === end.row) return l[start.row].slice(start.col, end.col);
+    const r = [l[start.row].slice(start.col)];
+    for (let i = start.row + 1; i < end.row; i++) r.push(l[i]);
+    r.push(l[end.row].slice(0, end.col));
+    return r.join('\n');
   }
-  if (p1.row===p2.row) return l[p1.row].slice(p1.col, p2.col);
-  const r=[l[p1.row].slice(p1.col)];
-  for (let i=p1.row+1;i<p2.row;i++) r.push(l[i]);
-  r.push(l[p2.row].slice(0, p2.col));
-  return r.join('\n');
-}
 
-newFile() {
-  if (this.state.isDirty && !confirm("Discard unsaved changes?")) return;
-  this.state.lines = [""];
-
-  this.state.cursor = {
-    row: 0, col: 0
-  }
-  ;
-  this.state.selectionAnchor = null;
-  this.state.fileName = 'Untitled.txt';
-  this.state.fileHandle = null;
-  this.state.isDirty = false;
-  this.history.undoStack = [];
-  this.history.redoStack = [];
-  this.state.desiredCol = 0;
-  this.updateDimensions();
-  this.render();
-  this.updateTitle();
-  this.setStatus("New file");
-}
-
-previewFile() {
-  const win = window.open();
-  if (win) {
-    win.document.write(this.state.lines.join('\n'));
-    win.document.close();
-  } else {
-  this.setStatus("Popup blocked!");
-}
-}
-
-openNewTab() {
-  window.open(window.location.href, '_blank');
-}
-
-setDirty(dirty) {
-  if (this.state.isDirty !== dirty) {
-    this.state.isDirty = dirty;
-    this.updateTitle();
-  }
-}
-
-updateTitle() {
-  document.title = (this.state.isDirty ? "* " : "") + this.state.fileName + " - Mastodon";
-  this.dom.fileStatus.textContent = (this.state.isDirty ? "* " : "") + this.state.fileName;
-}
-
-setStatus(m) {
-  this.dom.messageArea.textContent=m;
-  clearTimeout(this.statusTimeout);
-  this.statusTimeout=setTimeout(()=>this.dom.messageArea.textContent='Ready', 3000);
-}
-
-async openFile() {
-  if (this.state.isDirty && !confirm("Unsaved changes. Open anyway?")) return;
-  try {
-    // Open file picker
-    const [h]=await window.showOpenFilePicker();
-    this.state.fileHandle=h;
-    const f=await h.getFile();
-    // Read file content and split by common line endings
-    this.state.lines=(await f.text()).split(/\r\n|\n|\r/);
-    this.state.fileName=f.name;
-
-    this.state.cursor= {
-      row:0, col:0
-    }
-    ;
-    this.state.selectionAnchor=null;
-    this.history.undoStack=[];
-    this.history.redoStack=[];
-    this.state.desiredCol = 0;
+  newFile() {
+    if (this.state.isDirty && !confirm("Forkast endringer?")) return;
+    this.state.lines = [""];
+    this.state.cursor = { row: 0, col: 0 };
+    this.state.selectionAnchor = null;
+    this.state.fileName = 'Untitled.txt';
+    this.state.fileHandle = null;
     this.setDirty(false);
-    this.updateDimensions();
-    this.render();
-    this.setStatus("Opened: "+f.name);
-  } catch (e){
-    // Handle user cancellation or error
-    this.setStatus("Open failed");
-}
-}
+    this.history.undoStack = [];
+    this.finalizeUpdate();
+    this.setStatus("Ny fil");
+  }
 
-async saveFile() {
-  if (!this.state.fileHandle) {
+  previewFile() {
+    const win = window.open();
+    if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
+  }
+
+  setDirty(dirty) {
+    this.state.isDirty = dirty;
+    this.dom.fileStatus.textContent = (dirty ? "* " : "") + this.state.fileName;
+    document.title = this.dom.fileStatus.textContent + " - Mastodon";
+  }
+
+  setStatus(msg) {
+    this.dom.messageArea.textContent = msg;
+    clearTimeout(this.statusTimeout);
+    this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine 4.4', 3000);
+  }
+
+  async openFile() {
+    if (this.state.isDirty && !confirm("Forkast endringer?")) return;
     try {
-      // Show save dialog if no file handle exists
-      this.state.fileHandle=await window.showSaveFilePicker( {
-        suggestedName:this.state.fileName
-      }
-    );
-    } catch (e){
-    // Handle user cancellation or error
-    this.setStatus("Save cancelled");
-    return;
+      const [h] = await window.showOpenFilePicker();
+      const f = await h.getFile();
+      this.state.fileHandle = h;
+      this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
+      this.state.fileName = f.name;
+      this.state.cursor = { row: 0, col: 0 };
+      this.state.selectionAnchor = null;
+      this.setDirty(false);
+      this.history.undoStack = [];
+      this.finalizeUpdate();
+      this.setStatus("Åpnet: " + f.name);
+    } catch (e) {}
+  }
+
+  async saveFile() {
+    if (!this.state.fileHandle) {
+      try {
+        this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
+        this.state.fileName = this.state.fileHandle.name;
+      } catch (e) { return; }
+    }
+    try {
+      const w = await this.state.fileHandle.createWritable();
+      await w.write(this.state.lines.join('\n'));
+      await w.close();
+      this.setDirty(false);
+      this.setStatus("Lagret!");
+    } catch (e) { this.setStatus("Feil ved lagring"); }
   }
 }
-try {
-  // Use file handle to create a writable stream and write content
-  const w=await this.state.fileHandle.createWritable();
-  await w.write(this.state.lines.join('\n'));
-  await w.close();
-  this.setDirty(false);
-  this.setStatus("Saved!");
-} catch (e){
-this.setStatus("Save failed");
-}
-}
-}
 
-window.onload = () => {
-  window.editor = new EditorEngine();
-}
-;
+window.onload = () => { window.editor = new EditorEngine(); };
 </script>
 </body>
 </html>
