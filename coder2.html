@@ -534,13 +534,19 @@ handleEditorKeyDown(e) {
     this.handleEditorInput();
   }
 },
-insertText(text, select = false) {
+insertText(text, select = false, preventScrollRestore = false) {
   this.elements.editor.focus();
   const start = this.elements.editor.selectionStart;
-  const { scrollTop, scrollLeft } = this.elements.editor;
+  let savedTop, savedLeft;
+  if (!preventScrollRestore) {
+    savedTop = this.elements.editor.scrollTop;
+    savedLeft = this.elements.editor.scrollLeft;
+  }
   document.execCommand('insertText', false, text);
-  this.elements.editor.scrollTop = scrollTop;
-  this.elements.editor.scrollLeft = scrollLeft;
+  if (!preventScrollRestore) {
+    this.elements.editor.scrollTop = savedTop;
+    this.elements.editor.scrollLeft = savedLeft;
+  }
   if (select) {
     this.elements.editor.setSelectionRange(start, start + text.length);
   }
@@ -599,7 +605,22 @@ handlePaste(e) {
   .replace(/\u00A0/g, ' ')
   .replace(/[\u200B-\u200D\uFEFF]/g, '')
   .replace(/\t/g, this.config.indentUnit);
-  this.insertText(cleanText);
+  this.state.ignoreNextInput = true;
+  this.insertText(cleanText, false, true);
+  this.updateLineNumbers();
+  this.highlight();
+  setTimeout(() => {
+    const editor = this.elements.editor;
+    const cursorPos = editor.selectionStart;
+    const linesUpToCursor = editor.value.substr(0, cursorPos).split('\n').length;
+    let targetY = (linesUpToCursor * 24) - (editor.clientHeight / 2);
+    const maxScroll = editor.scrollHeight - editor.clientHeight;
+    if (targetY > maxScroll) targetY = maxScroll;
+    if (targetY < 0) targetY = 0;
+    editor.scrollTop = targetY;
+    this.elements.highlightLayer.scrollTop = targetY;
+    this.state.ignoreNextInput = false;
+  }, 0);
 },
 setUnsavedChanges(isUnsaved) {
   this.state.hasUnsavedChanges = isUnsaved;
