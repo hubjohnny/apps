@@ -260,7 +260,8 @@ class EditorEngine {
     this.config = {
       lineHeight: 24, 
       charWidth: 9.02,
-      xOffset: 65
+      xOffset: 65,
+      viewBuffer: 15
     };
 
     this.state = {
@@ -318,51 +319,76 @@ class EditorEngine {
     this.finalizeUpdate();
   }
 
-  render() {
+
+
+render() {
     const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
-    const { lineHeight, charWidth, xOffset } = this.config;
+    // Henter viewBuffer fra config her
+    const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
 
-    const startIndex = Math.max(0, Math.floor(scrollTop / lineHeight));
+    // 1. Beregn synlig område med buffer
+    const firstVisibleLine = Math.floor(scrollTop / lineHeight);
+    
+    // Start litt før toppen (men ikke mindre enn 0)
+    const startIndex = Math.max(0, firstVisibleLine - viewBuffer);
+    
+    // Hvor mange linjer vises på skjermen?
     const visibleLinesCount = Math.ceil(viewportHeight / lineHeight);
-    const endIndex = Math.min(lines.length, startIndex + visibleLinesCount + 2);
+    
+    // Slutt litt etter bunnen (men ikke lenger enn antall linjer i filen)
+    const endIndex = Math.min(lines.length, firstVisibleLine + visibleLinesCount + viewBuffer);
 
+    // 2. Klargjør viewport
     this.dom.viewport.innerHTML = '';
-    this.dom.viewport.style.transform = `translateY(${startIndex * lineHeight}px)`;
+    
+    // Flytt innholdet ned slik at det stemmer med hvor vi starter å tegne (startIndex)
+    const topOffset = startIndex * lineHeight;
+    this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
 
+    // 3. Beregn utvalg (Selection)
     let selStart = null, selEnd = null;
     if (selectionAnchor) {
       const anchorIsBefore = (selectionAnchor.row < cursor.row) || 
                              (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
       selStart = anchorIsBefore ? selectionAnchor : cursor;
       selEnd = anchorIsBefore ? cursor : selectionAnchor;
+      // Hvis start og slutt er like, er det ingen markering
       if (selStart.row === selEnd.row && selStart.col === selEnd.col) selStart = null;
     }
 
+    // 4. Tegn linjene (Kun de innenfor buffer-området)
     const fragment = document.createDocumentFragment();
+    
     for (let i = startIndex; i < endIndex; i++) {
       const lineDiv = document.createElement('div');
       lineDiv.className = 'line';
       
+      // Linjenummer (Sticky håndteres nå av CSS)
       const numSpan = document.createElement('div');
       numSpan.className = 'line-number';
       numSpan.textContent = i + 1;
 
+      // Innhold med syntax highlighting
       const contentSpan = document.createElement('div');
       contentSpan.className = 'line-content';
       contentSpan.innerHTML = this.highlighter.highlight(lines[i]);
 
+      // Markerings-lag (Selection Layer)
       const selectionDiv = document.createElement('div');
       selectionDiv.className = 'selection-layer';
       
       if (selStart && i >= selStart.row && i <= selEnd.row) {
         let colStart = 0;
         let colEnd = lines[i].length;
+        
         if (i === selStart.row) colStart = selStart.col;
         if (i === selEnd.row) colEnd = selEnd.col;
         
         let width = (colEnd - colStart) * charWidth;
+        // Legg til litt bredde for å markere selve linjeskiftet hvis vi markerer over flere linjer
         if (i < selEnd.row) width += charWidth * 0.5;
 
+        // Bruker xOffset fra config for å treffe nøyaktig
         selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
         selectionDiv.style.width = `${Math.max(0, width)}px`;
         selectionDiv.classList.add('is-selected');
@@ -373,9 +399,14 @@ class EditorEngine {
       lineDiv.appendChild(contentSpan);
       fragment.appendChild(lineDiv);
     }
+    
     this.dom.viewport.appendChild(fragment);
+    
+    // Oppdater markørens posisjon til slutt
     this.updateCursor();
   }
+
+
 
   updateCursor() {
     const { row, col } = this.state.cursor;
@@ -425,9 +456,23 @@ class EditorEngine {
     }
   }
 
-  onScroll() {
+onScroll() {
+    const currentLeft = this.dom.editor.scrollLeft;
+
+    // --- MAGNET LEFT FEATURE ---
+    // Hvis vi er nesten helt til venstre (mindre enn 6px), men ikke helt (0),
+    // så antar vi at det er "drifting" fra touchpad og tvinger den til 0.
+    if (currentLeft > 0 && currentLeft < 6) {
+      this.dom.editor.scrollLeft = 0;
+      return; // Vi stopper her for å ikke tegne opp "feil" posisjon
+    }
+
     this.state.scrollTop = this.dom.editor.scrollTop;
-    requestAnimationFrame(() => this.render());
+    
+    // Debounce render slightly for smoother scrolling performance
+    clearTimeout(this.scrollTimeout);
+    this.scrollTimeout = setTimeout(() => this.render(), 16);
+    this.render(); 
   }
 
   applyChange(txt) {
