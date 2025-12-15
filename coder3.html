@@ -69,7 +69,7 @@
     font-size: var(--font-size);
     font-family: var(--font-family);
     white-space: pre;
-    padding-left: 65px;
+    padding-left: 0;
     width: 100%;
     box-sizing: border-box;
     display: flex;
@@ -78,20 +78,21 @@
     letter-spacing: 0px; 
   }
 
-  .line-number {
-    position: absolute;
-    left: 0;
+.line-number {
+    position: sticky; /* <-- Endret fra absolute til sticky */
+    left: 0;          /* <-- Sørger for at den klistrer seg til venstre */
     top: 0;
     bottom: 0;
     width: 60px;
+    min-width: 60px;  /* <-- Lagt til for sikkerhets skyld */
     text-align: right;
     color: var(--line-num-text);
-    background: var(--line-num-bg);
+    background: var(--line-num-bg); /* Viktig at denne har farge, ellers ser du koden bak */
     padding-right: 10px;
     border-right: 1px solid var(--border-color);
     box-sizing: border-box;
     user-select: none;
-    z-index: 5;
+    z-index: 20;      /* <-- Økt litt for å være sikker */
   }
 
   .selection-layer {
@@ -259,7 +260,7 @@ class EditorEngine {
     this.config = {
       lineHeight: 24, 
       charWidth: 9.02,
-      xOffset: 70
+      xOffset: 65
     };
 
     this.state = {
