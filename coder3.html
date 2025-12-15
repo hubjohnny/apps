@@ -347,32 +347,66 @@ findAndJump(regex, desc) {
   for (let i = 0; i < start; i++) if (regex.test(l[i])) { this.jumpTo(i); this.setStatus(`Found ${desc} (Cycle)`); return; }
   this.setStatus(`No ${desc} found`);
 }
+
+
 async cleanCode() {
   this.setStatus("Formatting...");
   const orig = this.state.lines.join('\n');
+  
+  // Fjerner kommentarer og strings først som før
   let txt = orig.replace(/(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g, (m,b,l) => (b||l)?'':m);
+  
+  // Splitter og fjerner eksisterende tomme linjer for å bygge opp på nytt
   let l = txt.split('\n').map(x=>x.trim()).filter(x=>x.length>0);
-  const fmt = []; let lvl = 0;
+  
+  const fmt = []; 
+  let lvl = 0;
   const voids = ['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr','!doctype'];
-  l.forEach(line => {
+  
+  // Liste over nøkkelord vi IKKE vil ha tomme linjer foran (kontroll-strukturer)
+  const flowKw = /^(if|else|for|while|switch|catch|try|finally|return|do)\b/;
+
+  l.forEach((line, i) => {
     let tag = (line.match(/^<\/?([a-zA-Z0-9-]+)/)||[])[1]?.toLowerCase();
+    
+    // Resetter indentering for hoved-tags
     if(['html','head','body','script','style','!doctype'].includes(tag) || /^(export\s+)?(async\s+)?(function|class)\b/.test(line)) lvl = 0;
-    const open = (line.match(/\{/g)||[]).length; const close = (line.match(/\}/g)||[]).length;
+    
+    const open = (line.match(/\{/g)||[]).length; 
+    const close = (line.match(/\}/g)||[]).length;
     let oT=0, cT=0;
     if(/^<[a-z0-9-]+/.test(line) && !line.includes('</') && !line.endsWith('/>') && !voids.includes(tag)) oT=1;
     if(line.match(/^<\/[a-z0-9-]+/)) cT=1;
+    
     let pLvl = lvl;
     if(line.match(/^(\}|\]|\)|\<\/)/) || /^(else|catch|finally)/.test(line)) pLvl = Math.max(0, lvl-1);
-  fmt.push('  '.repeat(pLvl) + line);
-  lvl = Math.max(0, lvl + (open-close) + (oT-cT));
-});
-const newVal = fmt.join('\n');
-if(orig !== newVal) {
-  this.applyEditInternal(0, 0, this.state.lines.length-1, this.state.lines[this.state.lines.length-1].length, newVal, true);
-  this.state.scrollTop=0; this.dom.editor.scrollTop=0; this.state.cursor={row:0,col:0};
-  this.updateScrollHeight(); this.render(); this.setStatus("Cleaned!");
-} else { this.setStatus("Already clean!"); }
+
+    // --- NY LOGIKK START ---
+    // Sjekker om linjen slutter med {, men IKKE er en if/for/while etc.
+    // Sjekker også at vi ikke er helt i toppen, eller rett etter en <script>/<style> tag
+    if (i > 0 && line.endsWith('{') && !flowKw.test(line)) {
+      const prevLine = l[i-1];
+      // Ikke legg inn luft hvis forrige linje var starten på en tag som <style>
+      if (!prevLine.includes('<style>') && !prevLine.includes('<script>')) {
+         fmt.push(''); // Her legger vi inn den tomme linjen!
+      }
+    }
+    // --- NY LOGIKK SLUTT ---
+
+    fmt.push('  '.repeat(pLvl) + line);
+    lvl = Math.max(0, lvl + (open-close) + (oT-cT));
+  });
+
+  const newVal = fmt.join('\n');
+  if(orig !== newVal) {
+    this.applyEditInternal(0, 0, this.state.lines.length-1, this.state.lines[this.state.lines.length-1].length, newVal, true);
+    this.state.scrollTop=0; this.dom.editor.scrollTop=0; this.state.cursor={row:0,col:0};
+    this.updateScrollHeight(); this.render(); this.setStatus("Cleaned & Spaced!");
+  } else { this.setStatus("Already clean!"); }
 }
+
+
+
 applyChange(txt) {
   const { cursor: c, selectionAnchor: s } = this.state;
   let p1 = c, p2 = c;
