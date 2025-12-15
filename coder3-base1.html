@@ -8,7 +8,7 @@
 :root {
   --bg-color: #1e1e1e;
   --text-color: #d4d4d4;
-  --line-height: 24px; /* Default fall-back */
+  --line-height: 24px;
   --font-size: 15px;
   --font-family: 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
   --selection-bg: #264f78;
@@ -36,11 +36,23 @@ body {
 #editor {
   position: relative;
   width: 100vw;
-  height: calc(100vh - 30px); /* Justert for statusbar høyde */
+  height: calc(100vh - 30px);
   overflow: auto;
   outline: none;
   cursor: text;
 }
+
+#editor {
+  position: relative;
+  top: 40px;
+  width: 100vw;
+
+  height: calc(100vh - 70px);
+  overflow: auto;
+  outline: none;
+  cursor: text;
+}
+
 #scroll-phantom {
   position: absolute;
   top: 0;
@@ -55,8 +67,8 @@ body {
   left: 0;
   min-width: 100%;
   pointer-events: none;
-  /* Hardware acceleration for smoother scrolling */
-  will-change: transform; 
+
+  will-change: transform;
 }
 .line {
   height: var(--line-height);
@@ -106,7 +118,7 @@ body {
   z-index: 2;
   pointer-events: none;
 }
-/* Syntax Colors */
+
 .tok-com { color: var(--c-comment); }
 .tok-str { color: var(--c-string); }
 .tok-num { color: var(--c-number); }
@@ -157,6 +169,58 @@ body {
   max-width: 50%;
   text-overflow: ellipsis;
 }
+
+#toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: #0a0807;
+  border-bottom: 1px solid #1a1614;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+  z-index: 100;
+  font-size: 13px;
+  gap: 10px;
+}
+
+#toolbar input {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  color: #d4d4d4;
+  padding: 4px 8px;
+  border-radius: 3px;
+  outline: none;
+  font-family: sans-serif;
+}
+
+#toolbar input:focus { border-color: #007acc; }
+
+#toolbar button {
+  background: #2d2d2d;
+  border: 1px solid #333;
+  color: #d4d4d4;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#toolbar button:hover { background: #3d3d3d; }
+#toolbar button:active { background: #007acc; color: white; }
+
+#search-stats {
+  color: #858585;
+  font-size: 12px;
+  position: absolute;
+  right: 20px;
+  white-space: nowrap;
+}
+
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -164,6 +228,16 @@ body {
 </style>
 </head>
 <body>
+
+<div id="toolbar">
+  <input type="text" id="find-input" placeholder="Find..." style="width: 150px;">
+  <input type="text" id="replace-input" placeholder="Replace..." style="width: 150px;">
+  <button onclick="editor.search.findNext()">Next</button>
+  <button onclick="editor.search.replace()">Replace</button>
+  <button onclick="editor.search.replaceAll()">All</button>
+  <span id="search-stats"></span>
+</div>
+
 <div id="editor" tabindex="0">
   <div id="scroll-phantom"></div>
   <div id="view-port"></div>
@@ -175,7 +249,7 @@ body {
   <span id="message-area">Mastodon Engine</span>
 </div>
 <script>
-"use strict"; // Enforce cleaner code
+"use strict";
 
 class SyntaxHighlighter {
   highlight(text) {
@@ -192,18 +266,18 @@ class SyntaxHighlighter {
     html = html.replace(/(&lt;[a-zA-Z0-9-]+)(?=\s)/g, m => save(m, 'tok-tag'));
     html = html.replace(/(\.[a-zA-Z_-][\w-]*|#[a-zA-Z_-][\w-]*)/g, m => save(m, 'tok-sel'));
     html = html.replace(/(?<!§)\b([a-z][a-z0-9-]*)(?=\s*\{)/gi, m => save(m, 'tok-sel'));
-    html = html.replace(/([a-zA-Z-]+)(?=\s*:)/g, m => save(m, 'tok-prop'));
-    
-    const kw = /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await|try|catch|new|this|typeof|void|debugger|delete|extends|implements|interface|package|private|protected|public|static|yield|break|continue|switch|case|default)\b/g;
-    html = html.replace(kw, m => save(m, 'tok-kwd'));
-    html = html.replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\()/g, m => save(m, 'tok-func'));
-    html = html.replace(/\b([a-zA-Z-]+)(?==)/g, m => save(m, 'tok-attr'));
-    html = html.replace(/\b\d+(\.\d+)?([a-z%]+)?\b/gi, m => save(m, 'tok-num'));
-    
-    html = html.replace(/§T(\d+)T§/g, (_, i) => tokens[i]);
-    return html;
+      html = html.replace(/([a-zA-Z-]+)(?=\s*:)/g, m => save(m, 'tok-prop'));
+
+      const kw = /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await|try|catch|new|this|typeof|void|debugger|delete|extends|implements|interface|package|private|protected|public|static|yield|break|continue|switch|case|default)\b/g;
+      html = html.replace(kw, m => save(m, 'tok-kwd'));
+      html = html.replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\()/g, m => save(m, 'tok-func'));
+      html = html.replace(/\b([a-zA-Z-]+)(?==)/g, m => save(m, 'tok-attr'));
+      html = html.replace(/\b\d+(\.\d+)?([a-z%]+)?\b/gi, m => save(m, 'tok-num'));
+
+      html = html.replace(/§T(\d+)T§/g, (_, i) => tokens[i]);
+      return html;
+    }
   }
-}
 
 class HistoryManager {
   constructor(editor) {
@@ -216,7 +290,7 @@ class HistoryManager {
     const now = Date.now();
     const isTyping = op.text.length === 1 && op.oldText.length === 0;
     const isDel = op.oldText.length === 1 && op.text.length === 0;
-    
+
     if (this.undoStack.length > 0 && (now - this.lastEditTime) < 500) {
       const last = this.undoStack[this.undoStack.length - 1];
       if (isTyping && last.type === 'ins' && last.endRow === op.startRow && last.endCol === op.startCol) {
@@ -252,12 +326,121 @@ class HistoryManager {
   }
 }
 
+class SearchManager {
+  constructor(editor) {
+    this.editor = editor;
+    this.matches = [];
+    this.currentIndex = -1;
+    this.lastQuery = "";
+  }
+
+  find(query) {
+    if (!query) return;
+    if (query === this.lastQuery && this.matches.length > 0) return;
+
+    this.matches = [];
+    const lines = this.editor.state.lines;
+
+    for (let r = 0; r < lines.length; r++) {
+      const line = lines[r];
+      let pos = line.indexOf(query);
+      while (pos !== -1) {
+        this.matches.push({ row: r, col: pos, len: query.length });
+        pos = line.indexOf(query, pos + 1);
+      }
+    }
+
+    this.lastQuery = query;
+    this.currentIndex = -1;
+
+    const statEl = document.getElementById('search-stats');
+    if (this.matches.length === 0) {
+      statEl.textContent = "No matches";
+    } else {
+      statEl.textContent = `Found ${this.matches.length}`;
+      this.findNext();
+    }
+  }
+
+  findNext() {
+
+    const inputVal = document.getElementById('find-input').value;
+    if (inputVal !== this.lastQuery) this.find(inputVal);
+
+    if (this.matches.length === 0) return;
+
+    this.currentIndex = (this.currentIndex + 1) % this.matches.length;
+    const m = this.matches[this.currentIndex];
+
+    document.getElementById('search-stats').textContent = `${this.currentIndex + 1} of ${this.matches.length}`;
+
+    this.editor.state.selectionAnchor = { row: m.row, col: m.col };
+    this.editor.state.cursor = { row: m.row, col: m.col + m.len };
+    this.editor.state.desiredCol = m.col + m.len;
+
+    this.editor.finalizeUpdate();
+  }
+
+  replace() {
+    if (this.matches.length === 0) return;
+
+    const replacement = document.getElementById('replace-input').value;
+    const m = this.matches[this.currentIndex];
+
+    const cursor = this.editor.state.cursor;
+    const anchor = this.editor.state.selectionAnchor;
+
+    if (anchor && cursor.row === m.row && Math.abs(cursor.col - anchor.col) === m.len) {
+      this.editor.applyChange(replacement);
+
+      this.lastQuery = "";
+      this.findNext();
+    } else {
+      this.findNext();
+    }
+  }
+
+  replaceAll() {
+    const query = document.getElementById('find-input').value;
+    const replacement = document.getElementById('replace-input').value;
+    if (!query) return;
+
+    if (!confirm(`Replace all occurrences of "${query}"?`)) return;
+
+    const lines = this.editor.state.lines;
+    let count = 0;
+
+    const newLines = lines.map(line => {
+
+      if (line.includes(query)) {
+        const parts = line.split(query);
+        count += parts.length - 1;
+        return parts.join(replacement);
+      }
+      return line;
+    });
+
+    if (count > 0) {
+      const newText = newLines.join('\n');
+
+      this.editor.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+      this.editor.setStatus(`Replaced ${count} occurrences`);
+
+      this.matches = [];
+      this.lastQuery = "";
+      document.getElementById('search-stats').textContent = "";
+    } else {
+      this.editor.setStatus("Nothing found");
+    }
+  }
+}
+
 class EditorEngine {
   constructor() {
     this.config = {
-      lineHeight: 24, // Will be measured dynamically
-      charWidth: 9.02, // Will be measured dynamically
-      xOffset: 65,     // Match CSS .selection-layer left
+      lineHeight: 24,
+      charWidth: 9.02,
+      xOffset: 65,
       viewBuffer: 15
     };
     this.state = {
@@ -283,14 +466,19 @@ class EditorEngine {
       messageArea: document.getElementById('message-area')
     };
     this.history = new HistoryManager(this);
+    this.search = new SearchManager(this);
     this.highlighter = new SyntaxHighlighter();
     this.init();
   }
 
   init() {
+
+    document.getElementById('find-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.search.findNext();
+    });
+
     this.state.viewportHeight = this.dom.editor.clientHeight;
-    
-    // Wait for fonts to load before measuring layout
+
     document.fonts.ready.then(() => {
       this.recalculateLayout();
     });
@@ -320,55 +508,55 @@ class EditorEngine {
   render() {
     const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
     const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
-    
+
     const firstVisibleLine = Math.floor(scrollTop / lineHeight);
     const startIndex = Math.max(0, firstVisibleLine - viewBuffer);
     const visibleLinesCount = Math.ceil(viewportHeight / lineHeight);
     const endIndex = Math.min(lines.length, firstVisibleLine + visibleLinesCount + viewBuffer);
-    
+
     this.dom.viewport.innerHTML = '';
     const topOffset = startIndex * lineHeight;
     this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
-    
+
     let selStart = null, selEnd = null;
     if (selectionAnchor) {
       const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
-                             (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+      (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
       selStart = anchorIsBefore ? selectionAnchor : cursor;
       selEnd = anchorIsBefore ? cursor : selectionAnchor;
       if (selStart.row === selEnd.row && selStart.col === selEnd.col) selStart = null;
     }
-    
+
     const fragment = document.createDocumentFragment();
     for (let i = startIndex; i < endIndex; i++) {
       const lineDiv = document.createElement('div');
       lineDiv.className = 'line';
-      
+
       const numSpan = document.createElement('div');
       numSpan.className = 'line-number';
       numSpan.textContent = i + 1;
-      
+
       const contentSpan = document.createElement('div');
       contentSpan.className = 'line-content';
       contentSpan.innerHTML = this.highlighter.highlight(lines[i]);
-      
+
       const selectionDiv = document.createElement('div');
       selectionDiv.className = 'selection-layer';
-      
+
       if (selStart && i >= selStart.row && i <= selEnd.row) {
         let colStart = 0;
         let colEnd = lines[i].length;
         if (i === selStart.row) colStart = selStart.col;
         if (i === selEnd.row) colEnd = selEnd.col;
-        
+
         let width = (colEnd - colStart) * charWidth;
         if (i < selEnd.row) width += charWidth * 0.5;
-        
+
         selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
         selectionDiv.style.width = `${Math.max(0, width)}px`;
         selectionDiv.classList.add('is-selected');
       }
-      
+
       lineDiv.appendChild(numSpan);
       lineDiv.appendChild(selectionDiv);
       lineDiv.appendChild(contentSpan);
@@ -396,7 +584,7 @@ class EditorEngine {
     const height = (lines.length + 5) * lineHeight;
     const maxLen = lines.reduce((max, line) => Math.max(max, line.length), 0);
     const width = xOffset + ((maxLen + 5) * charWidth);
-    
+
     this.dom.phantom.style.height = `${Math.max(height, viewportHeight)}px`;
     this.dom.phantom.style.width = `${Math.max(width, window.innerWidth)}px`;
     this.dom.viewport.style.width = `${width}px`;
@@ -415,17 +603,16 @@ class EditorEngine {
     t.style.visibility = 'hidden';
     t.style.width = 'auto';
     t.style.padding = '0';
-    
-    // Measure Char Width
+
     t.textContent = 'M'.repeat(1000);
     this.dom.viewport.appendChild(t);
     const rect = t.getBoundingClientRect();
     const w = rect.width / 1000;
-    // Measure Line Height (Robustness against Zoom)
-    const h = rect.height; 
-    
+
+    const h = rect.height;
+
     this.dom.viewport.removeChild(t);
-    
+
     let needsUpdate = false;
     if (w > 0 && Math.abs(this.config.charWidth - w) > 0.0001) {
       this.config.charWidth = w;
@@ -433,17 +620,17 @@ class EditorEngine {
     }
     if (h > 0 && Math.abs(this.config.lineHeight - h) > 0.0001) {
       this.config.lineHeight = h;
-      // Update CSS var to match JS reality
+
       document.documentElement.style.setProperty('--line-height', `${h}px`);
       needsUpdate = true;
     }
-    
+
     if (needsUpdate) this.finalizeUpdate();
   }
 
   onScroll() {
     const currentLeft = this.dom.editor.scrollLeft;
-    // Magnet effect to prevent tiny horizontal drifts on touchpad
+
     if (currentLeft > 0 && currentLeft < 6) {
       this.dom.editor.scrollLeft = 0;
       return;
@@ -472,21 +659,16 @@ class EditorEngine {
     this.ensureCursorVisible();
   }
 
-
-
-
-
-applyEditInternal(sr, sc, er, ec, txt, hist) {
+  applyEditInternal(sr, sc, er, ec, txt, hist) {
     let l = this.state.lines;
-    
-    // 1. Sikre at vi har snapshot av gammel tekst for Undo
+
     let old = "";
-    // Sjekk om dette er en total utskiftning (som Alt+B gjør)
+
     const isFullReplace = (sr === 0 && er === l.length - 1 && sc === 0 && ec === l[er].length);
-    
+
     if (isFullReplace) {
-      // VIKTIG: Ved full utskiftning må vi ta vare på hele den gamle teksten
-      old = l.join('\n'); 
+
+      old = l.join('\n');
     } else {
       if (sr === er) {
         old = l[sr].slice(sc, ec);
@@ -495,39 +677,35 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
       }
     }
 
-    // 2. Bygg ny tekst
     const prefix = l[sr].slice(0, sc);
     const suffix = l[er].slice(ec);
     const newSegs = txt.split('\n');
-    
+
     newSegs[0] = prefix + newSegs[0];
     newSegs[newSegs.length - 1] += suffix;
 
-    // 3. Modifiser Array (Sikker metode for store filer)
     if (newSegs.length > 5000 || isFullReplace) {
-       // concat er tryggere enn splice for enorme datamengder
-       const pre = l.slice(0, sr);
-       const post = l.slice(er + 1);
-       this.state.lines = pre.concat(newSegs).concat(post);
+
+      const pre = l.slice(0, sr);
+      const post = l.slice(er + 1);
+      this.state.lines = pre.concat(newSegs).concat(post);
     } else {
-       // Rask metode for vanlig skriving
-       if (sr === er && newSegs.length === 1) {
-          l[sr] = newSegs[0];
-       } else {
-          l.splice(sr, er - sr + 1, ...newSegs);
-       }
+
+      if (sr === er && newSegs.length === 1) {
+        l[sr] = newSegs[0];
+      } else {
+        l.splice(sr, er - sr + 1, ...newSegs);
+      }
     }
 
-    // 4. Oppdater cursor
     const nr = sr + newSegs.length - 1;
     const nc = (newSegs.length === 1 ? sc : 0) + txt.split('\n').pop().length;
-    
-    // 5. Lagre historie
+
     if (hist) {
-       this.setDirty(true);
-       this.history.record({
+      this.setDirty(true);
+      this.history.record({
         startRow: sr, startCol: sc, endRow: er, endCol: ec,
-        text: txt, oldText: old, 
+        text: txt, oldText: old,
         cursorBefore: { row: sr, col: sc },
         cursorAfter: { row: nr, col: nc }
       });
@@ -537,18 +715,12 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
     this.finalizeUpdate();
   }
 
-
-
-
-
-
-
   handleInput(e) {
     const k = e.key;
     const ctrl = e.ctrlKey || e.metaKey;
     const { cursor: c, lines: l } = this.state;
     if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
-    
+
     if (k === 'Tab') {
       e.preventDefault();
       if (e.shiftKey) {
@@ -561,21 +733,21 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
     if (k === 'Backspace') {
       e.preventDefault();
       if (this.state.selectionAnchor) this.applyChange("");
-      else if (c.col > 0) { this.state.selectionAnchor = { row: c.row, col: c.col - 1 }; this.applyChange(""); }
-      else if (c.row > 0) { this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length }; this.applyChange(""); }
+    else if (c.col > 0) { this.state.selectionAnchor = { row: c.row, col: c.col - 1 }; this.applyChange(""); }
+    else if (c.row > 0) { this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length }; this.applyChange(""); }
       return;
     }
     if (k === 'Delete') {
       e.preventDefault();
       if (this.state.selectionAnchor) this.applyChange("");
-      else if (c.col < l[c.row].length) {
+    else if (c.col < l[c.row].length) {
         this.state.selectionAnchor = { row: c.row, col: c.col + 1 };
         const oldC = { ...c };
         this.applyChange("");
         this.state.cursor = oldC;
         this.finalizeUpdate();
       }
-      else if (c.row < l.length - 1) {
+    else if (c.row < l.length - 1) {
         this.state.selectionAnchor = { row: c.row + 1, col: 0 };
         const oldC = { ...c };
         this.applyChange("");
@@ -595,7 +767,7 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
     if (nav.includes(k)) {
       e.preventDefault();
       if (e.shiftKey) { if (!this.state.selectionAnchor) this.state.selectionAnchor = { ...c }; }
-      else this.state.selectionAnchor = null;
+    else this.state.selectionAnchor = null;
       this.handleNavigation(k, ctrl);
       this.render();
       return;
@@ -609,18 +781,18 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
   handleNavigation(k, wordJump) {
     const { cursor: c, lines: l } = this.state;
     let tr = c.row, tc = c.col;
-    
+
     if (k === 'ArrowUp') { if (tr > 0) tr--; tc = Math.min(this.state.desiredCol, l[tr].length); }
-    else if (k === 'ArrowDown') { if (tr < l.length - 1) tr++; tc = Math.min(this.state.desiredCol, l[tr].length); }
-    else if (k === 'ArrowLeft') {
+  else if (k === 'ArrowDown') { if (tr < l.length - 1) tr++; tc = Math.min(this.state.desiredCol, l[tr].length); }
+  else if (k === 'ArrowLeft') {
       if (wordJump) tc = this.findWordBoundary(tr, tc, -1);
-      else if (tc > 0) tc--;
-      else if (tr > 0) { tr--; tc = l[tr].length; }
+    else if (tc > 0) tc--;
+    else if (tr > 0) { tr--; tc = l[tr].length; }
       this.state.desiredCol = tc;
     } else if (k === 'ArrowRight') {
       if (wordJump) tc = this.findWordBoundary(tr, tc, 1);
-      else if (tc < l[tr].length) tc++;
-      else if (tr < l.length - 1) { tr++; tc = 0; }
+    else if (tc < l[tr].length) tc++;
+    else if (tr < l.length - 1) { tr++; tc = 0; }
       this.state.desiredCol = tc;
     } else if (k === 'Home') {
       const fc = (l[tr].match(/^\s*/) || [''])[0].length;
@@ -668,7 +840,7 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
       e.preventDefault();
       e.clipboardData.setData('text/plain', t);
       if (cut) { this.applyChange(""); this.setStatus("Cut"); }
-      else this.setStatus("Copied");
+    else this.setStatus("Copied");
     }
   }
 
@@ -678,7 +850,7 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
     const now = Date.now();
     this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
     this.state.lastClickTime = now;
-    
+
     const p = this.getPosFromMouse(e);
     if (this.state.clickCount === 2) {
       const s = this.findWordBoundary(p.row, p.col, -1);
@@ -736,12 +908,12 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
     const vH = this.state.viewportHeight;
     const sT = this.dom.editor.scrollTop;
     if (top < sT) this.dom.editor.scrollTop = top;
-    else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
+  else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
     const left = xOffset + (col * charWidth);
     const sL = this.dom.editor.scrollLeft;
     const cW = this.dom.editor.clientWidth;
     if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
-    else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
+  else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
   }
 
   blockEdit(mod, sr = null, er = null) {
@@ -758,49 +930,40 @@ applyEditInternal(sr, sc, er, ec, txt, hist) {
     }
   }
 
-
-
-
-
-cleanCode() {
+  cleanCode() {
     this.setStatus("Cleaning code... (This may take a moment)");
-    
+
     setTimeout(() => {
       try {
         const originalText = this.state.lines.join('\n');
-        const stringStore = []; // Lager for å gjemme strenger
-        
-        // Regex som fanger: 1. Blokkommentarer, 2. Linjekommentarer, 3. Strenger
+        const stringStore = [];
+
         const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
-        
-        // 1. Fjern kommentarer OG gjem strenger
+
         const textSafe = originalText.replace(re, (match, block, line, str) => {
-          if (block || line) return ''; // Slett kommentarer
-          // Det er en streng! Gjem den.
+          if (block || line) return '';
+
           stringStore.push(match);
-          return `§STR${stringStore.length - 1}§`; // Unik plassholder
+          return `§STR${stringStore.length - 1}§`;
         });
-        
-        // 2. Split linjer (Nå fri for farlige strenger)
+
         let lines = textSafe.split('\n');
-        
-        // Fjern tomme linjer i start/slutt
+
         while(lines.length > 0 && lines[0].trim() === '') lines.shift();
         while(lines.length > 0 && lines[lines.length-1].trim() === '') lines.pop();
-        
+
         if (lines.length === 0) lines = [""];
 
-        // 3. Formatér koden (Indentering)
         const formattedLines = [];
         let currentLevel = 0;
         const indentUnit = '  ';
-        
+
         const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype']);
         const rootTags = new Set(['html', 'head', 'body', 'script', 'style', '!doctype']);
 
         for (let i = 0; i < lines.length; i++) {
           const trimmedLine = lines[i].trim();
-          
+
           if (trimmedLine.length === 0) {
             if (formattedLines.length > 0 && formattedLines[formattedLines.length-1] !== '') formattedLines.push('');
             continue;
@@ -809,19 +972,18 @@ cleanCode() {
           let tagName = '';
           const tagMatch = trimmedLine.match(/^<\/?([a-zA-Z0-9-]+)/);
           if (tagMatch) tagName = tagMatch[1].toLowerCase();
-          
+
           const isHtmlRoot = rootTags.has(tagName);
           const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(trimmedLine);
-          // Forenklet sjekk
+
           const isJsRoot = isStandardDef || (trimmedLine.includes('function') && trimmedLine.endsWith('{'));
-          
+
           if (isJsRoot || isHtmlRoot) currentLevel = 0;
-          
-          // Tell krøllparenteser (Trygt nå, siden strenger er gjemt!)
+
           let openBraces = 0, closeBraces = 0;
           for (const char of trimmedLine) {
             if (char === '{') openBraces++;
-            else if (char === '}') closeBraces++;
+          else if (char === '}') closeBraces++;
           }
 
           let openTags = 0, closeTags = 0;
@@ -831,24 +993,21 @@ cleanCode() {
           if (tagMatch && trimmedLine.startsWith('</')) {
             if (!isHtmlRoot) closeTags = 1;
           }
-          
+
           let printLevel = currentLevel;
-          if (trimmedLine.startsWith('}') || trimmedLine.startsWith(']') || trimmedLine.startsWith(')') || trimmedLine.startsWith('</') || 
-              trimmedLine.startsWith('else') || trimmedLine.startsWith('catch') || trimmedLine.startsWith('finally')) {
+          if (trimmedLine.startsWith('}') || trimmedLine.startsWith(']') || trimmedLine.startsWith(')') || trimmedLine.startsWith('</') ||
+          trimmedLine.startsWith('else') || trimmedLine.startsWith('catch') || trimmedLine.startsWith('finally')) {
             printLevel = Math.max(0, currentLevel - 1);
           }
-          
+
           formattedLines.push(indentUnit.repeat(printLevel) + trimmedLine);
           currentLevel = Math.max(0, currentLevel + (openBraces - closeBraces) + (openTags - closeTags));
         }
-        
-        // 4. Sett sammen og putt strengene tilbake
+
         let newText = formattedLines.join('\n');
-        
-        // Erstatt plassholderne (§STR0§) med det originale innholdet
-        // Dette bevarer Sokoban-kartene piksel-perfekt, med original indentering internt i strengen
+
         newText = newText.replace(/§STR(\d+)§/g, (match, index) => {
-           return stringStore[parseInt(index)];
+          return stringStore[parseInt(index)];
         });
 
         if (newText !== originalText) {
@@ -864,16 +1023,10 @@ cleanCode() {
     }, 50);
   }
 
-
-
-
-
-
   async handleGlobalShortcuts(e) {
     const k = e.key.toLowerCase();
     const ctrl = e.ctrlKey || e.metaKey;
-    
-    // Prevent browser save dialog
+
     if (ctrl && k === 's') { e.preventDefault(); }
 
     if (ctrl) {
@@ -934,7 +1087,7 @@ cleanCode() {
   setStatus(msg) {
     this.dom.messageArea.textContent = msg;
     clearTimeout(this.statusTimeout);
-    this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine 4.5', 3000);
+    this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine', 3000);
   }
 
   async openFile() {
