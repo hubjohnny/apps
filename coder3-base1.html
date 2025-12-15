@@ -472,36 +472,76 @@ class EditorEngine {
     this.ensureCursorVisible();
   }
 
-  applyEditInternal(sr, sc, er, ec, txt, hist) {
-    if (hist) this.setDirty(true);
-    const l = this.state.lines;
-    let old = "";
-    if (sr === er) old = l[sr].slice(sc, ec);
-    else old = [l[sr].slice(sc), ...l.slice(sr + 1, er), l[er].slice(0, ec)].join('\n');
+
+
+
+
+applyEditInternal(sr, sc, er, ec, txt, hist) {
+    let l = this.state.lines;
     
+    // 1. Sikre at vi har snapshot av gammel tekst for Undo
+    let old = "";
+    // Sjekk om dette er en total utskiftning (som Alt+B gjør)
+    const isFullReplace = (sr === 0 && er === l.length - 1 && sc === 0 && ec === l[er].length);
+    
+    if (isFullReplace) {
+      // VIKTIG: Ved full utskiftning må vi ta vare på hele den gamle teksten
+      old = l.join('\n'); 
+    } else {
+      if (sr === er) {
+        old = l[sr].slice(sc, ec);
+      } else {
+        old = [l[sr].slice(sc), ...l.slice(sr + 1, er), l[er].slice(0, ec)].join('\n');
+      }
+    }
+
+    // 2. Bygg ny tekst
     const prefix = l[sr].slice(0, sc);
     const suffix = l[er].slice(ec);
     const newSegs = txt.split('\n');
+    
     newSegs[0] = prefix + newSegs[0];
     newSegs[newSegs.length - 1] += suffix;
-    
-    if (sr === er && newSegs.length === 1) l[sr] = newSegs[0];
-    else l.splice(sr, er - sr + 1, ...newSegs);
-    
+
+    // 3. Modifiser Array (Sikker metode for store filer)
+    if (newSegs.length > 5000 || isFullReplace) {
+       // concat er tryggere enn splice for enorme datamengder
+       const pre = l.slice(0, sr);
+       const post = l.slice(er + 1);
+       this.state.lines = pre.concat(newSegs).concat(post);
+    } else {
+       // Rask metode for vanlig skriving
+       if (sr === er && newSegs.length === 1) {
+          l[sr] = newSegs[0];
+       } else {
+          l.splice(sr, er - sr + 1, ...newSegs);
+       }
+    }
+
+    // 4. Oppdater cursor
     const nr = sr + newSegs.length - 1;
     const nc = (newSegs.length === 1 ? sc : 0) + txt.split('\n').pop().length;
     
+    // 5. Lagre historie
     if (hist) {
-      this.history.record({
+       this.setDirty(true);
+       this.history.record({
         startRow: sr, startCol: sc, endRow: er, endCol: ec,
-        text: txt, oldText: old,
+        text: txt, oldText: old, 
         cursorBefore: { row: sr, col: sc },
         cursorAfter: { row: nr, col: nc }
       });
     }
+
     this.state.cursor = { row: nr, col: nc };
     this.finalizeUpdate();
   }
+
+
+
+
+
+
 
   handleInput(e) {
     const k = e.key;
@@ -718,74 +758,116 @@ class EditorEngine {
     }
   }
 
-  cleanCode() {
-    this.setStatus("Cleaning code...");
-    const originalText = this.state.lines.join('\n');
-    // Remove comments and strings safely
-    const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
-    const textWithoutComments = originalText.replace(re, (match, block, line, str) => {
-      if (block || line) return '';
-      return match;
-    });
-    
-    let lines = textWithoutComments.split('\n')
-      .map(l => l.trim())
-      .filter(l => l.length > 0);
-      
-    // Edge case: Empty file
-    if (lines.length === 0) lines = [""];
 
-    const formattedLines = [];
-    let currentLevel = 0;
-    const indentUnit = '  ';
-    const voidTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype'];
-    const rootTags = ['html', 'head', 'body', 'script', 'style', '!doctype'];
+
+
+
+cleanCode() {
+    this.setStatus("Cleaning code... (This may take a moment)");
     
-    lines.forEach((line) => {
-      let tagName = '';
-      const tagMatch = line.match(/^<\/?([a-zA-Z0-9-]+)/);
-      if (tagMatch) tagName = tagMatch[1].toLowerCase();
-      
-      const isHtmlRoot = rootTags.includes(tagName);
-      const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(line);
-      const isMethodDef = /^\s*(async\s+)?(?!(if|for|while|switch|catch)\b)[a-zA-Z_$][\w$]*\s*\(.*?\)\s*\{/.test(line);
-      const isJsRoot = isStandardDef || isMethodDef;
-      
-      if (isJsRoot || isHtmlRoot) currentLevel = 0;
-      
-      const openBraces = (line.match(/\{/g) || []).length;
-      const closeBraces = (line.match(/\}/g) || []).length;
-      let openTags = 0;
-      let closeTags = 0;
-      
-      if (/^<[a-zA-Z0-9-]+/.test(line) && !line.includes('</') && !line.endsWith('/>') && !voidTags.includes(tagName)) {
-        if (!isHtmlRoot) openTags = 1;
+    setTimeout(() => {
+      try {
+        const originalText = this.state.lines.join('\n');
+        const stringStore = []; // Lager for å gjemme strenger
+        
+        // Regex som fanger: 1. Blokkommentarer, 2. Linjekommentarer, 3. Strenger
+        const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
+        
+        // 1. Fjern kommentarer OG gjem strenger
+        const textSafe = originalText.replace(re, (match, block, line, str) => {
+          if (block || line) return ''; // Slett kommentarer
+          // Det er en streng! Gjem den.
+          stringStore.push(match);
+          return `§STR${stringStore.length - 1}§`; // Unik plassholder
+        });
+        
+        // 2. Split linjer (Nå fri for farlige strenger)
+        let lines = textSafe.split('\n');
+        
+        // Fjern tomme linjer i start/slutt
+        while(lines.length > 0 && lines[0].trim() === '') lines.shift();
+        while(lines.length > 0 && lines[lines.length-1].trim() === '') lines.pop();
+        
+        if (lines.length === 0) lines = [""];
+
+        // 3. Formatér koden (Indentering)
+        const formattedLines = [];
+        let currentLevel = 0;
+        const indentUnit = '  ';
+        
+        const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype']);
+        const rootTags = new Set(['html', 'head', 'body', 'script', 'style', '!doctype']);
+
+        for (let i = 0; i < lines.length; i++) {
+          const trimmedLine = lines[i].trim();
+          
+          if (trimmedLine.length === 0) {
+            if (formattedLines.length > 0 && formattedLines[formattedLines.length-1] !== '') formattedLines.push('');
+            continue;
+          }
+
+          let tagName = '';
+          const tagMatch = trimmedLine.match(/^<\/?([a-zA-Z0-9-]+)/);
+          if (tagMatch) tagName = tagMatch[1].toLowerCase();
+          
+          const isHtmlRoot = rootTags.has(tagName);
+          const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(trimmedLine);
+          // Forenklet sjekk
+          const isJsRoot = isStandardDef || (trimmedLine.includes('function') && trimmedLine.endsWith('{'));
+          
+          if (isJsRoot || isHtmlRoot) currentLevel = 0;
+          
+          // Tell krøllparenteser (Trygt nå, siden strenger er gjemt!)
+          let openBraces = 0, closeBraces = 0;
+          for (const char of trimmedLine) {
+            if (char === '{') openBraces++;
+            else if (char === '}') closeBraces++;
+          }
+
+          let openTags = 0, closeTags = 0;
+          if (tagMatch && !trimmedLine.includes('</') && !trimmedLine.endsWith('/>') && !voidTags.has(tagName)) {
+            if (!isHtmlRoot && !trimmedLine.startsWith('</')) openTags = 1;
+          }
+          if (tagMatch && trimmedLine.startsWith('</')) {
+            if (!isHtmlRoot) closeTags = 1;
+          }
+          
+          let printLevel = currentLevel;
+          if (trimmedLine.startsWith('}') || trimmedLine.startsWith(']') || trimmedLine.startsWith(')') || trimmedLine.startsWith('</') || 
+              trimmedLine.startsWith('else') || trimmedLine.startsWith('catch') || trimmedLine.startsWith('finally')) {
+            printLevel = Math.max(0, currentLevel - 1);
+          }
+          
+          formattedLines.push(indentUnit.repeat(printLevel) + trimmedLine);
+          currentLevel = Math.max(0, currentLevel + (openBraces - closeBraces) + (openTags - closeTags));
+        }
+        
+        // 4. Sett sammen og putt strengene tilbake
+        let newText = formattedLines.join('\n');
+        
+        // Erstatt plassholderne (§STR0§) med det originale innholdet
+        // Dette bevarer Sokoban-kartene piksel-perfekt, med original indentering internt i strengen
+        newText = newText.replace(/§STR(\d+)§/g, (match, index) => {
+           return stringStore[parseInt(index)];
+        });
+
+        if (newText !== originalText) {
+          this.applyEditInternal(0, 0, this.state.lines.length - 1, this.state.lines[this.state.lines.length - 1].length, newText, true);
+          this.setStatus(`Code cleaned!`);
+        } else {
+          this.setStatus("Already clean!");
+        }
+      } catch (err) {
+        console.error(err);
+        this.setStatus("Error: " + err.message);
       }
-      if (line.match(/^<\/[a-zA-Z0-9-]+/)) {
-        if (!isHtmlRoot) closeTags = 1;
-      }
-      
-      let printLevel = currentLevel;
-      const startsWithClosing = line.match(/^(\}|\]|\)|\<\/)/);
-      const isContinuation = /^(else|catch|finally)/.test(line);
-      
-      if (startsWithClosing || isContinuation) {
-        printLevel = Math.max(0, currentLevel - 1);
-      }
-      
-      formattedLines.push(indentUnit.repeat(printLevel) + line);
-      const netChange = (openBraces - closeBraces) + (openTags - closeTags);
-      currentLevel = Math.max(0, currentLevel + netChange);
-    });
-    
-    const newText = formattedLines.join('\n');
-    if (newText !== originalText) {
-      this.applyEditInternal(0, 0, this.state.lines.length - 1, this.state.lines[this.state.lines.length - 1].length, newText, true);
-      this.setStatus("Code cleaned!");
-    } else {
-      this.setStatus("Already clean!");
-    }
+    }, 50);
   }
+
+
+
+
+
 
   async handleGlobalShortcuts(e) {
     const k = e.key.toLowerCase();
