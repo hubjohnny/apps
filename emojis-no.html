@@ -99,7 +99,7 @@ function copyText(text, successMessage) {
   });
 }
 function emojiToBase64Favicon(emoji) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90" fill="#000000">${emoji}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" font-size="80" text-anchor="middle" dominant-baseline="central" fill="#000000">${emoji}</text></svg>`;
   const base64SVG = btoa(unescape(encodeURIComponent(svg)));
   return `<link rel="icon" href="data:image/svg+xml;base64,${base64SVG}" type="image/svg+xml">`;
 }
