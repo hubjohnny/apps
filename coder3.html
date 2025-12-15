@@ -108,71 +108,36 @@ body {
 </div>
 <script>
 class SyntaxHighlighter {
-
 highlight(text) {
-    if (!text) return '&nbsp;';
-    
-    // 1. Escape HTML (Gjør om < og > til trygg tekst)
-    let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  if (!text) return '&nbsp;';
+  let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const tokens = [];
+  const save = (content, cls) => {
+    tokens.push(`<span class="${cls}">${content}</span>`);
+    return `§T${tokens.length - 1}T§`;
+  };
+  html = html.replace(/(\/\/.*|\/\*[\s\S]*?\*\/|&lt;!--[\s\S]*?--&gt;)/g, m => save(m, 'tok-com'));
+  html = html.replace(/(".*?"|'.*?'|`.*?`)/g, m => save(m, 'tok-str'));
 
-    const tokens = [];
-    
-    // NY TOKEN-STRATEGI:
-    // Vi bruker '§' (Section Sign) som vegger. Regex ser på dette som "ikke-ord".
-    // Dette gjør det umulig for tall-regexen å matche innholdet.
-    const save = (content, cls) => {
-        tokens.push(`<span class="${cls}">${content}</span>`);
-        return `§T${tokens.length - 1}T§`;
-    };
+// 1. Matcher HELE tags som ikke har attributter (f.eks. </div>, <br>, <html>). 
+// Her blir > farget blå fordi den er en del av matchen.
+html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+\s*&gt;)/g, m => save(m, 'tok-tag'));
 
-    // --- 1. BLOCKERS (Ting som må beskyttes først) ---
-    
-    // Comments
-    html = html.replace(/(\/\/.*|\/\*[\s\S]*?\*\/|&lt;!--[\s\S]*?--&gt;)/g, m => save(m, 'tok-com'));
-    
-    // Strings
-    html = html.replace(/(".*?"|'.*?'|`.*?`)/g, m => save(m, 'tok-str'));
+// 2. Matcher kun STARTEN av tags som følges av attributter/mellomrom.
+// Dette sikrer at <div blir blå, men en løs > i JS blir ignorert.
+html = html.replace(/(&lt;[a-zA-Z0-9-]+)(?=\s)/g, m => save(m, 'tok-tag'));
 
-    // --- 2. STRUKTUR ---
-
-    // HTML Tags (Nå inkludert > som er &gt;)
-    // Vi farger <tag, </tag, og >
-    html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+|&gt;)/g, m => save(m, 'tok-tag'));
-
-    // CSS Selectors (Starter med . eller #)
-    html = html.replace(/(\.[a-zA-Z_-][\w-]*|#[a-zA-Z_-][\w-]*)/g, m => save(m, 'tok-sel'));
-
-    // CSS Tag Selectors (ny! matcher 'body {')
-    html = html.replace(/(?<!§)\b([a-z][a-z0-9-]*)(?=\s*\{)/gi, m => save(m, 'tok-sel'));
-
-    // Properties (før :)
+  html = html.replace(/(\.[a-zA-Z_-][\w-]*|#[a-zA-Z_-][\w-]*)/g, m => save(m, 'tok-sel'));
+  html = html.replace(/(?<!§)\b([a-z][a-z0-9-]*)(?=\s*\{)/gi, m => save(m, 'tok-sel'));
     html = html.replace(/([a-zA-Z-]+\s*)(?=:)/g, m => save(m, 'tok-prop'));
-
-    // --- 3. LOGIKK ---
-
-    // Keywords
     const kw = /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await|try|catch|new|this|typeof|void|debugger|delete|extends|implements|interface|package|private|protected|public|static|yield)\b/g;
     html = html.replace(kw, m => save(m, 'tok-kwd'));
-
-    // Functions (før parentes)
     html = html.replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\()/g, m => save(m, 'tok-func'));
-
-    // Attributes (før =)
     html = html.replace(/\b([a-zA-Z-]+)(?==)/g, m => save(m, 'tok-attr'));
-
-    // Numbers (Med enheter!)
-    // Denne er nå trygg fordi '§' stopper den fra å se inni tokens.
-    // Matcher: 10, 0.5, 100px, 50%
     html = html.replace(/\b\d+(\.\d+)?([a-z%]+)?\b/gi, m => save(m, 'tok-num'));
-
-    // --- 4. RESTORE ---
-    // Hent tilbake HTML-koden fra hvelvet
     html = html.replace(/§T(\d+)T§/g, (match, index) => tokens[index]);
-
     return html;
   }
-
-
 }
 class HistoryManager {
 constructor(editor) {
