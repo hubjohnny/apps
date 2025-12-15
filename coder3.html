@@ -606,7 +606,7 @@ getPosFromMouse(e) {
   const x = e.clientX - r.left + this.dom.editor.scrollLeft;
   const y = e.clientY - r.top + this.dom.editor.scrollTop;
   let row = Math.floor(y / this.config.lineHeight);
-  let col = Math.floor((x - this.config.xOffset) / this.config.charWidth);
+  let col = Math.round((x - this.config.xOffset) / this.config.charWidth);
   row = Math.max(0, Math.min(row, this.state.lines.length - 1));
   col = Math.max(0, Math.min(col, this.state.lines[row].length));
   return { row, col };
