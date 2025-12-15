@@ -146,15 +146,29 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    background: #007acc;
-    color: white;
-    font-size: 12px;
-    padding: 4px 10px;
+    background: #0a0807;
+    color: #d4d4d4;
+    font-size: 14px;
+    padding: 6px 10px;
     font-family: sans-serif;
     z-index: 100;
     display: flex;
     justify-content: space-between;
     box-sizing: border-box;
+  }
+  
+  /* Ny stil for hurtigtastene i midten */
+  #shortcuts {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%); /* Justerer slik at midten av teksten treffer midten av skjermen */
+    color: #524b48; /* Mørk, varm gråfarge - diskret og subtil */
+    font-size: 14px;
+    white-space: nowrap; /* Hindrer at teksten brekker om skjermen er smal */
+    pointer-events: none; /* Lar deg klikke "gjennom" teksten om nødvendig */
+    overflow: hidden;
+    max-width: 50%; /* Sikrer at den ikke kræsjer med sidene på veldig små skjermer */
+    text-overflow: ellipsis;
   }
 
   @keyframes blink {
@@ -171,6 +185,7 @@
   </div>
   <div id="statusbar">
     <span id="file-status">Untitled.txt</span>
+    <span id="shortcuts">Alt+B: Beautify &nbsp;|&nbsp; Alt+P: Preview &nbsp;|&nbsp; Alt+N: New</span>
     <span id="message-area">Mastodon Engine 4.4</span>
   </div>
 <script>
