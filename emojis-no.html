@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emojis</title>
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIiBmaWxsPSIjMDAwMDAwIj7wn5iAPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
+<style>
+body {
+  font-family: sans-serif;
+  padding: 20px;
+  background-color: #f4f4f4;
+}
+h1 {
+  color: #333;
+}
+#search-box {
+  width: 100%;
+  max-width: 780px;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 2px solid #36a;
+  border-radius: 8px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+.emoji-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 800px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  border-radius: 5px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.emoji-item {
+  font-size: 32px;
+  padding: 5px 10px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.emoji-item:hover {
+  background-color: #e9e9e9;
+  border-color: #36a;
+}
+.emoji-item:active {
+  transform: scale(0.95);
+}
+#message {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #ccffcc;
+  color: #006600;
+  border: 1px solid #99ff99;
+  border-radius: 4px;
+  display: none;
+}
+.loading-text {
+  color: #555;
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+<input type="text" id="search-box" placeholder="Laster inn emojier... Vennligst vent." disabled>
+<div id="message"></div>
+<div class="emoji-container" id="emojiContainer">
+  <p class="loading-text">Laster inn fullt emoji-bibliotek... (Dette er en stor fil, vennligst vær tålmodig.)</p>
+</div>
+<script>
+const EMOJI_API_URL = 'https://cdn.jsdelivr.net/npm/@emoji-mart/data';
+const container = document.getElementById('emojiContainer');
+const messageBox = document.getElementById('message');
+const searchBox = document.getElementById('search-box');
+let allEmojis = [];
+let emojiElements = {};
+function showMessage(text) {
+  messageBox.textContent = text;
+  messageBox.style.display = 'block';
+  messageBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => {
+    messageBox.style.display = 'none';
+  }, 3000);
+}
+function copyText(text, successMessage) {
+  navigator.clipboard.writeText(text)
+  .then(() => {
+    showMessage(successMessage);
+  })
+  .catch(err => {
+    console.error('Kopiering feilet:', err);
+    showMessage('Kopiering feilet. Sjekk konsollen for feil.');
+  });
+}
+function emojiToBase64Favicon(emoji) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90" fill="#000000">${emoji}</text></svg>`;
+  const base64SVG = btoa(unescape(encodeURIComponent(svg)));
+  return `<link rel="icon" href="data:image/svg+xml;base64,${base64SVG}" type="image/svg+xml">`;
+}
+async function loadEmojis() {
+  try {
+    const response = await fetch(EMOJI_API_URL);
+    const data = await response.json();
+    let tempEmojis = [];
+    data.categories.forEach(category => {
+      category.emojis.forEach(emojiId => {
+        const emojiObject = data.emojis[emojiId];
+        if (emojiObject && emojiObject.skins) {
+          tempEmojis.push({
+            char: emojiObject.skins[0].native,
+            keywords: emojiObject.keywords,
+            id: emojiId,
+          });
+        }
+      });
+    });
+    allEmojis = tempEmojis;
+    container.innerHTML = '';
+    searchBox.disabled = false;
+    searchBox.placeholder = `Søk i ${allEmojis.length} emojier...`;
+    allEmojis.forEach(emojiData => {
+      const emojiChar = emojiData.char;
+      const keywords = [emojiData.id, ...emojiData.keywords].join(', ');
+      if (!emojiChar) return;
+      const item = document.createElement('div');
+      item.className = 'emoji-item';
+      item.textContent = emojiChar;
+      item.title = `${emojiChar} - ${keywords}\nVenstreklikk: Kopier emoji\nHøyreklikk: Kopier Base64 Favicon`;
+      emojiElements[emojiChar] = item;
+      item.addEventListener('click', () => {
+        copyText(emojiChar, `Kopierte emojien: ${emojiChar}`);
+      });
+      item.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        const faviconCode = emojiToBase64Favicon(emojiChar);
+        copyText(faviconCode, `Kopierte Base64 Favicon Kode for ${emojiChar}`);
+      });
+      container.appendChild(item);
+    });
+    showMessage(`Vellykket! Lastet inn ${allEmojis.length} emojier.`);
+  } catch (error) {
+    console.error('Kunne ikke laste inn emoji-data fra stabil kilde:', error);
+    container.innerHTML = '<p style="color: red;">Kunne ikke laste inn emojier. Sjekk din internettforbindelse og konsoller for feil.</p>';
+    searchBox.disabled = true;
+  }
+}
+function filterEmojis() {
+  const query = searchBox.value.toLowerCase().trim();
+  let visibleCount = 0;
+  allEmojis.forEach(emojiData => {
+    const emojiChar = emojiData.char;
+    const searchableText = [emojiData.id, ...emojiData.keywords].join(' ').toLowerCase();
+    const item = emojiElements[emojiChar];
+    if (!item) return;
+    if (searchableText.includes(query) || emojiChar.includes(query)) {
+      item.style.display = 'block';
+      visibleCount++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  searchBox.placeholder = `Viser ${visibleCount} treff for '${query}'`;
+}
+loadEmojis();
+searchBox.addEventListener('input', filterEmojis);
+</script>
+</body>
+</html>

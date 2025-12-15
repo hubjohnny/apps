@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lander Rescue</title>
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIiBmaWxsPSIjMDAwMDAwIj7wn5qAPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
 <style>
 body {
   margin: 0;
@@ -79,40 +80,9 @@ p {
 #score-list li {
   margin: 5px 0;
 }
-.sticky-link {
-  position: fixed;
-  bottom: 8px;
-  left: 8px;
-  z-index: 19;
-  background: #512DA8;
-  border: 3px solid #311B92;
-  color: #EDE7F6;
-  font-family: sans-serif;
-  font-size: 0.8rem;
-  padding: 6px 6px;
-  border-radius: 8px;
-  text-decoration: none;
-  text-shadow: 0 0 5px rgba(0,0,0,0.7);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-  animation: subtle-glow 2s infinite ease-in-out;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-.sticky-link:hover {
-  transform: scale(1.05);
-  background-color: #7E57C2;
-}
-@keyframes subtle-glow {
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(237, 231, 246, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 10px rgba(237, 231, 246, 0.8);
-  }
-}
 </style>
 </head>
 <body>
-<a href="index.html" class="sticky-link">My Apps</a>
 <canvas id="gameCanvas"></canvas>
 <div id="ui-overlay">
   <div id="start-screen">
