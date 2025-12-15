@@ -158,16 +158,91 @@ preview(){
     win.document.close();
   }
 },
+jumpToSection(tag) {
+  const val = this.e.value;
+  let idx = val.indexOf(`<${tag}`, this.e.selectionStart + 1);
+  if (idx === -1) {
+    idx = val.indexOf(`<${tag}`);
+  }
+  if (idx > -1) this.jumpTo(idx);
+else this.toast(`Tag <${tag}> not found.`);
+},
+jumpToNextDefinition() {
+  this.regexJump(/(^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{|^\s*function\s+\w+)/gm, "Next Definition");
+  },
+jumpToComment() {
+  this.regexJump(/(\/\*[\s\S]*?\*\/|(?<!:)\/\/.*)/g, "Next Comment");
+},
+regexJump(regex, type) {
+  const val = this.e.value;
+  const current = this.e.selectionStart;
+  let match;
+  let next = -1;
+  let first = -1;
+  regex.lastIndex = 0;
+  while ((match = regex.exec(val)) !== null) {
+    if (first === -1) first = match.index;
+    if (match.index > current) {
+      next = match.index;
+      break;
+    }
+  }
+  if (next === -1 && first > -1) {
+    this.jumpTo(first);
+    this.toast(`Cycled to first ${type}.`);
+  } else if (next > -1) {
+    this.jumpTo(next);
+    this.toast(`Jumped to ${type}.`);
+  } else {
+    this.toast(`No ${type} found.`);
+  }
+},
+jumpTo(idx) {
+  if (idx === -1) return;
+  const editor = this.e;
+  const computedStyle = window.getComputedStyle(editor);
+  const lineHeight = parseFloat(computedStyle.lineHeight) || 16;
+  editor.setSelectionRange(idx, idx);
+  const lines = editor.value.substr(0, idx).split('\n').length - 1;
+  const newScrollTop = (lines * lineHeight) - (editor.clientHeight / 2) + (lineHeight / 2);
+  editor.scrollTo({
+    top: newScrollTop,
+    behavior: 'smooth'
+  });
+  editor.blur();
+  setTimeout(() => {
+    editor.focus();
+  }, 10);
+},
 toast(m){const el=document.getElementById('t');el.innerText=m;el.style.opacity=1;if(this.tm)clearTimeout(this.tm);this.tm=setTimeout(()=>el.style.opacity=0,4000)},
 key(e){
-  if(!e.metaKey&&!e.ctrlKey)return;
-  const k=e.key.toLowerCase();
-  if(['o','s','b', 'p'].includes(k)){
-    e.preventDefault();
-    if(k==='o')this.open();
-    if(k==='s')this.save();
-    if(k==='b')this.clean();
-    if(k==='p')this.preview();
+  const isCtrlOrCmd = e.metaKey || e.ctrlKey;
+  const key = e.key.toLowerCase();
+  if (isCtrlOrCmd && !e.shiftKey) {
+    if(['o','s','b','p'].includes(key)){
+      e.preventDefault();
+      if(key==='o')this.open();
+      if(key==='s')this.save();
+      if(key==='b')this.clean();
+      if(key==='p')this.preview();
+    }
+    return;
+  }
+  if(isCtrlOrCmd && e.shiftKey){
+    const code = e.code;
+    if(['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)){
+      e.preventDefault();
+      const num = code.slice(-1);
+      if(num === '1') {
+        this.jumpToSection('style');
+      } else if(num === '2') {
+        this.jumpToSection('body');
+      } else if(num === '3') {
+        this.jumpToComment();
+      } else if(num === '4') {
+        this.jumpToNextDefinition();
+      }
+    }
   }
 },
 tab(e){
