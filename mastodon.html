@@ -355,12 +355,11 @@ body {
     <button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
     <button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
     <button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
-    <span style="display:inline-block; width: 10px; margin-right: 10px; height: 16px; opacity: 0.5;"></span>
-    <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)">↻ Comment</button>
+    <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comment</button>
     <button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Whitespace</button>
     <button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
     <button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Function</button>
-    <button onclick="editor.beautify()" title="Format code and fix indentation (Alt+B)" style="border-left: 1px solid #444; margin-left: 5px;">✨ Beautify</button>
+    <button onclick="editor.beautify()" title="Format code and fix indentation (Alt+B)" style="margin-left: 10px;">✨ Beautify</button>
   </div>
   <span id="message-area">Mastodon Engine</span>
 </div>
@@ -689,9 +688,19 @@ cycleNext(type) {
   }
 beautify() {
   const originalText = this.state.lines.join('\n');
-  let lines = originalText.split('\n')
-  .map(l => l.trim())
-  .filter(l => l.length > 0);
+  // --- STEG 1: SIKKERHETSKOPIERING ---
+  // Finn alle backtick-strenger (template literals) og gjem dem bort.
+  // Vi bruker en regex som fanger alt mellom to backticks, inkludert nye linjer.
+  const preservedBlocks = [];
+  const protectedText = originalText.replace(/(`[\s\S]*?`)/g, (match) => {
+    preservedBlocks.push(match);
+    return `§§PRESERVED_${preservedBlocks.length - 1}§§`;
+  });
+  // --- STEG 2: VASKING AV RESTERENDE KODE ---
+  // Nå som kartene er trygt lagret i 'preservedBlocks', kan vi være brutale med resten.
+  let lines = protectedText.split('\n')
+  .map(l => l.trim())        // Trim hver eneste linje
+  .filter(l => l.length > 0); // Fjern helt tomme linjer
   const formattedLines = [];
   let currentLevel = 0;
   const indentUnit = '  ';
@@ -704,8 +713,8 @@ beautify() {
     const isHtmlRoot = rootTags.includes(tagName);
     const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(line);
     const isMethodDef = /^\s*(async\s+)?(?!(if|for|while|switch|catch)\b)[a-zA-Z_$][\w$]*\s*\(.*?\)\s*\{/.test(line);
-      const isJsRoot = isStandardDef || isMethodDef;
-      if (isJsRoot || isHtmlRoot) {
+      // Reset indentering ved store blokker (din logikk)
+      if (isStandardDef || isMethodDef || isHtmlRoot) {
         currentLevel = 0;
       }
       const openBraces = (line.match(/\{/g) || []).length;
@@ -724,15 +733,24 @@ beautify() {
     if (startsWithClosing || isContinuation) {
       printLevel = Math.max(0, currentLevel - 1);
     }
+    // Her legger vi til linjen med riktig indentering.
+    // Hvis linjen inneholder "`<span class="${cls}">${content}</span>`", blir selve koden "const map = `<span class="${cls}">${content}</span>`;" indentert,
+    // men innholdet i §§...§§ er bare tekst foreløpig.
     formattedLines.push(indentUnit.repeat(printLevel) + line);
     const netChange = (openBraces - closeBraces) + (openTags - closeTags);
     currentLevel = Math.max(0, currentLevel + netChange);
   });
-  const newText = formattedLines.join('\n');
-  if (originalText !== newText) {
+  let resultText = formattedLines.join('\n');
+  // --- STEG 3: GJENOPPRETTING ---
+  // Putt de originale kartene/tekstene tilbake der plassholderne er.
+  resultText = resultText.replace(/§§PRESERVED_(\d+)§§/g, (match, index) => {
+    return preservedBlocks[parseInt(index)];
+  });
+  // Sjekk om noe ble endret og oppdater editor
+  if (originalText !== resultText) {
     const lastRow = this.state.lines.length - 1;
     const lastCol = this.state.lines[lastRow].length;
-    this.applyEditInternal(0, 0, lastRow, lastCol, newText, true);
+    this.applyEditInternal(0, 0, lastRow, lastCol, resultText, true);
     this.setStatus("Code beautified ✨");
   } else {
     this.setStatus("Already clean ✨");
