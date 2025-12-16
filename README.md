@@ -7,7 +7,7 @@
 ---
 **Looking for my Code Editor?**
 
-It is now called **[Mastodon Engine](mastodon.html)**. The new code editor is a powerhouse, combining simplicity with strength and speed. It's been put through its paces with a 600,000 line code stress test, and it flies through tasks that would slow down other editors. And now, the Beautify Code function is safer, faster, and more reliable than ever. It's perfect for single-file projects in HTML, CSS, and JavaScript.
+It is now called **[Mastodon Engine](mastodon.html)**. The new code editor is a powerhouse, combining simplicity with strength and speed. It's been put through its paces with a 600,000 line code stress test, and it flies through tasks that would slow down other editors. It's perfect for single-file projects in HTML, CSS, and JavaScript.
 
 
 ---
