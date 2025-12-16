@@ -6,28 +6,28 @@
 <style>
 * { box-sizing: border-box; }
 body {
-  margin: 0; background: #111; color: #eee; font-family: 'Courier New', Courier, monospace;
-  overflow: hidden; height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center;
+margin: 0; background: #111; color: #eee; font-family: 'Courier New', Courier, monospace;
+overflow: hidden; height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center;
 }
 #game-wrapper {
-  width: 1020px; height: 600px;
-  position: relative;
-  background: #000;
-  box-shadow: 0 0 50px rgba(0,0,0,0.8);
-  image-rendering: pixelated;
-  display: flex;
-  transform-origin: center center;
+width: 1020px; height: 600px;
+position: relative;
+background: #000;
+box-shadow: 0 0 50px rgba(0,0,0,0.8);
+image-rendering: pixelated;
+display: flex;
+transform-origin: center center;
 }
 #game-container {
-  width: 800px; height: 100%;
-  position: relative;
-  border-right: 4px solid #444;
-  overflow: hidden;
+width: 800px; height: 100%;
+position: relative;
+border-right: 4px solid #444;
+overflow: hidden;
 }
 #ui-panel {
-  background: #222; border-bottom: 2px solid #111;
-  width: 100%; height: 90px; padding: 10px 20px;
-  display: grid; grid-template-columns: 140px 1fr 220px; gap: 20px; align-items: center;
+background: #222; border-bottom: 2px solid #111;
+width: 100%; height: 90px; padding: 10px 20px;
+display: grid; grid-template-columns: 140px 1fr 220px; gap: 20px; align-items: center;
 }
 .score-box { text-align: left; }
 .score-label { font-size: 10px; color: #888; }
@@ -35,21 +35,21 @@ body {
 .panel-center { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 #route-label { font-size: 11px; color: #aaa; margin-bottom: 2px; width: 100%; text-align: center; height: 14px; font-weight: bold; }
 #route-bar-container {
-  width: 100%; height: 14px; background: #000; border: 1px solid #555; border-radius: 4px; position: relative; margin-top: 2px; overflow: hidden;
+width: 100%; height: 14px; background: #000; border: 1px solid #555; border-radius: 4px; position: relative; margin-top: 2px; overflow: hidden;
 }
 #route-fill { height: 100%; background: linear-gradient(90deg, #9C27B0, #E040FB); width: 0%; transition: width 0.2s; }
 #location-indicator { font-size: 14px; color: #4caf50; font-weight: bold; margin-top: 4px; text-shadow: 0 1px 2px #000; }
 #distance-text { font-size: 10px; color: #666; margin-top: 2px; }
 .panel-right {
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 4px;
-  font-size: 12px;
-  font-family: 'Consolas', monospace;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  padding: 4px 6px !important;
-  gap: 2px 5px !important;
+background: #111;
+border: 1px solid #333;
+border-radius: 4px;
+font-size: 12px;
+font-family: 'Consolas', monospace;
+display: grid;
+grid-template-columns: 1fr 1fr;
+padding: 4px 6px !important;
+gap: 2px 5px !important;
 }
 .stat-row { display: flex; justify-content: space-between; align-items: center; }
 .stat-val { color: #fff; font-weight: bold; }
@@ -71,11 +71,11 @@ canvas { background: #87CEEB; display: block; width: 100%; height: 510px; }
 .route-check { color: #4caf50; font-weight: bold; visibility: hidden; }
 .high-score { display: block; font-size: 9px; color: #ffeb3b; margin-top: 4px; }
 .overlay-screen {
-  position: absolute; top: 0; left: 0;
-  width: 800px; height: 600px;
-  background: rgba(0,0,0,0.85);
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  z-index: 10; color: white; text-align: center;
+position: absolute; top: 0; left: 0;
+width: 800px; height: 600px;
+background: rgba(0,0,0,0.85);
+display: flex; flex-direction: column; justify-content: center; align-items: center;
+z-index: 10; color: white; text-align: center;
 }
 #game-over-screen { display: none; background: rgba(50, 0, 0, 0.9); }
 .btn { margin-top: 20px; padding: 12px 24px; font-size: 20px; background: #ffcc00; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-weight: bold; color: #000; box-shadow: 0 4px 0 #c6a300; }
@@ -86,163 +86,163 @@ canvas { background: #87CEEB; display: block; width: 100%; height: 510px; }
 </head>
 <body>
 <div id="game-wrapper">
-  <div id="game-container">
-    <div id="start-screen" class="overlay-screen">
-      <h1 style="font-size: 48px; color: #fff; text-shadow: 0 0 20px #ffcc00;">✈️ SKY LINER</h1>
-      <p id="start-route-name" style="font-size: 18px; color: #ccc;">Select a route from the menu</p>
-      <div style="margin-top:30px; margin-bottom: 20px; font-size: 14px; color: #888; line-height: 1.6;">
-        <b>W / S</b> - Engine | <b>SPACE</b> - Brakes<br>
-        <b>ARROW DOWN</b> - Pitch Up (Takeoff)<br>
-        <b>ARROW UP</b> - Pitch Down
-      </div>
-      <button id="start-btn" class="btn">START FLIGHT</button>
-    </div>
-    <div id="game-over-screen" class="overlay-screen">
-      <h1 id="go-title" style="font-size: 48px; color: #ff4444; text-shadow: 0 0 20px #000;">CRASHED!</h1>
-      <p id="crash-reason" style="font-size: 18px; color: #ccc;">Reason</p>
-      <div id="final-score-display" style="font-size: 24px; color: #ffcc00; margin: 15px 0; font-weight: bold;"></div>
-      <button id="restart-btn" class="btn btn-restart">TRY AGAIN</button>
-    </div>
-    <div id="ui-panel">
-      <div class="score-box">
-        <div class="score-label">CURRENT SCORE</div>
-        <div id="live-score">80000</div>
-      </div>
-      <div class="panel-center">
-        <div id="route-label">SELECT ROUTE</div>
-        <div id="route-bar-container"><div id="route-fill"></div></div>
-        <div id="location-indicator">HANGAR</div>
-        <div id="distance-text">WAITING...</div>
-      </div>
-      <div class="panel-right" id="stats-panel"></div>
-    </div>
-    <canvas id="gameCanvas" width="800" height="510"></canvas>
-  </div>
-  <div id="sidebar">
-    <div class="sidebar-header">FLIGHT PLAN</div>
-    <div id="route-list"></div>
-  </div>
+<div id="game-container">
+<div id="start-screen" class="overlay-screen">
+<h1 style="font-size: 48px; color: #fff; text-shadow: 0 0 20px #ffcc00;">✈️ SKY LINER</h1>
+<p id="start-route-name" style="font-size: 18px; color: #ccc;">Select a route from the menu</p>
+<div style="margin-top:30px; margin-bottom: 20px; font-size: 14px; color: #888; line-height: 1.6;">
+<b>W / S</b> - Engine | <b>SPACE</b> - Brakes<br>
+<b>ARROW DOWN</b> - Pitch Up (Takeoff)<br>
+<b>ARROW UP</b> - Pitch Down
+</div>
+<button id="start-btn" class="btn">START FLIGHT</button>
+</div>
+<div id="game-over-screen" class="overlay-screen">
+<h1 id="go-title" style="font-size: 48px; color: #ff4444; text-shadow: 0 0 20px #000;">CRASHED!</h1>
+<p id="crash-reason" style="font-size: 18px; color: #ccc;">Reason</p>
+<div id="final-score-display" style="font-size: 24px; color: #ffcc00; margin: 15px 0; font-weight: bold;"></div>
+<button id="restart-btn" class="btn btn-restart">TRY AGAIN</button>
+</div>
+<div id="ui-panel">
+<div class="score-box">
+<div class="score-label">CURRENT SCORE</div>
+<div id="live-score">80000</div>
+</div>
+<div class="panel-center">
+<div id="route-label">SELECT ROUTE</div>
+<div id="route-bar-container"><div id="route-fill"></div></div>
+<div id="location-indicator">HANGAR</div>
+<div id="distance-text">WAITING...</div>
+</div>
+<div class="panel-right" id="stats-panel"></div>
+</div>
+<canvas id="gameCanvas" width="800" height="510"></canvas>
+</div>
+<div id="sidebar">
+<div class="sidebar-header">FLIGHT PLAN</div>
+<div id="route-list"></div>
+</div>
 </div>
 <script>
 const CONFIG = {
-  GRAVITY: 18,
-  LIFT_POWER: 0.01,
-  BASE_LIFT: 0.05,
-  ROTATION_SPEED: 10,
-  AUTO_LEVEL_SPEED: 10,
-  MAX_LANDING_SPEED: 90,
-  CRASH_ANGLE: 35,
-  RUNWAY_BUFFER: 2500,
-  FUEL_MAX: 8000,
-  STORM_START_PCT: 0.40,
-  STORM_END_PCT: 0.70,
-  STORM_WARN_DIST: 2000,
-  STORM_SAFE_ALT: 200,
-  STORM_GRACE_TIME: 5.0,
-  BIRD_SPAWN_RATE: 0.001,
-  BIRD_SPEED: 100
+GRAVITY: 18,
+LIFT_POWER: 0.01,
+BASE_LIFT: 0.05,
+ROTATION_SPEED: 10,
+AUTO_LEVEL_SPEED: 10,
+MAX_LANDING_SPEED: 90,
+CRASH_ANGLE: 35,
+RUNWAY_BUFFER: 2500,
+FUEL_MAX: 8000,
+STORM_START_PCT: 0.40,
+STORM_END_PCT: 0.70,
+STORM_WARN_DIST: 2000,
+STORM_SAFE_ALT: 200,
+STORM_GRACE_TIME: 5.0,
+BIRD_SPAWN_RATE: 0.001,
+BIRD_SPEED: 100
 };
 const BIOME_DATA = {
-  'RUNWAY':   { color: '#333',     msg: 'CRASHED ON RUNWAY', isWater: false },
-  'FOREST':   { color: '#2d4c1e',  msg: 'CRASHED INTO FOREST', isWater: false },
-  'WATER':    { color: '#01579B',  msg: 'LOST AT SEA',         isWater: true },
-  'MOUNTAIN': { color: '#37474F',  msg: 'IMPACT WITH MOUNTAIN',isWater: false },
-  'ICE':      { color: '#90A4AE',  msg: 'CRASHED ON GLACIER',  isWater: false },
-  'CITY':     { color: '#263238',  msg: 'CRASHED INTO CITY',   isWater: false }
+'RUNWAY':   { color: '#333',     msg: 'CRASHED ON RUNWAY', isWater: false },
+'FOREST':   { color: '#2d4c1e',  msg: 'CRASHED INTO FOREST', isWater: false },
+'WATER':    { color: '#01579B',  msg: 'LOST AT SEA',         isWater: true },
+'MOUNTAIN': { color: '#37474F',  msg: 'IMPACT WITH MOUNTAIN',isWater: false },
+'ICE':      { color: '#90A4AE',  msg: 'CRASHED ON GLACIER',  isWater: false },
+'CITY':     { color: '#263238',  msg: 'CRASHED INTO CITY',   isWater: false }
 };
 const ROUTE_DB = [
 {
-  id: 'training',
-  name: 'Training: Oslo ✈ Rygge',
-  gameDist: 40000, realKm: 60,
-  map: [
-  { at: 0.00, type: 'RUNWAY', name: 'GARDERMOEN' },
-  { at: 0.05, type: 'FOREST', name: 'NORDMARKA' },
-  { at: 0.40, type: 'WATER',  name: 'OSLOFJORD' },
-  { at: 0.70, type: 'FOREST', name: 'ØSTFOLD' },
-  { at: 0.90, type: 'CITY',   name: 'MOSS' },
-  { at: 0.95, type: 'RUNWAY', name: 'RYGGE' }
+id: 'training',
+name: 'Training: Oslo ✈ Rygge',
+gameDist: 40000, realKm: 60,
+map: [
+{ at: 0.00, type: 'RUNWAY', name: 'GARDERMOEN' },
+{ at: 0.05, type: 'FOREST', name: 'NORDMARKA' },
+{ at: 0.40, type: 'WATER',  name: 'OSLOFJORD' },
+{ at: 0.70, type: 'FOREST', name: 'ØSTFOLD' },
+{ at: 0.90, type: 'CITY',   name: 'MOSS' },
+{ at: 0.95, type: 'RUNWAY', name: 'RYGGE' }
 ]
 },
 {
-  id: 'alps',
-  name: 'Alps: Munich ✈ Milan',
-  gameDist: 100000, realKm: 350,
-  map: [
-  { at: 0.00, type: 'RUNWAY', name: 'MUNICH' },
-  { at: 0.05, type: 'FOREST', name: 'BAVARIA' },
-  { at: 0.20, type: 'MOUNTAIN', name: 'AUSTRIAN ALPS' },
-  { at: 0.50, type: 'MOUNTAIN', name: 'SWISS ALPS' },
-  { at: 0.80, type: 'WATER',  name: 'LAKE COMO' },
-  { at: 0.90, type: 'CITY',   name: 'MILAN' },
-  { at: 0.96, type: 'RUNWAY', name: 'MALPENSA' }
+id: 'alps',
+name: 'Alps: Munich ✈ Milan',
+gameDist: 100000, realKm: 350,
+map: [
+{ at: 0.00, type: 'RUNWAY', name: 'MUNICH' },
+{ at: 0.05, type: 'FOREST', name: 'BAVARIA' },
+{ at: 0.20, type: 'MOUNTAIN', name: 'AUSTRIAN ALPS' },
+{ at: 0.50, type: 'MOUNTAIN', name: 'SWISS ALPS' },
+{ at: 0.80, type: 'WATER',  name: 'LAKE COMO' },
+{ at: 0.90, type: 'CITY',   name: 'MILAN' },
+{ at: 0.96, type: 'RUNWAY', name: 'MALPENSA' }
 ]
 },
 {
-  id: 'canary',
-  name: 'Island: Gran Canaria ✈ Tenerife',
-  gameDist: 60000, realKm: 112,
-  map: [
-  { at: 0.00, type: 'RUNWAY', name: 'LAS PALMAS' },
-  { at: 0.05, type: 'WATER',  name: 'ATLANTIC' },
-  { at: 0.50, type: 'MOUNTAIN', name: 'MT TEIDE' },
-  { at: 0.80, type: 'FOREST', name: 'NORTH ISLAND' },
-  { at: 0.94, type: 'RUNWAY', name: 'TENERIFE NORTH' }
+id: 'canary',
+name: 'Island: Gran Canaria ✈ Tenerife',
+gameDist: 60000, realKm: 112,
+map: [
+{ at: 0.00, type: 'RUNWAY', name: 'LAS PALMAS' },
+{ at: 0.05, type: 'WATER',  name: 'ATLANTIC' },
+{ at: 0.50, type: 'MOUNTAIN', name: 'MT TEIDE' },
+{ at: 0.80, type: 'FOREST', name: 'NORTH ISLAND' },
+{ at: 0.94, type: 'RUNWAY', name: 'TENERIFE NORTH' }
 ]
 },
 {
-  id: 'transatlantic',
-  name: 'Long: London ✈ New York',
-  gameDist: 300000, realKm: 5585,
-  map: [
-  { at: 0.00, type: 'RUNWAY', name: 'HEATHROW' },
-  { at: 0.02, type: 'CITY',   name: 'LONDON' },
-  { at: 0.10, type: 'WATER',  name: 'CELTIC SEA' },
-  { at: 0.30, type: 'WATER',  name: 'ATLANTIC OCEAN' },
-  { at: 0.60, type: 'WATER',  name: 'DEEP OCEAN' },
-  { at: 0.85, type: 'FOREST', name: 'NOVA SCOTIA' },
-  { at: 0.95, type: 'CITY',   name: 'MANHATTAN' },
-  { at: 0.99, type: 'RUNWAY', name: 'JFK' }
+id: 'transatlantic',
+name: 'Long: London ✈ New York',
+gameDist: 300000, realKm: 5585,
+map: [
+{ at: 0.00, type: 'RUNWAY', name: 'HEATHROW' },
+{ at: 0.02, type: 'CITY',   name: 'LONDON' },
+{ at: 0.10, type: 'WATER',  name: 'CELTIC SEA' },
+{ at: 0.30, type: 'WATER',  name: 'ATLANTIC OCEAN' },
+{ at: 0.60, type: 'WATER',  name: 'DEEP OCEAN' },
+{ at: 0.85, type: 'FOREST', name: 'NOVA SCOTIA' },
+{ at: 0.95, type: 'CITY',   name: 'MANHATTAN' },
+{ at: 0.99, type: 'RUNWAY', name: 'JFK' }
 ]
 },
 {
-  id: 'svalbard',
-  name: 'Arctic: Tromsø ✈ Longyearbyen',
-  gameDist: 150000, realKm: 950,
-  map: [
-  { at: 0.00, type: 'RUNWAY', name: 'TROMSØ' },
-  { at: 0.10, type: 'WATER',  name: 'BARENTS SEA' },
-  { at: 0.50, type: 'WATER',  name: 'ARCTIC OCEAN' },
-  { at: 0.80, type: 'ICE',    name: 'SVALBARD GLACIER' },
-  { at: 0.90, type: 'ICE',    name: 'ISFJORDEN' },
-  { at: 0.97, type: 'RUNWAY', name: 'LONGYEARBYEN' }
+id: 'svalbard',
+name: 'Arctic: Tromsø ✈ Longyearbyen',
+gameDist: 150000, realKm: 950,
+map: [
+{ at: 0.00, type: 'RUNWAY', name: 'TROMSØ' },
+{ at: 0.10, type: 'WATER',  name: 'BARENTS SEA' },
+{ at: 0.50, type: 'WATER',  name: 'ARCTIC OCEAN' },
+{ at: 0.80, type: 'ICE',    name: 'SVALBARD GLACIER' },
+{ at: 0.90, type: 'ICE',    name: 'ISFJORDEN' },
+{ at: 0.97, type: 'RUNWAY', name: 'LONGYEARBYEN' }
 ]
 },
 {
-  id: 'amazon',
-  name: 'Jungle: Bogota ✈ Manaus',
-  gameDist: 180000, realKm: 1800,
-  map: [
-  { at: 0.00, type: 'RUNWAY', name: 'EL DORADO' },
-  { at: 0.05, type: 'MOUNTAIN', name: 'ANDES' },
-  { at: 0.30, type: 'FOREST', name: 'AMAZONAS' },
-  { at: 0.60, type: 'WATER',  name: 'AMAZON RIVER' },
-  { at: 0.80, type: 'FOREST', name: 'DEEP JUNGLE' },
-  { at: 0.97, type: 'RUNWAY', name: 'MANAUS' }
+id: 'amazon',
+name: 'Jungle: Bogota ✈ Manaus',
+gameDist: 180000, realKm: 1800,
+map: [
+{ at: 0.00, type: 'RUNWAY', name: 'EL DORADO' },
+{ at: 0.05, type: 'MOUNTAIN', name: 'ANDES' },
+{ at: 0.30, type: 'FOREST', name: 'AMAZONAS' },
+{ at: 0.60, type: 'WATER',  name: 'AMAZON RIVER' },
+{ at: 0.80, type: 'FOREST', name: 'DEEP JUNGLE' },
+{ at: 0.97, type: 'RUNWAY', name: 'MANAUS' }
 ]
 },
 {
-  id: 'dubai',
-  name: 'Desert: Cairo ✈ Dubai',
-  gameDist: 220000, realKm: 2400,
-  map: [
-  { at: 0.00, type: 'RUNWAY', name: 'CAIRO' },
-  { at: 0.05, type: 'MOUNTAIN', name: 'SINAI' },
-  { at: 0.30, type: 'CITY',   name: 'RIYADH' },
-  { at: 0.60, type: 'MOUNTAIN', name: 'SAND DUNES' },
-  { at: 0.85, type: 'WATER',  name: 'PERSIAN GULF' },
-  { at: 0.95, type: 'CITY',   name: 'DUBAI' },
-  { at: 0.99, type: 'RUNWAY', name: 'DXB INT' }
+id: 'dubai',
+name: 'Desert: Cairo ✈ Dubai',
+gameDist: 220000, realKm: 2400,
+map: [
+{ at: 0.00, type: 'RUNWAY', name: 'CAIRO' },
+{ at: 0.05, type: 'MOUNTAIN', name: 'SINAI' },
+{ at: 0.30, type: 'CITY',   name: 'RIYADH' },
+{ at: 0.60, type: 'MOUNTAIN', name: 'SAND DUNES' },
+{ at: 0.85, type: 'WATER',  name: 'PERSIAN GULF' },
+{ at: 0.95, type: 'CITY',   name: 'DUBAI' },
+{ at: 0.99, type: 'RUNWAY', name: 'DXB INT' }
 ]
 }
 ];
@@ -250,10 +250,10 @@ let CURRENT_ROUTE = ROUTE_DB[0];
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 let GAME = {
-  running: false, gameOver: false, levelComplete: false, hasStarted: false,
-  lastTime: 0, dist: 0, groundScroll: 0, score: 0,
-  stormActive: false, stormTimer: 0, flashFrame: 0,
-  birdStrikes: 0, strikeFlash: 0
+running: false, gameOver: false, levelComplete: false, hasStarted: false,
+lastTime: 0, dist: 0, groundScroll: 0, score: 0,
+stormActive: false, stormTimer: 0, flashFrame: 0,
+birdStrikes: 0, strikeFlash: 0
 };
 let PLANE = { x: 100, y: 0, width: 120, height: 35, wheelDepth: 11, speed: 0, verticalSpeed: 0, angle: 0, throttle: 0, fuel: CONFIG.FUEL_MAX };
 const INPUT = { ArrowUp: false, ArrowDown: false, w: false, s: false, " ": false };
@@ -261,378 +261,378 @@ let clouds = []; let stormClouds = []; let birdFlocks = [];
 const rainDrops = [];
 for(let i=0; i<50; i++) rainDrops.push({ x: Math.random()*800, y: Math.random()*600, speed: 5+Math.random()*5 });
 function loadProgress() {
-  const data = localStorage.getItem('skyliner_save_v1');
-  return data ? JSON.parse(data) : {};
+const data = localStorage.getItem('skyliner_save_v1');
+return data ? JSON.parse(data) : {};
 }
 function saveProgress(routeId, score) {
-  const data = loadProgress();
-  if (!data[routeId] || score > data[routeId]) {
-    data[routeId] = score;
-    localStorage.setItem('skyliner_save_v1', JSON.stringify(data));
-  }
-  renderMenu();
+const data = loadProgress();
+if (!data[routeId] || score > data[routeId]) {
+data[routeId] = score;
+localStorage.setItem('skyliner_save_v1', JSON.stringify(data));
+}
+renderMenu();
 }
 const AudioEngine = {
-  ctx: null, osc: null, gain: null,
-  init: function() {
-    if (this.ctx) return;
-    const AC = window.AudioContext || window.webkitAudioContext;
-    this.ctx = new AC();
-    this.osc = this.ctx.createOscillator();
-    this.osc.type = 'sawtooth'; this.osc.frequency.value = 40;
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass'; filter.frequency.value = 120;
-    this.gain = this.ctx.createGain(); this.gain.gain.value = 0;
-    this.osc.connect(filter); filter.connect(this.gain); this.gain.connect(this.ctx.destination);
-    this.osc.start();
-  },
-  update: function(throttle) {
-    if (!this.ctx) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
-    let vol = 0.05 + ((throttle / 100) * 0.15);
-    if (PLANE.fuel <= 0 || GAME.gameOver || GAME.birdStrikes >= 2) vol = 0;
-    const now = this.ctx.currentTime;
-    this.osc.frequency.setTargetAtTime(40 + (throttle * 0.4), now, 0.1);
-    this.gain.gain.setTargetAtTime(vol, now, 0.1);
-  },
-  stop: function() { if(this.gain) this.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05); },
-  playNoise: function(type) {
-    if (!this.ctx) return;
-    const dur = type === 'crash' ? 2.0 : 1.0;
-    const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * dur, this.ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-    const src = this.ctx.createBufferSource(); src.buffer = buf;
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass'; filter.frequency.value = type === 'thunder' ? 200 : 1000;
-    const g = this.ctx.createGain();
-    g.gain.setValueAtTime(type === 'crash' ? 0.5 : 0.8, this.ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
-    src.connect(filter); filter.connect(g); g.connect(this.ctx.destination); src.start();
-  }
+ctx: null, osc: null, gain: null,
+init: function() {
+if (this.ctx) return;
+const AC = window.AudioContext || window.webkitAudioContext;
+this.ctx = new AC();
+this.osc = this.ctx.createOscillator();
+this.osc.type = 'sawtooth'; this.osc.frequency.value = 40;
+const filter = this.ctx.createBiquadFilter();
+filter.type = 'lowpass'; filter.frequency.value = 120;
+this.gain = this.ctx.createGain(); this.gain.gain.value = 0;
+this.osc.connect(filter); filter.connect(this.gain); this.gain.connect(this.ctx.destination);
+this.osc.start();
+},
+update: function(throttle) {
+if (!this.ctx) return;
+if (this.ctx.state === 'suspended') this.ctx.resume();
+let vol = 0.05 + ((throttle / 100) * 0.15);
+if (PLANE.fuel <= 0 || GAME.gameOver || GAME.birdStrikes >= 2) vol = 0;
+const now = this.ctx.currentTime;
+this.osc.frequency.setTargetAtTime(40 + (throttle * 0.4), now, 0.1);
+this.gain.gain.setTargetAtTime(vol, now, 0.1);
+},
+stop: function() { if(this.gain) this.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05); },
+playNoise: function(type) {
+if (!this.ctx) return;
+const dur = type === 'crash' ? 2.0 : 1.0;
+const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * dur, this.ctx.sampleRate);
+const data = buf.getChannelData(0);
+for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+const src = this.ctx.createBufferSource(); src.buffer = buf;
+const filter = this.ctx.createBiquadFilter();
+filter.type = 'lowpass'; filter.frequency.value = type === 'thunder' ? 200 : 1000;
+const g = this.ctx.createGain();
+g.gain.setValueAtTime(type === 'crash' ? 0.5 : 0.8, this.ctx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+src.connect(filter); filter.connect(g); g.connect(this.ctx.destination); src.start();
+}
 };
 function resetToHangar() {
-  GAME.running = false; GAME.gameOver = false; GAME.levelComplete = false; GAME.hasStarted = false;
-  GAME.dist = 0; GAME.groundScroll = 0; GAME.score = CONFIG.FUEL_MAX * 10; GAME.birdStrikes = 0;
-  const groundY = canvas.height - 50;
-  PLANE = { x: 100, y: groundY - 17.5 - 11, width: 120, height: 35, wheelDepth: 11, speed: 0, verticalSpeed: 0, angle: 0, throttle: 0, fuel: CONFIG.FUEL_MAX };
-  clouds = []; for(let i=0; i<5; i++) clouds.push(createCloud(false));
-  stormClouds = []; for(let i=0; i<8; i++) stormClouds.push(createCloud(true));
-  birdFlocks = [];
-  document.getElementById('route-label').innerText = CURRENT_ROUTE.name;
-  document.getElementById('start-route-name').innerText = CURRENT_ROUTE.name;
-  document.getElementById('location-indicator').innerText = CURRENT_ROUTE.map[0].name;
-  document.getElementById('live-score').innerText = GAME.score;
-  document.getElementById('game-over-screen').style.display = 'none';
-  document.getElementById('start-screen').style.display = 'flex';
-  draw(); updateUI(); renderMenu();
+GAME.running = false; GAME.gameOver = false; GAME.levelComplete = false; GAME.hasStarted = false;
+GAME.dist = 0; GAME.groundScroll = 0; GAME.score = CONFIG.FUEL_MAX * 10; GAME.birdStrikes = 0;
+const groundY = canvas.height - 50;
+PLANE = { x: 100, y: groundY - 17.5 - 11, width: 120, height: 35, wheelDepth: 11, speed: 0, verticalSpeed: 0, angle: 0, throttle: 0, fuel: CONFIG.FUEL_MAX };
+clouds = []; for(let i=0; i<5; i++) clouds.push(createCloud(false));
+stormClouds = []; for(let i=0; i<8; i++) stormClouds.push(createCloud(true));
+birdFlocks = [];
+document.getElementById('route-label').innerText = CURRENT_ROUTE.name;
+document.getElementById('start-route-name').innerText = CURRENT_ROUTE.name;
+document.getElementById('location-indicator').innerText = CURRENT_ROUTE.map[0].name;
+document.getElementById('live-score').innerText = GAME.score;
+document.getElementById('game-over-screen').style.display = 'none';
+document.getElementById('start-screen').style.display = 'flex';
+draw(); updateUI(); renderMenu();
 }
 function loadRoute(index) { AudioEngine.stop(); CURRENT_ROUTE = ROUTE_DB[index]; resetToHangar(); }
 function renderMenu() {
-  const list = document.getElementById('route-list');
-  list.innerHTML = '';
-  const progress = loadProgress();
-  ROUTE_DB.forEach((route, index) => {
-    const item = document.createElement('div');
-    item.className = 'route-item';
-    if (route === CURRENT_ROUTE) item.classList.add('active');
-    const isDone = progress[route.id] !== undefined;
-    if (isDone) item.classList.add('completed');
-    let scoreHtml = isDone ? `<span class="high-score">BEST: ${progress[route.id]} PTS</span>` : '';
-    item.innerHTML = `
-    <div class="route-name">${route.name} <span class="route-check">✅</span></div>
-    <div class="route-meta"><span>${route.realKm} KM</span><span>${route.map.length} ZONES</span></div>${scoreHtml}`;
-    item.onclick = () => loadRoute(index);
-    list.appendChild(item);
-  });
+const list = document.getElementById('route-list');
+list.innerHTML = '';
+const progress = loadProgress();
+ROUTE_DB.forEach((route, index) => {
+const item = document.createElement('div');
+item.className = 'route-item';
+if (route === CURRENT_ROUTE) item.classList.add('active');
+const isDone = progress[route.id] !== undefined;
+if (isDone) item.classList.add('completed');
+let scoreHtml = isDone ? `<span class="high-score">BEST: ${progress[route.id]} PTS</span>` : '';
+item.innerHTML = `
+<div class="route-name">${route.name} <span class="route-check">✅</span></div>
+<div class="route-meta"><span>${route.realKm} KM</span><span>${route.map.length} ZONES</span></div>${scoreHtml}`;
+item.onclick = () => loadRoute(index);
+list.appendChild(item);
+});
 }
 function startGame() {
-  resetToHangar(); GAME.running = true; GAME.lastTime = performance.now();
-  document.getElementById('start-screen').style.display = 'none';
-  AudioEngine.init(); resizeGame(); requestAnimationFrame(loop);
+resetToHangar(); GAME.running = true; GAME.lastTime = performance.now();
+document.getElementById('start-screen').style.display = 'none';
+AudioEngine.init(); resizeGame(); requestAnimationFrame(loop);
 }
 function updateScore() {
-  if (GAME.levelComplete || GAME.gameOver) return;
-  if (!GAME.hasStarted) { document.getElementById('live-score').innerText = Math.floor(CONFIG.FUEL_MAX * 10); return; }
-  let currentScore = Math.floor(PLANE.fuel * 10);
-  currentScore -= (GAME.birdStrikes * 5000);
-  if (currentScore < 0) currentScore = 0;
-  GAME.score = currentScore;
-  document.getElementById('live-score').innerText = GAME.score;
+if (GAME.levelComplete || GAME.gameOver) return;
+if (!GAME.hasStarted) { document.getElementById('live-score').innerText = Math.floor(CONFIG.FUEL_MAX * 10); return; }
+let currentScore = Math.floor(PLANE.fuel * 10);
+currentScore -= (GAME.birdStrikes * 5000);
+if (currentScore < 0) currentScore = 0;
+GAME.score = currentScore;
+document.getElementById('live-score').innerText = GAME.score;
 }
 function gameOver(reason) {
-  GAME.running = false; GAME.gameOver = true; AudioEngine.stop(); AudioEngine.playNoise('crash');
-  document.getElementById('go-title').innerText = "CRASHED!";
-  document.getElementById('go-title').style.color = "#ff4444";
-  document.getElementById('crash-reason').innerText = reason;
-  document.getElementById('final-score-display').innerText = `FINAL SCORE: 0`;
-  document.getElementById('game-over-screen').style.display = 'flex';
+GAME.running = false; GAME.gameOver = true; AudioEngine.stop(); AudioEngine.playNoise('crash');
+document.getElementById('go-title').innerText = "CRASHED!";
+document.getElementById('go-title').style.color = "#ff4444";
+document.getElementById('crash-reason').innerText = reason;
+document.getElementById('final-score-display').innerText = `FINAL SCORE: 0`;
+document.getElementById('game-over-screen').style.display = 'flex';
 }
 function victory() {
-  GAME.running = false; GAME.levelComplete = true; AudioEngine.stop();
-  saveProgress(CURRENT_ROUTE.id, GAME.score);
-  document.getElementById('go-title').innerText = "ROUTE COMPLETE!";
-  document.getElementById('go-title').style.color = "#4caf50";
-  document.getElementById('crash-reason').innerText = "Perfect Landing";
-  document.getElementById('final-score-display').innerText = `FINAL SCORE: ${GAME.score}`;
-  document.getElementById('game-over-screen').style.display = 'flex';
+GAME.running = false; GAME.levelComplete = true; AudioEngine.stop();
+saveProgress(CURRENT_ROUTE.id, GAME.score);
+document.getElementById('go-title').innerText = "ROUTE COMPLETE!";
+document.getElementById('go-title').style.color = "#4caf50";
+document.getElementById('crash-reason').innerText = "Perfect Landing";
+document.getElementById('final-score-display').innerText = `FINAL SCORE: ${GAME.score}`;
+document.getElementById('game-over-screen').style.display = 'flex';
 }
 function createCloud(isStorm) {
-  const cloud = { x: Math.random() * 800, y: isStorm ? 200 + Math.random()*100 : 50 + Math.random()*100, puffs: [] };
-  const n = 4 + Math.floor(Math.random()*4);
-  for(let i=0; i<n; i++) cloud.puffs.push({ r: 20+Math.random()*30, cx:(Math.random()-0.5)*80, cy:(Math.random()-0.5)*30 });
-  return cloud;
+const cloud = { x: Math.random() * 800, y: isStorm ? 200 + Math.random()*100 : 50 + Math.random()*100, puffs: [] };
+const n = 4 + Math.floor(Math.random()*4);
+for(let i=0; i<n; i++) cloud.puffs.push({ r: 20+Math.random()*30, cx:(Math.random()-0.5)*80, cy:(Math.random()-0.5)*30 });
+return cloud;
 }
 function createBirdFlock() {
-  return { x: canvas.width + 100, y: 50 + Math.random() * 350, width: 60, height: 30, members: [ {rx:0, ry:0}, {rx:15, ry:-10}, {rx:15, ry:10}, {rx:30, ry:0}, {rx:40, ry:-15} ] };
+return { x: canvas.width + 100, y: 50 + Math.random() * 350, width: 60, height: 30, members: [ {rx:0, ry:0}, {rx:15, ry:-10}, {rx:15, ry:10}, {rx:30, ry:0}, {rx:40, ry:-15} ] };
 }
 function getZoneAt(meter) {
-  let pct = meter / CURRENT_ROUTE.gameDist;
-  if (pct < 0) pct = 0; if (pct > 1) pct = 1;
-  let map = CURRENT_ROUTE.map;
-  let zone = map[0];
-  for (let i = 0; i < map.length; i++) { if (pct >= map[i].at) zone = map[i]; }
-  return zone;
+let pct = meter / CURRENT_ROUTE.gameDist;
+if (pct < 0) pct = 0; if (pct > 1) pct = 1;
+let map = CURRENT_ROUTE.map;
+let zone = map[0];
+for (let i = 0; i < map.length; i++) { if (pct >= map[i].at) zone = map[i]; }
+return zone;
 }
 function updatePlane(dt) {
-  if (INPUT.w && PLANE.throttle < 100) { PLANE.throttle += 40 * dt; GAME.hasStarted = true; }
-  if (INPUT.s && PLANE.throttle > 0) PLANE.throttle -= 40 * dt;
-  let engineEfficiency = 1.0;
-  if (GAME.birdStrikes === 1) engineEfficiency = 0.5;
-  if (GAME.birdStrikes >= 2) engineEfficiency = 0.0;
-  if (GAME.hasStarted && PLANE.fuel > 0) {
-    let burn = 6 + (PLANE.throttle * 0.2); if (PLANE.throttle > 85) burn *= 2;
-    PLANE.fuel -= burn * dt; if (PLANE.fuel < 0) PLANE.fuel = 0;
-  } else if (PLANE.fuel <= 0) { PLANE.throttle = 0; }
-  let availableThrust = (PLANE.throttle / 100) * engineEfficiency;
-  let targetSpeed = availableThrust * 350;
-  const groundY = canvas.height - 50; const onGround = (PLANE.y + (PLANE.height/2) + PLANE.wheelDepth) > groundY - 1;
-  if (onGround && INPUT[" "]) { PLANE.speed -= 150 * dt; targetSpeed = 0; PLANE.throttle = 0; }
-  if (PLANE.speed < targetSpeed) PLANE.speed += 30 * dt; else if (PLANE.speed > targetSpeed) PLANE.speed -= 20 * dt;
-  if (PLANE.speed < 0) PLANE.speed = 0;
-  PLANE.verticalSpeed += CONFIG.GRAVITY * dt;
-  if (PLANE.speed > 50) {
-    let baseLift = PLANE.speed * CONFIG.BASE_LIFT;
-    let aoaLift = 0;
-    if (PLANE.angle < 0) {
-      aoaLift = Math.abs(PLANE.angle) * PLANE.speed * CONFIG.LIFT_POWER;
-    }
-    let totalLift = baseLift + aoaLift;
-    PLANE.verticalSpeed -= totalLift * dt;
-  }
-  if (INPUT.ArrowDown) PLANE.angle -= CONFIG.ROTATION_SPEED * dt;
-  if (INPUT.ArrowUp) PLANE.angle += CONFIG.ROTATION_SPEED * dt;
-  if (!INPUT.ArrowUp && !INPUT.ArrowDown) {
-    if (PLANE.angle < -0.5) PLANE.angle += CONFIG.AUTO_LEVEL_SPEED * dt;
-  else if (PLANE.angle > 0.5) PLANE.angle -= CONFIG.AUTO_LEVEL_SPEED * dt;
-  else PLANE.angle = 0;
-  }
-  if (PLANE.angle < -90) PLANE.angle = -90; if (PLANE.angle > 90) PLANE.angle = 90;
-  PLANE.y += PLANE.verticalSpeed * dt;
-  GAME.dist += PLANE.speed * dt; GAME.groundScroll += PLANE.speed * 0.016;
+if (INPUT.w && PLANE.throttle < 100) { PLANE.throttle += 40 * dt; GAME.hasStarted = true; }
+if (INPUT.s && PLANE.throttle > 0) PLANE.throttle -= 40 * dt;
+let engineEfficiency = 1.0;
+if (GAME.birdStrikes === 1) engineEfficiency = 0.5;
+if (GAME.birdStrikes >= 2) engineEfficiency = 0.0;
+if (GAME.hasStarted && PLANE.fuel > 0) {
+let burn = 6 + (PLANE.throttle * 0.2); if (PLANE.throttle > 85) burn *= 2;
+PLANE.fuel -= burn * dt; if (PLANE.fuel < 0) PLANE.fuel = 0;
+} else if (PLANE.fuel <= 0) { PLANE.throttle = 0; }
+let availableThrust = (PLANE.throttle / 100) * engineEfficiency;
+let targetSpeed = availableThrust * 350;
+const groundY = canvas.height - 50; const onGround = (PLANE.y + (PLANE.height/2) + PLANE.wheelDepth) > groundY - 1;
+if (onGround && INPUT[" "]) { PLANE.speed -= 150 * dt; targetSpeed = 0; PLANE.throttle = 0; }
+if (PLANE.speed < targetSpeed) PLANE.speed += 30 * dt; else if (PLANE.speed > targetSpeed) PLANE.speed -= 20 * dt;
+if (PLANE.speed < 0) PLANE.speed = 0;
+PLANE.verticalSpeed += CONFIG.GRAVITY * dt;
+if (PLANE.speed > 50) {
+let baseLift = PLANE.speed * CONFIG.BASE_LIFT;
+let aoaLift = 0;
+if (PLANE.angle < 0) {
+aoaLift = Math.abs(PLANE.angle) * PLANE.speed * CONFIG.LIFT_POWER;
+}
+let totalLift = baseLift + aoaLift;
+PLANE.verticalSpeed -= totalLift * dt;
+}
+if (INPUT.ArrowDown) PLANE.angle -= CONFIG.ROTATION_SPEED * dt;
+if (INPUT.ArrowUp) PLANE.angle += CONFIG.ROTATION_SPEED * dt;
+if (!INPUT.ArrowUp && !INPUT.ArrowDown) {
+if (PLANE.angle < -0.5) PLANE.angle += CONFIG.AUTO_LEVEL_SPEED * dt;
+else if (PLANE.angle > 0.5) PLANE.angle -= CONFIG.AUTO_LEVEL_SPEED * dt;
+else PLANE.angle = 0;
+}
+if (PLANE.angle < -90) PLANE.angle = -90; if (PLANE.angle > 90) PLANE.angle = 90;
+PLANE.y += PLANE.verticalSpeed * dt;
+GAME.dist += PLANE.speed * dt; GAME.groundScroll += PLANE.speed * 0.016;
 }
 function updateStorm(dt) {
-  const stormStartDist = CURRENT_ROUTE.gameDist * CONFIG.STORM_START_PCT;
-  const stormEndDist = CURRENT_ROUTE.gameDist * CONFIG.STORM_END_PCT;
-  const inWarning = (GAME.dist > stormStartDist - CONFIG.STORM_WARN_DIST) && (GAME.dist < stormEndDist);
-  const isUnsafeHeight = PLANE.y > CONFIG.STORM_SAFE_ALT;
-  const label = document.getElementById('route-label');
-  if (GAME.birdStrikes === 0) {
-    if (inWarning && isUnsafeHeight) { label.innerText = "⚠ STORM AHEAD - CLIMB NOW! ⚠"; label.style.color = "#ffeb3b"; label.style.animation = "blink 0.5s infinite"; }
-  else { label.innerText = CURRENT_ROUTE.name; label.style.color = "#aaa"; label.style.animation = "none"; }
-  }
-  if (GAME.dist > stormStartDist && GAME.dist < stormEndDist) {
-    GAME.stormActive = true;
-    if (isUnsafeHeight) {
-      GAME.stormTimer += dt;
-      if (Math.random() < 0.005) { GAME.flashFrame = 5; AudioEngine.playNoise('thunder'); if (GAME.stormTimer > CONFIG.STORM_GRACE_TIME) gameOver("STRUCK BY LIGHTNING"); }
-    } else { GAME.stormTimer = 0; if (Math.random() < 0.005) { GAME.flashFrame = 5; AudioEngine.playNoise('thunder'); } }
-  } else { GAME.stormActive = false; GAME.stormTimer = 0; }
-  if (GAME.flashFrame > 0) GAME.flashFrame--;
+const stormStartDist = CURRENT_ROUTE.gameDist * CONFIG.STORM_START_PCT;
+const stormEndDist = CURRENT_ROUTE.gameDist * CONFIG.STORM_END_PCT;
+const inWarning = (GAME.dist > stormStartDist - CONFIG.STORM_WARN_DIST) && (GAME.dist < stormEndDist);
+const isUnsafeHeight = PLANE.y > CONFIG.STORM_SAFE_ALT;
+const label = document.getElementById('route-label');
+if (GAME.birdStrikes === 0) {
+if (inWarning && isUnsafeHeight) { label.innerText = "⚠ STORM AHEAD - CLIMB NOW! ⚠"; label.style.color = "#ffeb3b"; label.style.animation = "blink 0.5s infinite"; }
+else { label.innerText = CURRENT_ROUTE.name; label.style.color = "#aaa"; label.style.animation = "none"; }
+}
+if (GAME.dist > stormStartDist && GAME.dist < stormEndDist) {
+GAME.stormActive = true;
+if (isUnsafeHeight) {
+GAME.stormTimer += dt;
+if (Math.random() < 0.005) { GAME.flashFrame = 5; AudioEngine.playNoise('thunder'); if (GAME.stormTimer > CONFIG.STORM_GRACE_TIME) gameOver("STRUCK BY LIGHTNING"); }
+} else { GAME.stormTimer = 0; if (Math.random() < 0.005) { GAME.flashFrame = 5; AudioEngine.playNoise('thunder'); } }
+} else { GAME.stormActive = false; GAME.stormTimer = 0; }
+if (GAME.flashFrame > 0) GAME.flashFrame--;
 }
 function updateBirds(dt) {
-  if (!GAME.stormActive && !GAME.running && !GAME.gameOver) return;
-  if (PLANE.y < canvas.height - 100 && Math.random() < CONFIG.BIRD_SPAWN_RATE) { birdFlocks.push(createBirdFlock()); }
-  const label = document.getElementById('route-label');
-  for (let i = birdFlocks.length - 1; i >= 0; i--) {
-    let flock = birdFlocks[i]; flock.x -= (CONFIG.BIRD_SPEED + PLANE.speed) * dt;
-    const yOffset = 20; const padX = 5; const padY = 5;
-    const pLeft = PLANE.x + padX; const pRight = PLANE.x + PLANE.width - padX; const pTop = PLANE.y + padY; const pBottom = PLANE.y + PLANE.height - padY;
-    const fLeft = flock.x; const fRight = flock.x + flock.width; const fTop = flock.y - yOffset; const fBottom = (flock.y + flock.height) - yOffset;
-    if (pLeft < fRight && pRight > fLeft && pTop < fBottom && pBottom > fTop) {
-      GAME.birdStrikes++; GAME.strikeFlash = 10; AudioEngine.playNoise('crash');
-      if (GAME.birdStrikes === 1) { label.innerText = "⚠ BIRD STRIKE! ENGINE 1 LOST! ⚠"; label.style.color = "orange"; }
-    else { label.innerText = "⚠ BIRD STRIKE! ALL ENGINES LOST! ⚠"; label.style.color = "red"; }
-      label.style.animation = "blink 0.2s infinite";
-      birdFlocks.splice(i, 1); continue;
-    }
-    if (flock.x < -100) birdFlocks.splice(i, 1);
-  }
-  if (GAME.strikeFlash > 0) GAME.strikeFlash--;
+if (!GAME.stormActive && !GAME.running && !GAME.gameOver) return;
+if (PLANE.y < canvas.height - 100 && Math.random() < CONFIG.BIRD_SPAWN_RATE) { birdFlocks.push(createBirdFlock()); }
+const label = document.getElementById('route-label');
+for (let i = birdFlocks.length - 1; i >= 0; i--) {
+let flock = birdFlocks[i]; flock.x -= (CONFIG.BIRD_SPEED + PLANE.speed) * dt;
+const yOffset = 20; const padX = 5; const padY = 5;
+const pLeft = PLANE.x + padX; const pRight = PLANE.x + PLANE.width - padX; const pTop = PLANE.y + padY; const pBottom = PLANE.y + PLANE.height - padY;
+const fLeft = flock.x; const fRight = flock.x + flock.width; const fTop = flock.y - yOffset; const fBottom = (flock.y + flock.height) - yOffset;
+if (pLeft < fRight && pRight > fLeft && pTop < fBottom && pBottom > fTop) {
+GAME.birdStrikes++; GAME.strikeFlash = 10; AudioEngine.playNoise('crash');
+if (GAME.birdStrikes === 1) { label.innerText = "⚠ BIRD STRIKE! ENGINE 1 LOST! ⚠"; label.style.color = "orange"; }
+else { label.innerText = "⚠ BIRD STRIKE! ALL ENGINES LOST! ⚠"; label.style.color = "red"; }
+label.style.animation = "blink 0.2s infinite";
+birdFlocks.splice(i, 1); continue;
+}
+if (flock.x < -100) birdFlocks.splice(i, 1);
+}
+if (GAME.strikeFlash > 0) GAME.strikeFlash--;
 }
 function checkCollisions() {
-  const groundY = canvas.height - 50;
-  const wheelY = PLANE.y + (PLANE.height/2) + PLANE.wheelDepth;
-  const rad = PLANE.angle * Math.PI / 180;
-  const noseY = (PLANE.y + PLANE.height/2) + (Math.sin(rad) * (PLANE.width/2));
-  if (PLANE.y < 0) { PLANE.y = 0; PLANE.verticalSpeed = 80; }
-  if (wheelY > groundY || noseY > groundY) {
-    if (PLANE.verticalSpeed > CONFIG.MAX_LANDING_SPEED) {
-      gameOver("HARD LANDING! (Descend slower)");
-      return;
-    }
-    if (noseY > groundY && PLANE.angle > 10) {
-      gameOver("NOSE DIVE CRASH!");
-      return;
-    }
-    if (PLANE.angle < -CONFIG.CRASH_ANGLE || PLANE.angle > CONFIG.CRASH_ANGLE) {
-      gameOver("CRASH LANDING! (Keep level)");
-      return;
-    }
-    const zone = getZoneAt(GAME.dist);
-    const biomeInfo = BIOME_DATA[zone.type] || BIOME_DATA['RUNWAY'];
-    if (GAME.birdStrikes >= 2) { gameOver("TOTAL ENGINE FAILURE - CRASHED"); return; }
-    if (biomeInfo.isWater) { gameOver("SPLASHDOWN FAILED"); return; }
-    const takeoffLimit = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[1].at;
-    const lastZoneIdx = CURRENT_ROUTE.map.length - 1;
-    const landingStart = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[lastZoneIdx].at;
-    const inStart = GAME.dist < takeoffLimit;
-    const inEnd = GAME.dist > landingStart;
-    if (!inStart && !inEnd) {
-      gameOver(biomeInfo.msg);
-      return;
-    }
-    if (inEnd && PLANE.speed < 2) { if (!GAME.levelComplete) victory(); }
-    PLANE.y = groundY - (PLANE.height/2) - PLANE.wheelDepth;
-    PLANE.verticalSpeed = 0;
-    PLANE.angle *= 0.9;
-  }
-  const takeoffLimit = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[1].at;
-  if (wheelY > groundY - 1 && GAME.dist > takeoffLimit && GAME.dist < 5000) gameOver("OVERSHOT RUNWAY (Did not takeoff)");
-  if (GAME.dist > CURRENT_ROUTE.gameDist + CONFIG.RUNWAY_BUFFER) { if (PLANE.speed > 5) gameOver("OVERSHOT RUNWAY (Brake harder!)"); }
+const groundY = canvas.height - 50;
+const wheelY = PLANE.y + (PLANE.height/2) + PLANE.wheelDepth;
+const rad = PLANE.angle * Math.PI / 180;
+const noseY = (PLANE.y + PLANE.height/2) + (Math.sin(rad) * (PLANE.width/2));
+if (PLANE.y < 0) { PLANE.y = 0; PLANE.verticalSpeed = 80; }
+if (wheelY > groundY || noseY > groundY) {
+if (PLANE.verticalSpeed > CONFIG.MAX_LANDING_SPEED) {
+gameOver("HARD LANDING! (Descend slower)");
+return;
+}
+if (noseY > groundY && PLANE.angle > 10) {
+gameOver("NOSE DIVE CRASH!");
+return;
+}
+if (PLANE.angle < -CONFIG.CRASH_ANGLE || PLANE.angle > CONFIG.CRASH_ANGLE) {
+gameOver("CRASH LANDING! (Keep level)");
+return;
+}
+const zone = getZoneAt(GAME.dist);
+const biomeInfo = BIOME_DATA[zone.type] || BIOME_DATA['RUNWAY'];
+if (GAME.birdStrikes >= 2) { gameOver("TOTAL ENGINE FAILURE - CRASHED"); return; }
+if (biomeInfo.isWater) { gameOver("SPLASHDOWN FAILED"); return; }
+const takeoffLimit = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[1].at;
+const lastZoneIdx = CURRENT_ROUTE.map.length - 1;
+const landingStart = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[lastZoneIdx].at;
+const inStart = GAME.dist < takeoffLimit;
+const inEnd = GAME.dist > landingStart;
+if (!inStart && !inEnd) {
+gameOver(biomeInfo.msg);
+return;
+}
+if (inEnd && PLANE.speed < 2) { if (!GAME.levelComplete) victory(); }
+PLANE.y = groundY - (PLANE.height/2) - PLANE.wheelDepth;
+PLANE.verticalSpeed = 0;
+PLANE.angle *= 0.9;
+}
+const takeoffLimit = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[1].at;
+if (wheelY > groundY - 1 && GAME.dist > takeoffLimit && GAME.dist < 5000) gameOver("OVERSHOT RUNWAY (Did not takeoff)");
+if (GAME.dist > CURRENT_ROUTE.gameDist + CONFIG.RUNWAY_BUFFER) { if (PLANE.speed > 5) gameOver("OVERSHOT RUNWAY (Brake harder!)"); }
 }
 function updateUI() {
-  let throtPct = Math.round(PLANE.throttle);
-  let fuelPct = Math.round((PLANE.fuel / CONFIG.FUEL_MAX) * 100);
-  let routePct = Math.min(100, (GAME.dist / CURRENT_ROUTE.gameDist) * 100);
-  document.getElementById('route-fill').style.width = routePct + "%";
-  let currentZone = getZoneAt(GAME.dist);
-  const biomeInfo = BIOME_DATA[currentZone.type] || BIOME_DATA['RUNWAY'];
-  const locInd = document.getElementById('location-indicator');
-  locInd.innerText = currentZone.name;
-  locInd.style.color = biomeInfo.isWater ? '#29B6F6' : '#4caf50';
-  let pctLeft = 1 - (GAME.dist / CURRENT_ROUTE.gameDist);
-  let remKm = Math.max(0, Math.round(CURRENT_ROUTE.realKm * pctLeft));
-  document.getElementById('distance-text').innerHTML = `DISTANCE: ${remKm} KM`;
-  let throtColor = throtPct > 75 ? '#ff9800' : '#4caf50';
-  if (GAME.birdStrikes > 0) throtColor = 'red';
-  let fuelColor = fuelPct < 20 ? '#ff0000' : '#4caf50';
-  document.getElementById('stats-panel').innerHTML = `
-  <div class="stat-row"><span class="stat-label">SPD</span><div><span class="stat-val">${Math.round(PLANE.speed)}</span> <span style="font-size:9px">kts</span></div></div>
-  <div class="stat-row"><span class="stat-label">ALT</span><div><span class="stat-val">${Math.round(canvas.height - 50 - PLANE.y)}</span> <span style="font-size:9px">ft</span></div></div>
-  <div class="stat-row"><span class="stat-label">PWR</span><div style="display:flex; align-items:center"><span class="stat-val" style="color:${throtColor}">${throtPct}%</span><div class="mini-bar"><div class="mini-fill" style="width:${throtPct}%; background:${throtColor}"></div></div></div></div>
-  <div class="stat-row"><span class="stat-label">FUEL</span><div style="display:flex; align-items:center"><span class="stat-val" style="color:${fuelColor}">${fuelPct}%</span><div class="mini-bar"><div class="mini-fill" style="width:${fuelPct}%; background:${fuelColor}"></div></div></div></div>
-  `;
+let throtPct = Math.round(PLANE.throttle);
+let fuelPct = Math.round((PLANE.fuel / CONFIG.FUEL_MAX) * 100);
+let routePct = Math.min(100, (GAME.dist / CURRENT_ROUTE.gameDist) * 100);
+document.getElementById('route-fill').style.width = routePct + "%";
+let currentZone = getZoneAt(GAME.dist);
+const biomeInfo = BIOME_DATA[currentZone.type] || BIOME_DATA['RUNWAY'];
+const locInd = document.getElementById('location-indicator');
+locInd.innerText = currentZone.name;
+locInd.style.color = biomeInfo.isWater ? '#29B6F6' : '#4caf50';
+let pctLeft = 1 - (GAME.dist / CURRENT_ROUTE.gameDist);
+let remKm = Math.max(0, Math.round(CURRENT_ROUTE.realKm * pctLeft));
+document.getElementById('distance-text').innerHTML = `DISTANCE: ${remKm} KM`;
+let throtColor = throtPct > 75 ? '#ff9800' : '#4caf50';
+if (GAME.birdStrikes > 0) throtColor = 'red';
+let fuelColor = fuelPct < 20 ? '#ff0000' : '#4caf50';
+document.getElementById('stats-panel').innerHTML = `
+<div class="stat-row"><span class="stat-label">SPD</span><div><span class="stat-val">${Math.round(PLANE.speed)}</span> <span style="font-size:9px">kts</span></div></div>
+<div class="stat-row"><span class="stat-label">ALT</span><div><span class="stat-val">${Math.round(canvas.height - 50 - PLANE.y)}</span> <span style="font-size:9px">ft</span></div></div>
+<div class="stat-row"><span class="stat-label">PWR</span><div style="display:flex; align-items:center"><span class="stat-val" style="color:${throtColor}">${throtPct}%</span><div class="mini-bar"><div class="mini-fill" style="width:${throtPct}%; background:${throtColor}"></div></div></div></div>
+<div class="stat-row"><span class="stat-label">FUEL</span><div style="display:flex; align-items:center"><span class="stat-val" style="color:${fuelColor}">${fuelPct}%</span><div class="mini-bar"><div class="mini-fill" style="width:${fuelPct}%; background:${fuelColor}"></div></div></div></div>
+`;
 }
 const designColors = { fuselage: '#EEEFFF', fuselageShadow: '#D0D1E0', wings: '#B0B4C0', wingShadow: '#8A8E99', windows: '#2C3E50' };
 function drawPlane() {
-  ctx.save();
-  ctx.translate(PLANE.x + PLANE.width/2, PLANE.y + PLANE.height/2);
-  ctx.rotate(PLANE.angle * Math.PI / 180);
-  const s = 0.18; ctx.scale(s, s); ctx.translate(-365, -180);
-  ctx.fillStyle = designColors.wingShadow; ctx.beginPath(); ctx.moveTo(280, 180); ctx.lineTo(380, 160); ctx.lineTo(400, 165); ctx.lineTo(350, 190); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = "#333"; ctx.fillRect(300, 210, 15, 15); ctx.beginPath(); ctx.arc(308, 230, 12, 0, Math.PI*2); ctx.fill();
-  ctx.fillRect(550, 200, 10, 25); ctx.beginPath(); ctx.arc(555, 230, 10, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = designColors.fuselage; ctx.beginPath(); ctx.moveTo(50, 190); ctx.quadraticCurveTo(300, 240, 600, 200); ctx.quadraticCurveTo(680, 190, 680, 170); ctx.quadraticCurveTo(670, 140, 620, 140); ctx.quadraticCurveTo(300, 120, 50, 160); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = designColors.fuselageShadow; ctx.beginPath(); ctx.moveTo(50, 190); ctx.quadraticCurveTo(300, 240, 600, 200); ctx.lineTo(580, 190); ctx.quadraticCurveTo(300, 220, 60, 185); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = designColors.wings; ctx.beginPath(); ctx.moveTo(60, 165); ctx.lineTo(20, 60); ctx.lineTo(90, 60); ctx.lineTo(140, 150); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = designColors.wingShadow; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(75, 60); ctx.lineTo(120, 155); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(65, 155); ctx.lineTo(30, 150); ctx.lineTo(40, 135); ctx.lineTo(90, 145); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(260, 195); ctx.lineTo(400, 180); ctx.lineTo(420, 185); ctx.lineTo(340, 215); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = designColors.wingShadow; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(400, 180); ctx.lineTo(340, 215); ctx.stroke();
-  const engineX = 330; const engineY = 205; ctx.fillStyle = designColors.wings; ctx.beginPath(); ctx.ellipse(engineX, engineY, 60, 20, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#222"; ctx.beginPath(); ctx.ellipse(engineX + 55, engineY, 5, 18, 0, 0, Math.PI * 2); ctx.fill();
-  if (GAME.birdStrikes > 0) { ctx.fillStyle = `rgba(50,50,50,0.5)`; ctx.beginPath(); ctx.ellipse(engineX - 20, engineY - 10, 10, 10, 0, 0, Math.PI * 2); ctx.fill(); }
-  if (PLANE.throttle > 5 && GAME.birdStrikes < 2) { ctx.save(); ctx.clip(); ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.5})`; ctx.beginPath(); ctx.ellipse(engineX + 55, engineY, 4, 16, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
-  ctx.fillStyle = designColors.windows; ctx.beginPath(); ctx.moveTo(620, 150); ctx.lineTo(665, 155); ctx.lineTo(670, 165); ctx.lineTo(625, 165); ctx.closePath(); ctx.fill();
-  const wSX = 180; const wEX = 580; const wY = 175; const numW = 12; const sp = (wEX - wSX) / numW;
-  for (let i = 0; i < numW; i++) { ctx.beginPath(); ctx.ellipse(wSX + (i * sp), wY, 6, 8, 0, 0, Math.PI * 2); ctx.fill(); }
-  ctx.restore();
+ctx.save();
+ctx.translate(PLANE.x + PLANE.width/2, PLANE.y + PLANE.height/2);
+ctx.rotate(PLANE.angle * Math.PI / 180);
+const s = 0.18; ctx.scale(s, s); ctx.translate(-365, -180);
+ctx.fillStyle = designColors.wingShadow; ctx.beginPath(); ctx.moveTo(280, 180); ctx.lineTo(380, 160); ctx.lineTo(400, 165); ctx.lineTo(350, 190); ctx.closePath(); ctx.fill();
+ctx.fillStyle = "#333"; ctx.fillRect(300, 210, 15, 15); ctx.beginPath(); ctx.arc(308, 230, 12, 0, Math.PI*2); ctx.fill();
+ctx.fillRect(550, 200, 10, 25); ctx.beginPath(); ctx.arc(555, 230, 10, 0, Math.PI*2); ctx.fill();
+ctx.fillStyle = designColors.fuselage; ctx.beginPath(); ctx.moveTo(50, 190); ctx.quadraticCurveTo(300, 240, 600, 200); ctx.quadraticCurveTo(680, 190, 680, 170); ctx.quadraticCurveTo(670, 140, 620, 140); ctx.quadraticCurveTo(300, 120, 50, 160); ctx.closePath(); ctx.fill();
+ctx.fillStyle = designColors.fuselageShadow; ctx.beginPath(); ctx.moveTo(50, 190); ctx.quadraticCurveTo(300, 240, 600, 200); ctx.lineTo(580, 190); ctx.quadraticCurveTo(300, 220, 60, 185); ctx.closePath(); ctx.fill();
+ctx.fillStyle = designColors.wings; ctx.beginPath(); ctx.moveTo(60, 165); ctx.lineTo(20, 60); ctx.lineTo(90, 60); ctx.lineTo(140, 150); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = designColors.wingShadow; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(75, 60); ctx.lineTo(120, 155); ctx.stroke();
+ctx.beginPath(); ctx.moveTo(65, 155); ctx.lineTo(30, 150); ctx.lineTo(40, 135); ctx.lineTo(90, 145); ctx.closePath(); ctx.fill();
+ctx.beginPath(); ctx.moveTo(260, 195); ctx.lineTo(400, 180); ctx.lineTo(420, 185); ctx.lineTo(340, 215); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = designColors.wingShadow; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(400, 180); ctx.lineTo(340, 215); ctx.stroke();
+const engineX = 330; const engineY = 205; ctx.fillStyle = designColors.wings; ctx.beginPath(); ctx.ellipse(engineX, engineY, 60, 20, 0, 0, Math.PI * 2); ctx.fill();
+ctx.fillStyle = "#222"; ctx.beginPath(); ctx.ellipse(engineX + 55, engineY, 5, 18, 0, 0, Math.PI * 2); ctx.fill();
+if (GAME.birdStrikes > 0) { ctx.fillStyle = `rgba(50,50,50,0.5)`; ctx.beginPath(); ctx.ellipse(engineX - 20, engineY - 10, 10, 10, 0, 0, Math.PI * 2); ctx.fill(); }
+if (PLANE.throttle > 5 && GAME.birdStrikes < 2) { ctx.save(); ctx.clip(); ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.5})`; ctx.beginPath(); ctx.ellipse(engineX + 55, engineY, 4, 16, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+ctx.fillStyle = designColors.windows; ctx.beginPath(); ctx.moveTo(620, 150); ctx.lineTo(665, 155); ctx.lineTo(670, 165); ctx.lineTo(625, 165); ctx.closePath(); ctx.fill();
+const wSX = 180; const wEX = 580; const wY = 175; const numW = 12; const sp = (wEX - wSX) / numW;
+for (let i = 0; i < numW; i++) { ctx.beginPath(); ctx.ellipse(wSX + (i * sp), wY, 6, 8, 0, 0, Math.PI * 2); ctx.fill(); }
+ctx.restore();
 }
 function draw() {
-  ctx.clearRect(0,0,canvas.width, canvas.height);
-  let skyColor = Math.max(0, 135 - (400 - PLANE.y)*0.2);
-  let grad = ctx.createLinearGradient(0,0,0,canvas.height);
-  if (GAME.stormActive) { grad.addColorStop(0, "#222"); grad.addColorStop(1, "#444"); }
+ctx.clearRect(0,0,canvas.width, canvas.height);
+let skyColor = Math.max(0, 135 - (400 - PLANE.y)*0.2);
+let grad = ctx.createLinearGradient(0,0,0,canvas.height);
+if (GAME.stormActive) { grad.addColorStop(0, "#222"); grad.addColorStop(1, "#444"); }
 else { grad.addColorStop(0, `rgb(20, 40, ${skyColor + 40})`); grad.addColorStop(1, "#87CEEB"); }
-  ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width, canvas.height);
-  if (GAME.stormActive) {
-    ctx.strokeStyle = "rgba(150,150,180,0.4)"; ctx.lineWidth = 1; ctx.beginPath();
-    rainDrops.forEach(d => {
-      d.x -= (PLANE.speed * 0.05) + 2; d.y += d.speed * 2;
-      if(d.y > canvas.height) { d.y = -20; d.x = Math.random()*800; }
-      if(d.x < 0) d.x = 800; ctx.moveTo(d.x, d.y); ctx.lineTo(d.x-5, d.y+15);
-    }); ctx.stroke();
-  }
-  const activeClouds = GAME.stormActive ? stormClouds : clouds;
-  ctx.fillStyle = GAME.stormActive ? "rgba(60,60,70,0.9)" : "rgba(255,255,255,0.25)";
-  activeClouds.forEach(c => {
-    c.x -= PLANE.speed * 0.005; if(c.x < -150) c.x = 900; ctx.beginPath();
-    c.puffs.forEach(p => { ctx.moveTo(c.x+p.cx+p.r, c.y+p.cy); ctx.arc(c.x+p.cx, c.y+p.cy, p.r, 0, Math.PI*2); }); ctx.fill();
-  });
-  ctx.strokeStyle = "#FFF"; ctx.lineWidth = 2; let flapY = Math.sin(Date.now() / 100) * 5;
-  birdFlocks.forEach(flock => {
-    flock.members.forEach(b => {
-      let bx = flock.x + b.rx; let by = flock.y + b.ry;
-      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - 5, by - 2 + (flapY * 0.5)); ctx.lineTo(bx - 10, by - 8 + flapY);
-      ctx.moveTo(bx, by); ctx.lineTo(bx + 5, by - 2 + (flapY * 0.5)); ctx.lineTo(bx + 10, by - 8 + flapY); ctx.stroke();
-    });
-  });
-  if (GAME.flashFrame > 0) { ctx.fillStyle = `rgba(255,255,255,${GAME.flashFrame/5})`; ctx.fillRect(0,0,canvas.width,canvas.height); }
-  if (GAME.strikeFlash > 0) { ctx.fillStyle = `rgba(255,0,0,0.5)`; ctx.fillRect(0,0,canvas.width,canvas.height); }
-  const step = 40; const screenOffset = Math.floor(GAME.groundScroll) % step;
-  for(let i = -screenOffset; i < canvas.width; i += step) {
-    let meter = GAME.dist + i; let zone = getZoneAt(meter);
-    let biomeConfig = BIOME_DATA[zone.type] || BIOME_DATA['RUNWAY'];
-    let col = biomeConfig.color;
-    if (GAME.stormActive) col = "#111";
-    ctx.fillStyle = col; ctx.fillRect(i, canvas.height-50, step+1, 50);
-    let worldX = Math.floor((GAME.groundScroll + i) / step); let rand = Math.sin(worldX * 1234.5);
-    if (zone.type === 'RUNWAY') {
-      if (worldX % 4 === 0) { ctx.fillStyle = "#BDBDBD"; ctx.fillRect(i, canvas.height-45, 30, 5); }
-    }
-  else if (zone.type === 'FOREST') {
-      if (rand > 0.3) { let h = 10 + Math.abs(rand*15); ctx.fillStyle = GAME.stormActive ? "#0d1a08" : "#1b3310"; ctx.beginPath(); ctx.moveTo(i, canvas.height-10); ctx.lineTo(i+15, canvas.height-10); ctx.lineTo(i+7, canvas.height-10-h); ctx.fill(); }
-    }
-  else if (zone.type === 'WATER') {
-      if (rand > 0.5) { ctx.fillStyle="rgba(255,255,255,0.3)"; ctx.fillRect(i, canvas.height-40+(rand*20), 10, 2); }
-    }
-  else if (zone.type === 'CITY') {
-      if (rand > 0.2) { let h = 10 + Math.abs(rand*40); ctx.fillStyle="#000"; ctx.fillRect(i, canvas.height-10-h, 15, h); if(h>20){ ctx.fillStyle="#FFEB3B"; ctx.fillRect(i+2, canvas.height-10-h+5, 2, 2); } }
-    }
-  else if (zone.type === 'MOUNTAIN' || zone.type === 'ICE') {
-      if (rand > 0.4) {
-        let h = 20 + Math.abs(rand*30);
-        ctx.fillStyle = zone.type === 'ICE' ? "#CFD8DC" : "#546E7A";
-        ctx.beginPath(); ctx.moveTo(i, canvas.height-10); ctx.lineTo(i+40, canvas.height-10); ctx.lineTo(i+20, canvas.height-10-h); ctx.fill();
-      }
-    }
-  }
-  drawPlane();
+ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width, canvas.height);
+if (GAME.stormActive) {
+ctx.strokeStyle = "rgba(150,150,180,0.4)"; ctx.lineWidth = 1; ctx.beginPath();
+rainDrops.forEach(d => {
+d.x -= (PLANE.speed * 0.05) + 2; d.y += d.speed * 2;
+if(d.y > canvas.height) { d.y = -20; d.x = Math.random()*800; }
+if(d.x < 0) d.x = 800; ctx.moveTo(d.x, d.y); ctx.lineTo(d.x-5, d.y+15);
+}); ctx.stroke();
+}
+const activeClouds = GAME.stormActive ? stormClouds : clouds;
+ctx.fillStyle = GAME.stormActive ? "rgba(60,60,70,0.9)" : "rgba(255,255,255,0.25)";
+activeClouds.forEach(c => {
+c.x -= PLANE.speed * 0.005; if(c.x < -150) c.x = 900; ctx.beginPath();
+c.puffs.forEach(p => { ctx.moveTo(c.x+p.cx+p.r, c.y+p.cy); ctx.arc(c.x+p.cx, c.y+p.cy, p.r, 0, Math.PI*2); }); ctx.fill();
+});
+ctx.strokeStyle = "#FFF"; ctx.lineWidth = 2; let flapY = Math.sin(Date.now() / 100) * 5;
+birdFlocks.forEach(flock => {
+flock.members.forEach(b => {
+let bx = flock.x + b.rx; let by = flock.y + b.ry;
+ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - 5, by - 2 + (flapY * 0.5)); ctx.lineTo(bx - 10, by - 8 + flapY);
+ctx.moveTo(bx, by); ctx.lineTo(bx + 5, by - 2 + (flapY * 0.5)); ctx.lineTo(bx + 10, by - 8 + flapY); ctx.stroke();
+});
+});
+if (GAME.flashFrame > 0) { ctx.fillStyle = `rgba(255,255,255,${GAME.flashFrame/5})`; ctx.fillRect(0,0,canvas.width,canvas.height); }
+if (GAME.strikeFlash > 0) { ctx.fillStyle = `rgba(255,0,0,0.5)`; ctx.fillRect(0,0,canvas.width,canvas.height); }
+const step = 40; const screenOffset = Math.floor(GAME.groundScroll) % step;
+for(let i = -screenOffset; i < canvas.width; i += step) {
+let meter = GAME.dist + i; let zone = getZoneAt(meter);
+let biomeConfig = BIOME_DATA[zone.type] || BIOME_DATA['RUNWAY'];
+let col = biomeConfig.color;
+if (GAME.stormActive) col = "#111";
+ctx.fillStyle = col; ctx.fillRect(i, canvas.height-50, step+1, 50);
+let worldX = Math.floor((GAME.groundScroll + i) / step); let rand = Math.sin(worldX * 1234.5);
+if (zone.type === 'RUNWAY') {
+if (worldX % 4 === 0) { ctx.fillStyle = "#BDBDBD"; ctx.fillRect(i, canvas.height-45, 30, 5); }
+}
+else if (zone.type === 'FOREST') {
+if (rand > 0.3) { let h = 10 + Math.abs(rand*15); ctx.fillStyle = GAME.stormActive ? "#0d1a08" : "#1b3310"; ctx.beginPath(); ctx.moveTo(i, canvas.height-10); ctx.lineTo(i+15, canvas.height-10); ctx.lineTo(i+7, canvas.height-10-h); ctx.fill(); }
+}
+else if (zone.type === 'WATER') {
+if (rand > 0.5) { ctx.fillStyle="rgba(255,255,255,0.3)"; ctx.fillRect(i, canvas.height-40+(rand*20), 10, 2); }
+}
+else if (zone.type === 'CITY') {
+if (rand > 0.2) { let h = 10 + Math.abs(rand*40); ctx.fillStyle="#000"; ctx.fillRect(i, canvas.height-10-h, 15, h); if(h>20){ ctx.fillStyle="#FFEB3B"; ctx.fillRect(i+2, canvas.height-10-h+5, 2, 2); } }
+}
+else if (zone.type === 'MOUNTAIN' || zone.type === 'ICE') {
+if (rand > 0.4) {
+let h = 20 + Math.abs(rand*30);
+ctx.fillStyle = zone.type === 'ICE' ? "#CFD8DC" : "#546E7A";
+ctx.beginPath(); ctx.moveTo(i, canvas.height-10); ctx.lineTo(i+40, canvas.height-10); ctx.lineTo(i+20, canvas.height-10-h); ctx.fill();
+}
+}
+}
+drawPlane();
 }
 function loop(timestamp) {
-  if (!GAME.running) return;
-  let dt = (timestamp - GAME.lastTime) / 1000;
-  GAME.lastTime = timestamp; if (dt > 0.1) dt = 0.1;
-  updatePlane(dt); updateStorm(dt); updateBirds(dt); checkCollisions();
-  updateScore(); updateUI(); AudioEngine.update(PLANE.throttle);
-  draw(); requestAnimationFrame(loop);
+if (!GAME.running) return;
+let dt = (timestamp - GAME.lastTime) / 1000;
+GAME.lastTime = timestamp; if (dt > 0.1) dt = 0.1;
+updatePlane(dt); updateStorm(dt); updateBirds(dt); checkCollisions();
+updateScore(); updateUI(); AudioEngine.update(PLANE.throttle);
+draw(); requestAnimationFrame(loop);
 }
 function resizeGame() {
-  const wrapper = document.getElementById('game-wrapper');
-  const margin = 40;
-  const scale = Math.min((window.innerWidth - margin) / 1020, (window.innerHeight - margin) / 600);
-  wrapper.style.transform = `scale(${scale})`;
+const wrapper = document.getElementById('game-wrapper');
+const margin = 40;
+const scale = Math.min((window.innerWidth - margin) / 1020, (window.innerHeight - margin) / 600);
+wrapper.style.transform = `scale(${scale})`;
 }
 window.addEventListener('resize', resizeGame);
 window.addEventListener('load', resizeGame);

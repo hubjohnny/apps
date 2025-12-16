@@ -4,54 +4,53 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Image Retromaker</title>
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn5G+PC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
 <style>
 body {
-  background-color: #222;
-  color: #eee;
-  font-family: 'Courier New', Courier, monospace;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
+background-color: #222;
+color: #eee;
+font-family: 'Courier New', Courier, monospace;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 20px;
 }
 label { display: block; margin-top: 15px; font-weight: bold; }
 input[type="range"], select { width: 100%; margin-top: 5px; }
 select {
-  padding: 8px;
-  background: #222;
-  color: white;
-  border: 1px solid #555;
-  font-family: inherit;
+padding: 8px;
+background: #222;
+color: white;
+border: 1px solid #555;
+font-family: inherit;
 }
 .canvas-container {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
+display: flex;
+gap: 20px;
+flex-wrap: wrap;
+justify-content: center;
 }
 canvas {
-  image-rendering: pixelated;
-  border: 4px solid #000;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
-  max-width: 100%;
-  height: auto;
+image-rendering: pixelated;
+border: 4px solid #000;
+box-shadow: 0 0 20px rgba(0,0,0,0.5);
+max-width: 100%;
+height: auto;
 }
 .btn-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
+display: flex;
+gap: 10px;
+margin-top: 20px;
 }
 button {
-  background: #0077aa;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  font-family: inherit;
-  cursor: pointer;
-  font-size: 1em;
-  flex: 1;
-  font-weight: bold;
+background: #0077aa;
+color: white;
+border: none;
+padding: 12px 20px;
+font-family: inherit;
+cursor: pointer;
+font-size: 1em;
+flex: 1;
+font-weight: bold;
 }
 button.download { background-color: #44aa44; }
 button:hover { filter: brightness(1.2); }
@@ -60,25 +59,25 @@ button:hover { filter: brightness(1.2); }
 <body>
 <h1>Image Retromaker</h1>
 <div class="controls">
-  <label>1. Upload Image</label>
-  <input type="file" id="upload" accept="image/*">
-  <label>2. Resolution (Width): <span id="resValue">320</span>px</label>
-  <input type="range" id="resolution" min="64" max="640" value="320" step="8">
-  <small style="color: #aaa;">Low (64-160) = Abstract | High (320+) = Detailed</small>
-  <label>3. Color Palette</label>
-  <select id="colorCount">
-    <option value="16">16 Colors (Retro Console style)</option>
-    <option value="32" selected>32 Colors (Arne32 - Balanced)</option>
-    <option value="64">64 Colors (Extended - Richer)</option>
-  </select>
-  <div class="btn-group">
-    <button onclick="processImage()">Convert</button>
-    <button class="download" onclick="downloadImage()">Download</button>
-  </div>
+<label>1. Upload Image</label>
+<input type="file" id="upload" accept="image/*">
+<label>2. Resolution (Width): <span id="resValue">320</span>px</label>
+<input type="range" id="resolution" min="64" max="640" value="320" step="8">
+<small style="color: #aaa;">Low (64-160) = Abstract | High (320+) = Detailed</small>
+<label>3. Color Palette</label>
+<select id="colorCount">
+<option value="16">16 Colors (Retro Console style)</option>
+<option value="32" selected>32 Colors (Arne32 - Balanced)</option>
+<option value="64">64 Colors (Extended - Richer)</option>
+</select>
+<div class="btn-group">
+<button onclick="processImage()">Convert</button>
+<button class="download" onclick="downloadImage()">Download</button>
+</div>
 </div>
 <div class="canvas-container">
-  <canvas id="canvas" style="display:none;"></canvas>
-  <canvas id="displayCanvas"></canvas>
+<canvas id="canvas" style="display:none;"></canvas>
+<canvas id="displayCanvas"></canvas>
 </div>
 <script>
 const PALETTE_16 = [
@@ -117,78 +116,78 @@ const displayCanvas = document.getElementById('displayCanvas');
 const dCtx = displayCanvas.getContext('2d');
 let originalImage = null;
 resInput.addEventListener('input', (e) => {
-  resValue.innerText = e.target.value;
+resValue.innerText = e.target.value;
 });
 fileInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const img = new Image();
-    img.onload = () => {
-      originalImage = img;
-      processImage();
-    };
-    img.src = event.target.result;
-  };
-  reader.readAsDataURL(file);
+const file = e.target.files[0];
+if(!file) return;
+const reader = new FileReader();
+reader.onload = (event) => {
+const img = new Image();
+img.onload = () => {
+originalImage = img;
+processImage();
+};
+img.src = event.target.result;
+};
+reader.readAsDataURL(file);
 });
 function getPalette() {
-  const val = colorSelect.value;
-  if (val === '16') return PALETTE_16;
-  if (val === '64') return PALETTE_64;
-  return PALETTE_32;
+const val = colorSelect.value;
+if (val === '16') return PALETTE_16;
+if (val === '64') return PALETTE_64;
+return PALETTE_32;
 }
 function findNearestColor(r, g, b, palette) {
-  let minDist = Infinity;
-  let color = palette[0];
-  for (let i = 0; i < palette.length; i++) {
-    const p = palette[i];
-    const dist = (r - p[0])**2 + (g - p[1])**2 + (b - p[2])**2;
-    if (dist < minDist) {
-      minDist = dist;
-      color = p;
-    }
-  }
-  return color;
+let minDist = Infinity;
+let color = palette[0];
+for (let i = 0; i < palette.length; i++) {
+const p = palette[i];
+const dist = (r - p[0])**2 + (g - p[1])**2 + (b - p[2])**2;
+if (dist < minDist) {
+minDist = dist;
+color = p;
+}
+}
+return color;
 }
 function processImage() {
-  if (!originalImage) {
-    alert("Please upload an image first!");
-    return;
-  }
-  const width = parseInt(resInput.value);
-  const scaleFactor = originalImage.width / width;
-  const height = Math.floor(originalImage.height / scaleFactor);
-  const currentPalette = getPalette();
-  canvas.width = width;
-  canvas.height = height;
-  ctx.drawImage(originalImage, 0, 0, width, height);
-  const imgData = ctx.getImageData(0, 0, width, height);
-  const data = imgData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i+3] < 128) continue;
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    const nearest = findNearestColor(r, g, b, currentPalette);
-    data[i] = nearest[0];
-    data[i + 1] = nearest[1];
-    data[i + 2] = nearest[2];
-  }
-  ctx.putImageData(imgData, 0, 0);
-  const scaleDisplay = 4;
-  displayCanvas.width = width * scaleDisplay;
-  displayCanvas.height = height * scaleDisplay;
-  dCtx.imageSmoothingEnabled = false;
-  dCtx.drawImage(canvas, 0, 0, displayCanvas.width, displayCanvas.height);
+if (!originalImage) {
+alert("Please upload an image first!");
+return;
+}
+const width = parseInt(resInput.value);
+const scaleFactor = originalImage.width / width;
+const height = Math.floor(originalImage.height / scaleFactor);
+const currentPalette = getPalette();
+canvas.width = width;
+canvas.height = height;
+ctx.drawImage(originalImage, 0, 0, width, height);
+const imgData = ctx.getImageData(0, 0, width, height);
+const data = imgData.data;
+for (let i = 0; i < data.length; i += 4) {
+if (data[i+3] < 128) continue;
+const r = data[i];
+const g = data[i + 1];
+const b = data[i + 2];
+const nearest = findNearestColor(r, g, b, currentPalette);
+data[i] = nearest[0];
+data[i + 1] = nearest[1];
+data[i + 2] = nearest[2];
+}
+ctx.putImageData(imgData, 0, 0);
+const scaleDisplay = 4;
+displayCanvas.width = width * scaleDisplay;
+displayCanvas.height = height * scaleDisplay;
+dCtx.imageSmoothingEnabled = false;
+dCtx.drawImage(canvas, 0, 0, displayCanvas.width, displayCanvas.height);
 }
 function downloadImage() {
-  if(displayCanvas.width === 0) return;
-  const link = document.createElement('a');
-  link.download = 'pixel-art.png';
-  link.href = displayCanvas.toDataURL();
-  link.click();
+if(displayCanvas.width === 0) return;
+const link = document.createElement('a');
+link.download = 'pixel-art.png';
+link.href = displayCanvas.toDataURL();
+link.click();
 }
 </script>
 </body>
