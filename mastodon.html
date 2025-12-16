@@ -7,250 +7,250 @@
 <style>
 
 :root {
-  --bg-color: #1e1e1e;
-  --text-color: #d4d4d4;
-  --line-height: 24px;
-  --font-size: 15px;
-  --font-family: 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
-  --selection-bg: #264f78;
-  --cursor-color: #aeafad;
-  --line-num-bg: #1e1e1e;
-  --line-num-text: #858585;
-  --border-color: #333;
-  --c-comment: #6a9955;
-  --c-string: #ce9178;
-  --c-number: #b5cea8;
-  --c-keyword: #c586c0;
-  --c-function: #dcdcaa;
-  --c-tag: #569cd6;
-  --c-attr: #9cdcfe;
-  --c-selector: #d7ba7d;
-  --c-property: #9cdcfe;
+--bg-color: #1e1e1e;
+--text-color: #d4d4d4;
+--line-height: 24px;
+--font-size: 15px;
+--font-family: 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
+--selection-bg: #264f78;
+--cursor-color: #aeafad;
+--line-num-bg: #1e1e1e;
+--line-num-text: #858585;
+--border-color: #333;
+--c-comment: #6a9955;
+--c-string: #ce9178;
+--c-number: #b5cea8;
+--c-keyword: #c586c0;
+--c-function: #dcdcaa;
+--c-tag: #569cd6;
+--c-attr: #9cdcfe;
+--c-selector: #d7ba7d;
+--c-property: #9cdcfe;
 }
 
 body {
-  margin: 0;
-  overflow: hidden;
-  background: var(--bg-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
+margin: 0;
+overflow: hidden;
+background: var(--bg-color);
+color: var(--text-color);
+font-family: var(--font-family);
 }
 
 #editor {
-  position: relative;
-  top: 40px;
-  width: 100vw;
-  height: calc(100vh - 80px);
-  overflow: auto;
-  outline: none;
-  cursor: text;
+position: relative;
+top: 40px;
+width: 100vw;
+height: calc(100vh - 80px);
+overflow: auto;
+outline: none;
+cursor: text;
 }
 
 #scroll-phantom {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  width: 1px;
-  height: 1px;
+position: absolute;
+top: 0;
+left: 0;
+z-index: -1;
+width: 1px;
+height: 1px;
 }
 
 #view-port {
-  position: absolute;
-  top: 0;
-  left: 0;
-  min-width: 100%;
-  pointer-events: none;
-  will-change: transform;
+position: absolute;
+top: 0;
+left: 0;
+min-width: 100%;
+pointer-events: none;
+will-change: transform;
 }
 
 .line {
-  height: var(--line-height);
-  line-height: var(--line-height);
-  font-size: var(--font-size);
-  font-family: 'Menlo', 'Consolas', 'Monaco', monospace !important;
-  white-space: pre;
-  padding-left: 0;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  position: relative;
-  font-variant-ligatures: none;
-  letter-spacing: 0px;
+height: var(--line-height);
+line-height: var(--line-height);
+font-size: var(--font-size);
+font-family: 'Menlo', 'Consolas', 'Monaco', monospace !important;
+white-space: pre;
+padding-left: 0;
+width: 100%;
+box-sizing: border-box;
+display: flex;
+position: relative;
+font-variant-ligatures: none;
+letter-spacing: 0px;
 }
 
 :not(pre) > code[class*="language-"], pre[class*="language-"] {
-  background: transparent !important;
-  text-shadow: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
+background: transparent !important;
+text-shadow: none !important;
+padding: 0 !important;
+margin: 0 !important;
 }
 
 .line-number {
-  position: sticky;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 60px;
-  min-width: 60px;
-  text-align: right;
-  color: var(--line-num-text);
-  background: var(--line-num-bg);
-  padding-right: 10px;
-  border-right: 1px solid var(--border-color);
-  box-sizing: border-box;
-  user-select: none;
-  z-index: 20;
+position: sticky;
+left: 0;
+top: 0;
+bottom: 0;
+width: 60px;
+min-width: 60px;
+text-align: right;
+color: var(--line-num-text);
+background: var(--line-num-bg);
+padding-right: 10px;
+border-right: 1px solid var(--border-color);
+box-sizing: border-box;
+user-select: none;
+z-index: 20;
 }
 
 .selection-layer {
-  position: absolute;
-  left: 65px;
-  top: 0;
-  bottom: 0;
-  background-color: transparent;
-  z-index: 1;
-  pointer-events: none;
+position: absolute;
+left: 65px;
+top: 0;
+bottom: 0;
+background-color: transparent;
+z-index: 1;
+pointer-events: none;
 }
 
 .is-selected {
-  background-color: var(--selection-bg);
+background-color: var(--selection-bg);
 }
 
 .line-content {
-  padding-left: 5px;
-  position: relative;
-  z-index: 2;
-  pointer-events: none;
+padding-left: 5px;
+position: relative;
+z-index: 2;
+pointer-events: none;
 }
 
 #cursor {
-  position: absolute;
-  width: 1ch;
-  height: var(--line-height);
-  background-color: #6a9955;
-  border-radius: 3px;
-  opacity: 0.5;
-  z-index: 10;
-  pointer-events: none;
+position: absolute;
+width: 1ch;
+height: var(--line-height);
+background-color: #6a9955;
+border-radius: 3px;
+opacity: 0.5;
+z-index: 10;
+pointer-events: none;
 }
 
 .blink {
-  animation: blink 1s step-end infinite;
+animation: blink 1s step-end infinite;
 }
 
 #toolbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  background: #0a0807;
-  border-bottom: 1px solid #1a1614;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 10px;
-  box-sizing: border-box;
-  z-index: 100;
-  font-size: 13px;
-  gap: 10px;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 40px;
+background: #0a0807;
+border-bottom: 1px solid #1a1614;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 0 10px;
+box-sizing: border-box;
+z-index: 100;
+font-size: 13px;
+gap: 10px;
 }
 
 #toolbar input {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  color: #d4d4d4;
-  padding: 4px 8px;
-  border-radius: 3px;
-  outline: none;
-  font-family: sans-serif;
+background: #1e1e1e;
+border: 1px solid #333;
+color: #d4d4d4;
+padding: 4px 8px;
+border-radius: 3px;
+outline: none;
+font-family: sans-serif;
 }
 
 #toolbar input:focus {
-  border-color: #007acc;
+border-color: #007acc;
 }
 
 #toolbar button {
-  background: #2d2d2d;
-  border: 1px solid #333;
-  color: #d4d4d4;
-  padding: 4px 10px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
+background: #2d2d2d;
+border: 1px solid #333;
+color: #d4d4d4;
+padding: 4px 10px;
+border-radius: 3px;
+cursor: pointer;
+font-size: 12px;
 }
 
 #toolbar button:hover {
-  background: #3d3d3d;
+background: #3d3d3d;
 }
 
 #toolbar button:active {
-  background: #007acc;
-  color: white;
+background: #007acc;
+color: white;
 }
 
 #search-stats {
-  color: #858585;
-  font-size: 12px;
-  position: absolute;
-  right: 20px;
-  white-space: nowrap;
+color: #858585;
+font-size: 12px;
+position: absolute;
+right: 20px;
+white-space: nowrap;
 }
 
 #statusbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  background: #0a0807;
-  color: #524b48;
-  font-size: 14px;
-  padding: 0 10px;
-  font-family: sans-serif;
-  z-index: 100;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-sizing: border-box;
-  border-top: 1px solid #1a1614;
+position: fixed;
+bottom: 0;
+left: 0;
+width: 100%;
+height: 40px;
+background: #0a0807;
+color: #524b48;
+font-size: 14px;
+padding: 0 10px;
+font-family: sans-serif;
+z-index: 100;
+display: flex;
+justify-content: space-between;
+align-items: center;
+box-sizing: border-box;
+border-top: 1px solid #1a1614;
 }
 
 #file-status {
-  flex: 1;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+flex: 1;
+text-align: left;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
 }
 
 #message-area {
-  flex: 1;
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+flex: 1;
+text-align: right;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
 }
 
 #shortcuts {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 5px;
+flex: 0 0 auto;
+display: flex;
+gap: 5px;
 }
 
 #shortcuts button {
-  background: #2d2d2d;
-  border: 1px solid #333;
-  color: #d4d4d4;
-  padding: 4px 10px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
+background: #2d2d2d;
+border: 1px solid #333;
+color: #d4d4d4;
+padding: 4px 10px;
+border-radius: 3px;
+cursor: pointer;
+font-size: 12px;
 }
 
 #shortcuts button:hover {
-  background: #3d3d3d;
+background: #3d3d3d;
 }
 
 #shortcuts button:active {
@@ -261,89 +261,89 @@ color: white;
 @keyframes blink {
 0%,
 100% {
-  opacity: 1;
+opacity: 1;
 }
 50% {
-  opacity: 0;
+opacity: 0;
 }
 }
 
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(2px);
-  z-index: 1000;
-  display: none;
-  justify-content: center;
-  align-items: center;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.6);
+backdrop-filter: blur(2px);
+z-index: 1000;
+display: none;
+justify-content: center;
+align-items: center;
 }
 
 .modal-box {
-  background: #252526;
-  color: #cccccc;
-  width: 480px;
-  max-width: 90%;
-  border: 1px solid #454545;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  padding: 0;
-  overflow: hidden;
-  animation: modalFadeIn 0.3s ease-out;
+background: #252526;
+color: #cccccc;
+width: 480px;
+max-width: 90%;
+border: 1px solid #454545;
+border-radius: 8px;
+box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+padding: 0;
+overflow: hidden;
+animation: modalFadeIn 0.3s ease-out;
 }
 
 .modal-header {
-  background: #2d2d2d;
-  padding: 15px 20px;
-  border-bottom: 1px solid #333;
-  font-size: 28px;
-  font-weight: 600;
-  color: #fff;
+background: #2d2d2d;
+padding: 15px 20px;
+border-bottom: 1px solid #333;
+font-size: 28px;
+font-weight: 600;
+color: #fff;
 }
 
 .modal-body {
-  padding: 20px;
-  font-size: 14px;
-  line-height: 1.6;
+padding: 20px;
+font-size: 14px;
+line-height: 1.6;
 }
 
 .modal-body h3 {
-  color: #4fc1ff;
-  margin-top: 0;
-  font-size: 15px;
+color: #4fc1ff;
+margin-top: 0;
+font-size: 15px;
 }
 
 .modal-body ul {
-  padding-left: 20px;
-  margin-bottom: 20px;
+padding-left: 20px;
+margin-bottom: 20px;
 }
 
 .modal-body li {
-  margin-bottom: 8px;
+margin-bottom: 8px;
 }
 
 .modal-footer {
-  padding: 15px 20px;
-  background: #2d2d2d;
-  border-top: 1px solid #333;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+padding: 15px 20px;
+background: #2d2d2d;
+border-top: 1px solid #333;
+display: flex;
+justify-content: space-between;
+align-items: center;
 }
 
 .modal-btn {
-  background: #007acc;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
+background: #007acc;
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 13px;
+transition: background 0.2s;
 }
 
 .modal-btn:hover {
@@ -351,24 +351,24 @@ background: #005f9e;
 }
 
 .modal-checkbox-label {
-  font-size: 13px;
-  color: #999;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  user-select: none;
+font-size: 13px;
+color: #999;
+cursor: pointer;
+display: flex;
+align-items: center;
+gap: 8px;
+user-select: none;
 }
 
 @keyframes modalFadeIn {
 from {
-  opacity: 0;
-  transform: translateY(-20px);
+opacity: 0;
+transform: translateY(-20px);
 }
 
 to {
-  opacity: 1;
-  transform: translateY(0);
+opacity: 1;
+transform: translateY(0);
 }
 }
 
@@ -388,61 +388,61 @@ to {
 <body>
 
 <div id="intro-modal" class="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-header">
-      <big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.2
-    </div>
-    <div class="modal-body">
-      <p>You are now using a specialized code editor tailored for building and optimizing
-      <strong>Single-File Web Applications</strong>.</p>
-      <h3>Key Features:</h3>
-        <ul>
-          <li>
-            <strong>Unrivaled Performance:</strong> Engineered to handle massive files that choke standard editors.
-            Capable of processing <strong>650,000+ lines</strong> on entry-level hardware.
-          </li>
-          <li>
-            <strong>Syntax Highlighting:</strong> Custom-built highlighting specifically tuned for mixed-mode
-            development (HTML/JS/CSS).
-          </li>
-        </ul>
-    </div>
-    <div class="modal-footer">
-      <label class="modal-checkbox-label">
-        <input type="checkbox" id="dont-show-again"> Don't show again
-      </label>
-    <button class="modal-btn" onclick="closeIntroModal()">Start coding</button>
-    </div>
-  </div>
+<div class="modal-box">
+<div class="modal-header">
+<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.2
+</div>
+<div class="modal-body">
+<p>You are now using a specialized code editor tailored for building and optimizing
+<strong>Single-File Web Applications</strong>.</p>
+<h3>Key Features:</h3>
+<ul>
+<li>
+<strong>Unrivaled Performance:</strong> Engineered to handle massive files that choke standard editors.
+Capable of processing <strong>650,000+ lines</strong> on entry-level hardware.
+</li>
+<li>
+<strong>Syntax Highlighting:</strong> Custom-built highlighting specifically tuned for mixed-mode
+development (HTML/JS/CSS).
+</li>
+</ul>
+</div>
+<div class="modal-footer">
+<label class="modal-checkbox-label">
+<input type="checkbox" id="dont-show-again"> Don't show again
+</label>
+<button class="modal-btn" onclick="closeIntroModal()">Start coding</button>
+</div>
+</div>
 </div>
 
 <div id="toolbar">
-  <input type="text" id="find-input" placeholder="Find..." style="width: 150px;">
-  <input type="text" id="replace-input" placeholder="Replace..." style="width: 150px;">
-  <button onclick="editor.search.findNext()">Next</button>
-  <button onclick="editor.search.replace()">Replace</button>
-  <button onclick="editor.search.replaceAll()">All</button>
-  <span id="search-stats"></span>
+<input type="text" id="find-input" placeholder="Find..." style="width: 150px;">
+<input type="text" id="replace-input" placeholder="Replace..." style="width: 150px;">
+<button onclick="editor.search.findNext()">Next</button>
+<button onclick="editor.search.replace()">Replace</button>
+<button onclick="editor.search.replaceAll()">All</button>
+<span id="search-stats"></span>
 </div>
 
 <div id="editor" tabindex="0">
-  <div id="scroll-phantom"></div>
-  <div id="view-port"></div>
-  <div id="cursor" class="blink"></div>
+<div id="scroll-phantom"></div>
+<div id="view-port"></div>
+<div id="cursor" class="blink"></div>
 </div>
 <div id="statusbar">
-  <span id="file-status">Untitled.txt</span>
-    <div id="shortcuts">
-      <button onclick="editor.openFile()" title="Open File (Alt+O)">Open</button>
-      <button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
-      <button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
-      <button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
-      <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comment</button>
-      <button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Whitespace</button>
-      <button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
-      <button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Function</button>
-    </div>
-  <span id="message-area">Mastodon Engine</span>
+<span id="file-status">Untitled.txt</span>
+<div id="shortcuts">
+<button onclick="editor.openFile()" title="Open File (Alt+O)">Open</button>
+<button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
+<button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
+<button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
+<button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comment</button>
+<button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Whitespace</button>
+<button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
+<button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Function</button>
+</div>
+<span id="message-area">Mastodon Engine</span>
 </div>
 
 <script>
@@ -665,7 +665,7 @@ this.editor.state.cursor = { row: m.row, col: m.col + m.len };
 this.editor.state.desiredCol = m.col + m.len;
 const lh = this.editor.config.lineHeight;
 const targetRow = m.row;
-const paddingLines = 8; 
+const paddingLines = 8;
 const desiredBottomPixel = (targetRow + paddingLines) * lh;
 let newScrollTop = desiredBottomPixel - this.editor.state.viewportHeight;
 newScrollTop = Math.max(0, newScrollTop);
@@ -1080,6 +1080,14 @@ this.finalizeUpdate();
 handleInput(e) {
 const k = e.key;
 const ctrl = e.ctrlKey || e.metaKey;
+const alt = e.altKey;
+if (alt) {
+const lower = k.toLowerCase();
+if (lower === 'c') { e.preventDefault(); this.cycleNext('comment'); return; }
+if (lower === 'w') { e.preventDefault(); this.cycleNext('whitespace'); return; }
+if (lower === 'l') { e.preventDefault(); this.cycleNext('empty'); return; }
+if (lower === '.') { e.preventDefault(); this.cycleNext('function'); return; }
+}
 const { cursor: c, lines: l } = this.state;
 if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
 if (k === 'Enter') {
@@ -1398,6 +1406,7 @@ this.state.cursor = { row: er, col: l[er].length };
 this.finalizeUpdate();
 }
 }
+
 async handleGlobalShortcuts(e) {
 const k = e.key.toLowerCase();
 const ctrl = e.ctrlKey || e.metaKey;
@@ -1428,10 +1437,6 @@ if (k === 's') { e.preventDefault(); await this.saveFile(); }
 if (k === 'o') { e.preventDefault(); await this.openFile(); }
 if (k === 'n') { e.preventDefault(); this.newFile(); }
 if (k === 'p') { e.preventDefault(); this.previewFile(); }
-if (k === 'c') { e.preventDefault(); this.cycleNext('comment'); }
-if (k === 'w') { e.preventDefault(); this.cycleNext('whitespace'); }
-if (k === 'l') { e.preventDefault(); this.cycleNext('empty'); }
-if (k === '.') { e.preventDefault(); this.cycleNext('function'); }
 }
 }
 
@@ -1449,7 +1454,7 @@ return r.join('\n');
 
 newFile() {
 if (this.state.isDirty && !confirm("Discard changes?")) {
-this.dom.editor.focus(); 
+this.dom.editor.focus();
 return;
 }
 this.state.lines = [""];
@@ -1462,13 +1467,13 @@ this.setDirty(false);
 this.history.undoStack = [];
 this.finalizeUpdate();
 this.setStatus("New File");
-this.dom.editor.focus(); 
+this.dom.editor.focus();
 }
 
 previewFile() {
 const win = window.open();
 if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
-this.dom.editor.focus(); 
+this.dom.editor.focus();
 }
 
 setDirty(dirty) {
@@ -1485,7 +1490,7 @@ this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastod
 
 async openFile() {
 if (this.state.isDirty && !confirm("Discard changes?")) {
-this.dom.editor.focus(); 
+this.dom.editor.focus();
 return;
 }
 try {
@@ -1501,9 +1506,9 @@ this.setDirty(false);
 this.history.undoStack = [];
 this.finalizeUpdate();
 this.setStatus("Opened: " + f.name);
-} catch (e) { 
+} catch (e) {
 } finally {
-this.dom.editor.focus(); 
+this.dom.editor.focus();
 }
 }
 
@@ -1512,9 +1517,9 @@ if (!this.state.fileHandle) {
 try {
 this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
 this.state.fileName = this.state.fileHandle.name;
-} catch (e) { 
-this.dom.editor.focus(); 
-return; 
+} catch (e) {
+this.dom.editor.focus();
+return;
 }
 }
 try {
@@ -1523,10 +1528,10 @@ await w.write(this.state.lines.join('\n'));
 await w.close();
 this.setDirty(false);
 this.setStatus("Saved!");
-} catch (e) { 
-this.setStatus("Save failed"); 
+} catch (e) {
+this.setStatus("Save failed");
 } finally {
-this.dom.editor.focus(); 
+this.dom.editor.focus();
 }
 }
 }
