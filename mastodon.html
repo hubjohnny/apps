@@ -437,10 +437,14 @@ development (HTML/JS/CSS).
 <button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
 <button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
 <button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
+<button onclick="editor.smartIndent()" title="Smart Indent (Alt+I)" style="margin-left: 10px;">↹ Format</button>
 <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comment</button>
 <button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Whitespace</button>
 <button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
 <button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Function</button>
+
+<button onclick="editor.removeEmptyLines()" title="Fjern tomme linjer (Alt+E)" style="margin-left: 10px;">Rx Empty</button>
+
 </div>
 <span id="message-area">Mastodon Engine</span>
 </div>
@@ -788,6 +792,253 @@ this.highlighter.analyze(this.state.lines);
 this.finalizeUpdate();
 }
 
+
+
+
+
+removeEmptyLines() {
+    const lines = this.state.lines;
+    const newLines = [];
+    let inBackticks = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        let content = line.trim();
+
+        // 1. BESKYTTELSES-MODUS (Behold alt)
+        if (inBackticks) {
+            newLines.push(line); 
+            
+            let escaped = false;
+            for (let char of line) {
+                if (escaped) { escaped = false; continue; }
+                if (char === '\\') { escaped = true; continue; }
+                if (char === '`') inBackticks = !inBackticks;
+            }
+            continue;
+        }
+
+        // 2. VANLIG KODE-MODUS
+        let localInBackticks = false;
+        let inSingleQuote = false;
+        let inDoubleQuote = false;
+        let charEscaped = false;
+
+        // Vi bruker en for-løkke med indeks for å kunne se fremover (etter //)
+        for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+
+            if (charEscaped) { charEscaped = false; continue; }
+            if (char === '\\') { charEscaped = true; continue; }
+
+            // SJEKK FOR KOMMENTAR (//)
+            // Hvis vi ikke er inni en streng, og ser //, ignorer resten av linjen!
+            if (!inSingleQuote && !inDoubleQuote) {
+                if (char === '/' && line[j+1] === '/') {
+                    break; // Hopp ut av loopen for denne linjen
+                }
+            }
+
+            // Streng-håndtering
+            if (!localInBackticks) {
+                if (char === "'" && !inDoubleQuote) { inSingleQuote = !inSingleQuote; continue; }
+                if (char === '"' && !inSingleQuote) { inDoubleQuote = !inDoubleQuote; continue; }
+            }
+
+            if (inSingleQuote || inDoubleQuote) continue;
+
+            // Backtick-håndtering
+            if (char === '`') {
+                localInBackticks = !localInBackticks;
+            }
+        }
+
+        // 3. AVGJØRELSE
+        if (content.length > 0) {
+            newLines.push(line);
+        }
+
+        // 4. OPPDATER STATUS
+        if (localInBackticks) inBackticks = true;
+    }
+
+    // Lagre endringer
+    const newText = newLines.join('\n');
+    if (newText !== lines.join('\n')) {
+        this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+        this.setStatus("Tomme linjer slettet");
+    } else {
+        this.setStatus("Ingen tomme linjer funnet");
+    }
+}
+
+
+
+
+
+
+smartIndent() {
+    const lines = this.state.lines;
+    const newLines = [];
+    let indentLevel = 0;
+    const tabString = "  "; 
+    
+    // Unngå chat-filter
+    const commentStart = '<' + '!--'; 
+    const voidTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype'];
+
+    let mode = 'html';
+    
+    // GLOBAL STATUS: Er vi inni en "Sokoban-blokk" (template literal) over flere linjer?
+    let inBacktickBlock = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let originalLine = lines[i];
+        
+        // 1. SOKOBAN-VERN:
+        // Hvis vi startet denne linjen mens vi var inne i en backtick-blokk, 
+        // er dette RÅ DATA. Vi rører ikke mellomrommene!
+        if (inBacktickBlock) {
+            newLines.push(originalLine);
+            
+            // Vi må likevel skanne linjen for å se om blokken slutter her
+            // (men vi gjør en enkel scan som bare ser etter backticks som ikke er escaped)
+            let escaped = false;
+            for (let char of originalLine) {
+                if (escaped) { escaped = false; continue; }
+                if (char === '\\') { escaped = true; continue; }
+                if (char === '`') inBacktickBlock = !inBacktickBlock;
+            }
+            continue; // Ferdig med denne linjen
+        }
+
+        // 2. NORMAL MODUS:
+        let content = originalLine.trim();
+        
+        if (!content) {
+            newLines.push("");
+            continue;
+        }
+
+        // Oppdater fil-modus (HTML/JS/CSS)
+        if (mode === 'html') {
+            if (content.match(/<script/i) && !content.match(/<\/script/i)) mode = 'javascript';
+            else if (content.match(/<style/i) && !content.match(/<\/style/i)) mode = 'css';
+        } else if (mode === 'javascript' || mode === 'css') {
+            if (content.match(/<\/script/i) || content.match(/<\/style/i)) mode = 'html';
+        }
+
+        // 3. ANALYSER LINJEN TEGN FOR TEGN
+        // Vi må vite netto endring i innrykk, og om vi starter en backtick-blokk.
+        // Vi bruker en løkke for å ignorere tegn som er inni 'strings' eller "strings".
+        
+        let localIndentChange = 0;
+        let tempVisualDedent = 0; // Hvor mye vi trekker fra visuelt på denne linjen (f.eks for } )
+        
+        // Tilstander for denne linjen
+        let inSingleQuote = false;
+        let inDoubleQuote = false;
+        let charEscaped = false;
+        
+        // Sjekk visuell dedent før vi looper (basert på start)
+        const startsWithCloser = content.startsWith('}') || content.startsWith(']') || content.startsWith(')') || content.startsWith('</');
+        const isSwitch = (mode === 'javascript') && (content.startsWith('case ') || content.startsWith('default:'));
+        
+        if (startsWithCloser || isSwitch) tempVisualDedent = 1;
+
+        // --- HOVEDLØKKE: TEGN FOR TEGN ANALYSE ---
+        // Denne kjøres KUN for JS/CSS logikk for å telle { } og `
+        if (mode !== 'html' || content.includes('<script') || content.includes('<style')) {
+            
+            for (let j = 0; j < content.length; j++) {
+                const char = content[j];
+
+                if (charEscaped) {
+                    charEscaped = false;
+                    continue;
+                }
+
+                if (char === '\\') {
+                    charEscaped = true;
+                    continue;
+                }
+
+                // Håndter Quotes (' og ")
+                if (!inBacktickBlock) { 
+                    if (char === "'" && !inDoubleQuote) {
+                        inSingleQuote = !inSingleQuote;
+                        continue; 
+                    }
+                    if (char === '"' && !inSingleQuote) {
+                        inDoubleQuote = !inDoubleQuote;
+                        continue;
+                    }
+                }
+
+                // HVIS vi er inni en ' eller ", IGNORER alt innhold (brackets, backticks osv)
+                if (inSingleQuote || inDoubleQuote) {
+                    continue;
+                }
+
+                // --- HERFRA ER VI I EKTE KODE (IKKE I STRING) ---
+
+                // Håndter Backticks `
+                if (char === '`') {
+                    inBacktickBlock = !inBacktickBlock;
+                    // Merk: Hvis vi går INN i en blokk, slutter vi å telle brackets inntil videre i denne implementasjonen
+                    // for å beskytte innholdet.
+                }
+
+                // Håndter Brackets (kun hvis vi ikke er inni en backtick-blokk)
+                if (!inBacktickBlock) {
+                    if (char === '{' || char === '[' || char === '(') localIndentChange++;
+                    else if (char === '}' || char === ']' || char === ')') localIndentChange--;
+                }
+            }
+        }
+
+        // 4. HTML TAG TELLING (Regex er trygt nok for HTML tags isolert sett)
+        if (mode === 'html' && !content.startsWith(commentStart)) {
+            const tags = content.match(/<\/?[\w-]+[^>]*>/g);
+            if (tags) {
+                tags.forEach(tag => {
+                    if (tag.startsWith('</')) {
+                        localIndentChange--;
+                    } else if (tag.startsWith('<')) {
+                        const tagNameMatch = tag.match(/<([a-zA-Z0-9-]+)/);
+                        if (tagNameMatch) {
+                            const tagName = tagNameMatch[1].toLowerCase();
+                            const isSelfClosing = tag.includes('/>') || voidTags.includes(tagName);
+                            if (!isSelfClosing && !tag.startsWith('<!') && !tag.startsWith('<?')) {
+                                localIndentChange++;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // 5. BYGG LINJEN
+        let finalIndent = Math.max(0, indentLevel - tempVisualDedent);
+        newLines.push(tabString.repeat(finalIndent) + content);
+
+        // 6. OPPDATER GLOBAL NIVÅ FOR NESTE LINJE
+        indentLevel += localIndentChange;
+        if (indentLevel < 0) indentLevel = 0;
+    }
+    
+    // LAGRE
+    const newText = newLines.join('\n');
+    if (newText !== lines.join('\n')) {
+        this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+        this.setStatus("Smart Format Applied");
+    }
+}
+
+
+
+
+
 cycleNext(type) {
 const lines = this.state.lines;
 const currentLineIdx = this.state.cursor.row;
@@ -1105,15 +1356,84 @@ this.applyChange("\n");
 }
 return;
 }
+
+
 if (k === 'Tab') {
-e.preventDefault();
-if (e.shiftKey) {
-this.state.selectionAnchor ? this.blockEdit(l => l.replace(/^ {1,2}/, "")) : this.blockEdit(l => l.replace(/^ {1,2}/, ""), c.row, c.row);
-} else {
-this.state.selectionAnchor ? this.blockEdit(l => "  " + l) : this.applyChange("  ");
-}
-return;
-}
+            e.preventDefault();
+            
+            // TILSTAND: Vi må huske om vi er inni en blokk mens vi jobber oss nedover
+            let inBackticks = false;
+
+            // En "Stateful" unindent-funksjon
+            const safeUnindent = (line) => {
+                // 1. ANALYSER LINJEN FOR BACKTICKS (Samme logikk som Smart Indent)
+                // Vi må vite om vi går inn i eller ut av en blokk på denne linjen.
+                // Vi fjerner innholdet i vanlige strings (' og ") før vi teller backticks,
+                // slik at `var x = "ikke en ` backtick"` ikke lurer oss.
+                
+                let toggleState = false;
+                
+                if (inBackticks) {
+                    // Hvis vi allerede er inni, teller vi bare rå backticks for å se om vi skal ut
+                    const cnt = (line.match(/`/g) || []).length;
+                    if (cnt % 2 !== 0) toggleState = true;
+                } else {
+                    // Hvis vi er ute, må vi vaske linjen for strings før vi teller
+                    const cleanLine = line
+                        .replace(/\\./g, '__')      // Fjern escaped tegn
+                        .replace(/'[^']*'/g, '')    // Fjern '...'
+                        .replace(/"[^"]*"/g, '');   // Fjern "..."
+                    
+                    const cnt = (cleanLine.match(/`/g) || []).length;
+                    if (cnt % 2 !== 0) toggleState = true;
+                }
+
+                // 2. BESKYTTELSE
+                // Hvis vi var inni backticks da vi startet på linjen -> FREDET!
+                if (inBackticks) {
+                    // Oppdater status for NESTE linje før vi returnerer
+                    if (toggleState) inBackticks = false;
+                    return line; 
+                }
+
+                // 3. OPPATER STATUS FOR NESTE LINJE
+                // Vi var ikke inne, men denne linjen kan ha startet en blokk
+                if (toggleState) inBackticks = true;
+
+                // 4. VANLIG SJEKK FOR ENKELTLINJER (Sokoban one-liners)
+                // Selv om vi ikke er i backticks, kan linjen være et kart uten backticks
+                // (f.eks. hvis du bare har markert selve kartet)
+                const isMap = /^[ \t"'#@$*+.,]+$/.test(line) && line.includes('#');
+                if (isMap) return line;
+
+                // 5. UTFØR UNINDENT (Hvis vi kom hit, er det trygt)
+                return line.replace(/^ {1,2}/, "");
+            };
+
+            if (e.shiftKey) {
+                // Shift+Tab: Bruk den nye stateful-funksjonen
+                // Merk: blockEdit bruker .map(), så 'inBackticks' oppdateres sekvensielt linje for linje.
+                // Dette fungerer perfekt for Ctrl+A (som starter fra linje 0 med inBackticks=false).
+                
+                if (this.state.selectionAnchor) {
+                    // Tilbakestill state før vi starter loopen
+                    inBackticks = false; 
+                    
+                    // Liten edge-case: Hvis du markerer fra midt i filen og inni en blokk, 
+                    // vil den tro den er utenfor. Men for Ctrl+A er dette perfekt.
+                    this.blockEdit(safeUnindent);
+                } else {
+                    // Enkeltlinje unindent
+                    this.blockEdit(safeUnindent, c.row, c.row);
+                }
+            } else {
+                // Vanlig Tab (Innrykk) - Alltid trygt å legge til luft
+                this.state.selectionAnchor ? this.blockEdit(l => "  " + l) : this.applyChange("  ");
+            }
+            return;
+        }
+
+
 if (k === 'Backspace') {
 e.preventDefault();
 if (this.state.selectionAnchor) {
@@ -1441,6 +1761,8 @@ if (k === 's') { e.preventDefault(); await this.saveFile(); }
 if (k === 'o') { e.preventDefault(); await this.openFile(); }
 if (k === 'n') { e.preventDefault(); this.newFile(); }
 if (k === 'p') { e.preventDefault(); this.previewFile(); }
+if (k === 'i') { e.preventDefault(); this.smartIndent(); }
+if (k === 'e') { e.preventDefault(); this.removeEmptyLines(); }
 }
 }
 
