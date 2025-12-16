@@ -4,702 +4,701 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Yatzy</title>
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn46yPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
 <style>
 :root {
-  --bg-color: #1a1a2e;
-  --surface-color: #16213e;
-  --primary-color: #e94560;
-  --secondary-color: #0f3460;
-  --text-color: #dcdce6;
-  --highlight-color: #f0e68c;
-  --dice-bg: #ffffff;
-  --dice-dot: #1a1a2e;
-  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+--bg-color: #1a1a2e;
+--surface-color: #16213e;
+--primary-color: #e94560;
+--secondary-color: #0f3460;
+--text-color: #dcdce6;
+--highlight-color: #f0e68c;
+--dice-bg: #ffffff;
+--dice-dot: #1a1a2e;
+--font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+box-sizing: border-box;
+margin: 0;
+padding: 0;
 }
 html,
 body {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  font-family: var(--font-family);
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
+height: 100%;
+width: 100%;
+overflow: hidden;
+font-family: var(--font-family);
+background-color: var(--bg-color);
+color: var(--text-color);
+display: flex;
+justify-content: center;
+align-items: center;
+font-size: 16px;
 }
 .game-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 1.5vmin;
-  gap: 1.5vmin;
-  max-width: 1400px;
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: column;
+padding: 1.5vmin;
+gap: 1.5vmin;
+max-width: 1400px;
 }
 .top-panel {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-  gap: 15px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-shrink: 0;
+gap: 15px;
 }
 h1 {
-  font-size: 1.6em;
-  margin-bottom: 20px;
-  color: var(--primary-color);
-  margin-bottom: 0;
+font-size: 1.6em;
+margin-bottom: 20px;
+color: var(--primary-color);
+margin-bottom: 0;
 }
 .top-panel-info {
-  display: flex;
-  align-items: baseline;
-  gap: 20px;
+display: flex;
+align-items: baseline;
+gap: 20px;
 }
 .main-content {
-  display: flex;
-  flex-grow: 1;
-  gap: 1.5vmin;
-  height: calc(100% - 160px);
+display: flex;
+flex-grow: 1;
+gap: 1.5vmin;
+height: calc(100% - 160px);
 }
 .scoreboard-container {
-  flex-grow: 1;
-  overflow-y: auto;
-  background: var(--surface-color);
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  padding: 1vmin;
+flex-grow: 1;
+overflow-y: auto;
+background: var(--surface-color);
+border-radius: 10px;
+box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+padding: 1vmin;
 }
 .scoreboard {
-  width: 100%;
-  border-collapse: collapse;
+width: 100%;
+border-collapse: collapse;
 }
 .scoreboard th,
 .scoreboard td {
-  padding: 1.0vmin;
-  text-align: left;
-  border-bottom: 1px solid var(--secondary-color);
+padding: 1.0vmin;
+text-align: left;
+border-bottom: 1px solid var(--secondary-color);
 }
 .scoreboard th {
-  font-size: clamp(12px, 2vmin, 18px);
-  color: var(--primary-color);
+font-size: clamp(12px, 2vmin, 18px);
+color: var(--primary-color);
 }
 .scoreboard td {
-  font-size: clamp(12px, 1.8vmin, 16px);
-  text-align: center;
+font-size: clamp(12px, 1.8vmin, 16px);
+text-align: center;
 }
 .scoreboard th:first-child,
 .scoreboard td:first-child {
-  text-align: left;
-  font-weight: bold;
+text-align: left;
+font-weight: bold;
 }
 .player-header {
-  font-size: clamp(16px, 3vmin, 24px) !important;
-  position: sticky;
-  top: 0;
-  background: var(--surface-color);
+font-size: clamp(16px, 3vmin, 24px) !important;
+position: sticky;
+top: 0;
+background: var(--surface-color);
 }
 .score-cell {
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.2s;
+cursor: pointer;
+border-radius: 5px;
+transition: background-color 0.2s;
 }
 .score-cell.filled {
-  font-weight: bold;
-  color: var(--highlight-color);
-  cursor: not-allowed;
+font-weight: bold;
+color: var(--highlight-color);
+cursor: not-allowed;
 }
 .total-score-row td {
-  font-weight: bold;
-  font-size: clamp(14px, 2.2vmin, 20px);
-  color: var(--primary-color);
-  border-top: 2px solid var(--primary-color);
+font-weight: bold;
+font-size: clamp(14px, 2.2vmin, 20px);
+color: var(--primary-color);
+border-top: 2px solid var(--primary-color);
 }
 @keyframes pulse-glow {
-  0% {
-    box-shadow: 0 0 3px var(--highlight-color);
-  }
-  50% {
-    box-shadow: 0 0 12px 3px var(--highlight-color);
-  }
-  100% {
-    box-shadow: 0 0 3px var(--highlight-color);
-  }
+0% {
+box-shadow: 0 0 3px var(--highlight-color);
+}
+50% {
+box-shadow: 0 0 12px 3px var(--highlight-color);
+}
+100% {
+box-shadow: 0 0 3px var(--highlight-color);
+}
 }
 .score-cell.available:hover {
-  background-color: var(--secondary-color);
-  color: var(--highlight-color);
+background-color: var(--secondary-color);
+color: var(--highlight-color);
 }
 .score-cell.suggestion {
-  animation: pulse-glow 2s infinite ease-in-out;
+animation: pulse-glow 2s infinite ease-in-out;
 }
 .control-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5vmin;
-  width: 300px;
-  flex-shrink: 0;
+display: flex;
+flex-direction: column;
+gap: 1.5vmin;
+width: 300px;
+flex-shrink: 0;
 }
 .player-info,
 .dice-area,
 .game-controls {
-  background: var(--surface-color);
-  padding: 2vmin;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5vmin;
+background: var(--surface-color);
+padding: 2vmin;
+border-radius: 10px;
+box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 1.5vmin;
 }
 .player-info h2 {
-  font-size: clamp(18px, 2.5vmin, 24px);
-  color: var(--primary-color);
+font-size: clamp(18px, 2.5vmin, 24px);
+color: var(--primary-color);
 }
 .player-info p {
-  font-size: clamp(14px, 2vmin, 18px);
+font-size: clamp(14px, 2vmin, 18px);
 }
 .dice-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1vmin;
-  width: 100%;
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 1vmin;
+width: 100%;
 }
 .dice {
-  width: clamp(40px, 10vmin, 70px);
-  height: clamp(40px, 10vmin, 70px);
-  background-color: var(--dice-bg);
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s, box-shadow 0.2s;
-  position: relative;
+width: clamp(40px, 10vmin, 70px);
+height: clamp(40px, 10vmin, 70px);
+background-color: var(--dice-bg);
+border-radius: 10px;
+cursor: pointer;
+display: flex;
+justify-content: center;
+align-items: center;
+box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+transition: transform 0.2s, box-shadow 0.2s;
+position: relative;
 }
 .dice.no-click {
-  cursor: not-allowed;
+cursor: not-allowed;
 }
 .dice:nth-child(4),
 .dice:nth-child(5) {
-  grid-column: span 1.5;
+grid-column: span 1.5;
 }
 .dice.held {
-  transform: scale(0.9);
-  box-shadow: 0 0 15px 3px var(--highlight-color);
-  border: 2px solid var(--highlight-color);
+transform: scale(0.9);
+box-shadow: 0 0 15px 3px var(--highlight-color);
+border: 2px solid var(--highlight-color);
 }
 .dice .dot {
-  width: clamp(8px, 2vmin, 15px);
-  height: clamp(8px, 2vmin, 15px);
-  background-color: var(--dice-dot);
-  border-radius: 50%;
-  position: absolute;
+width: clamp(8px, 2vmin, 15px);
+height: clamp(8px, 2vmin, 15px);
+background-color: var(--dice-dot);
+border-radius: 50%;
+position: absolute;
 }
 .dice[data-value="1"] .dot:nth-child(1) {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="2"] .dot:nth-child(1) {
-  top: 25%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 25%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="2"] .dot:nth-child(2) {
-  top: 75%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 75%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="3"] .dot:nth-child(1) {
-  top: 25%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 25%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="3"] .dot:nth-child(2) {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="3"] .dot:nth-child(3) {
-  top: 75%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 75%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="4"] .dot:nth-child(1) {
-  top: 25%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 25%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="4"] .dot:nth-child(2) {
-  top: 25%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 25%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="4"] .dot:nth-child(3) {
-  top: 75%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 75%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="4"] .dot:nth-child(4) {
-  top: 75%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 75%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="5"] .dot:nth-child(1) {
-  top: 25%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 25%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="5"] .dot:nth-child(2) {
-  top: 25%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 25%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="5"] .dot:nth-child(3) {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="5"] .dot:nth-child(4) {
-  top: 75%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 75%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="5"] .dot:nth-child(5) {
-  top: 75%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 75%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="6"] .dot:nth-child(1) {
-  top: 25%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 25%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="6"] .dot:nth-child(2) {
-  top: 50%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 50%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="6"] .dot:nth-child(3) {
-  top: 75%;
-  left: 25%;
-  transform: translate(-50%, -50%);
+top: 75%;
+left: 25%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="6"] .dot:nth-child(4) {
-  top: 25%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 25%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="6"] .dot:nth-child(5) {
-  top: 50%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 50%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .dice[data-value="6"] .dot:nth-child(6) {
-  top: 75%;
-  left: 75%;
-  transform: translate(-50%, -50%);
+top: 75%;
+left: 75%;
+transform: translate(-50%, -50%);
 }
 .game-btn {
-  width: 100%;
-  padding: 15px;
-  font-size: clamp(16px, 2.2vmin, 20px);
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  background-color: var(--primary-color);
-  color: var(--text-color);
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s, display 0.1s;
+width: 100%;
+padding: 15px;
+font-size: clamp(16px, 2.2vmin, 20px);
+font-weight: bold;
+border: none;
+border-radius: 8px;
+background-color: var(--primary-color);
+color: var(--text-color);
+cursor: pointer;
+transition: background-color 0.2s, transform 0.1s, display 0.1s;
 }
 .game-btn.secondary {
-  background-color: transparent;
-  border: 2px solid var(--primary-color);
-  width: auto;
-  padding: 4px 8px;
+background-color: transparent;
+border: 2px solid var(--primary-color);
+width: auto;
+padding: 4px 8px;
 }
 .game-btn:hover:not(:disabled) {
-  background-color: #ff6b81;
+background-color: #ff6b81;
 }
 .game-btn.secondary:hover:not(:disabled) {
-  background-color: var(--primary-color);
+background-color: var(--primary-color);
 }
 .game-btn:active:not(:disabled) {
-  transform: scale(0.98);
+transform: scale(0.98);
 }
 .game-btn:disabled {
-  background-color: var(--secondary-color);
-  color: #6c757d;
-  cursor: not-allowed;
+background-color: var(--secondary-color);
+color: #6c757d;
+cursor: not-allowed;
 }
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s, visibility 0.3s;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.7);
+display: flex;
+justify-content: center;
+align-items: center;
+z-index: 1000;
+opacity: 0;
+visibility: hidden;
+transition: opacity 0.3s, visibility 0.3s;
 }
 .modal-overlay.visible {
-  opacity: 1;
-  visibility: visible;
+opacity: 1;
+visibility: visible;
 }
 .modal-content {
-  background: var(--surface-color);
-  padding: 30px 40px;
-  border-radius: 15px;
-  text-align: center;
-  box-shadow: 0 0 30px var(--primary-color);
-  border: 1px solid var(--primary-color);
-  max-width: 90%;
-  max-height: 90%;
-  overflow-y: auto;
+background: var(--surface-color);
+padding: 30px 40px;
+border-radius: 15px;
+text-align: center;
+box-shadow: 0 0 30px var(--primary-color);
+border: 1px solid var(--primary-color);
+max-width: 90%;
+max-height: 90%;
+overflow-y: auto;
 }
 .modal-content h2 {
-  font-size: 1.6em;
-  margin-bottom: 20px;
-  color: var(--primary-color);
+font-size: 1.6em;
+margin-bottom: 20px;
+color: var(--primary-color);
 }
 .modal-content p {
-  margin-bottom: 30px;
-  font-size: 1.2em;
+margin-bottom: 30px;
+font-size: 1.2em;
 }
 .modal-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
+display: flex;
+gap: 10px;
+justify-content: center;
 }
 .rules-content {
-  text-align: left;
+text-align: left;
 }
 .rules-content h2 {
-  color: var(--primary-color);
-  margin-top: 20px;
-  margin-bottom: 10px;
+color: var(--primary-color);
+margin-top: 20px;
+margin-bottom: 10px;
 }
 .rules-content ul {
-  list-style: none;
-  padding-left: 0;
+list-style: none;
+padding-left: 0;
 }
 .rules-content li {
-  margin-bottom: 10px;
+margin-bottom: 10px;
 }
 .rules-content strong {
-  color: var(--highlight-color);
+color: var(--highlight-color);
 }
 @media (max-width: 768px) {
-  body {
-    overflow: auto;
-  }
-  .game-container {
-    height: auto;
-  }
-  .main-content {
-    flex-direction: column;
-    height: auto;
-  }
-  .control-panel {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
-  }
-  .player-info,
-  .dice-area,
-  .game-controls {
-    flex-basis: 45%;
-    flex-grow: 1;
-  }
+body {
+overflow: auto;
+}
+.game-container {
+height: auto;
+}
+.main-content {
+flex-direction: column;
+height: auto;
+}
+.control-panel {
+width: 100%;
+flex-direction: row;
+flex-wrap: wrap;
+justify-content: space-around;
+}
+.player-info,
+.dice-area,
+.game-controls {
+flex-basis: 45%;
+flex-grow: 1;
+}
 }
 </style>
 </head>
 <body>
 <div class="game-container">
-  <div class="top-panel">
-    <div class="top-panel-info">
-      <p id="game-mode-display"></p>
-    </div>
-    <button id="rules-btn" class="game-btn secondary"></button>
-  </div>
-  <div class="main-content">
-    <div class="scoreboard-container">
-      <table class="scoreboard" id="scoreboard">
-      </table>
-    </div>
-    <div class="control-panel">
-      <div class="player-info">
-        <h2 id="current-player-name"></h2>
-        <p id="rolls-left"></p>
-      </div>
-      <div class="dice-area">
-        <div class="dice-container" id="dice-container">
-        </div>
-      </div>
-      <div class="game-controls">
-        <button id="roll-btn" class="game-btn"></button>
-        <button id="confirm-btn" class="game-btn" style="display: none;"></button>
-      </div>
-    </div>
-  </div>
+<div class="top-panel">
+<div class="top-panel-info">
+<p id="game-mode-display"></p>
+</div>
+<button id="rules-btn" class="game-btn secondary"></button>
+</div>
+<div class="main-content">
+<div class="scoreboard-container">
+<table class="scoreboard" id="scoreboard">
+</table>
+</div>
+<div class="control-panel">
+<div class="player-info">
+<h2 id="current-player-name"></h2>
+<p id="rolls-left"></p>
+</div>
+<div class="dice-area">
+<div class="dice-container" id="dice-container">
+</div>
+</div>
+<div class="game-controls">
+<button id="roll-btn" class="game-btn"></button>
+<button id="confirm-btn" class="game-btn" style="display: none;"></button>
+</div>
+</div>
+</div>
 </div>
 <div id="start-modal" class="modal-overlay">
-  <div class="modal-content">
-    <h2 id="welcome-title"></h2>
-    <p id="mode-select-text"></p>
-    <div class="modal-buttons">
-      <button id="free-mode-btn" class="game-btn"></button>
-      <button id="forced-mode-btn" class="game-btn"></button>
-    </div>
-  </div>
+<div class="modal-content">
+<h2 id="welcome-title"></h2>
+<p id="mode-select-text"></p>
+<div class="modal-buttons">
+<button id="free-mode-btn" class="game-btn"></button>
+<button id="forced-mode-btn" class="game-btn"></button>
+</div>
+</div>
 </div>
 <div id="game-over-modal" class="modal-overlay">
-  <div class="modal-content">
-    <h2 id="game-over-title"></h2>
-    <p id="game-over-winner"></p>
-    <div class="modal-buttons">
-      <button id="play-again-btn" class="game-btn"></button>
-    </div>
-  </div>
+<div class="modal-content">
+<h2 id="game-over-title"></h2>
+<p id="game-over-winner"></p>
+<div class="modal-buttons">
+<button id="play-again-btn" class="game-btn"></button>
+</div>
+</div>
 </div>
 <div id="rules-modal" class="modal-overlay">
-  <div class="modal-content rules-content">
-    <h1 id="rules-how-to-title"></h1>
-    <p id="rules-goal-text"></p>
-    <h2 id="rules-gameplay-title"></h2>
-    <ul id="rules-gameplay-list"></ul>
-    <h2 id="rules-scoring-upper-title"></h2>
-    <ul id="rules-scoring-upper-list"></ul>
-    <h2 id="rules-scoring-lower-title"></h2>
-    <ul id="rules-scoring-lower-list"></ul>
-    <div class="modal-buttons">
-      <button id="close-rules-btn" class="game-btn"></button>
-    </div>
-  </div>
+<div class="modal-content rules-content">
+<h1 id="rules-how-to-title"></h1>
+<p id="rules-goal-text"></p>
+<h2 id="rules-gameplay-title"></h2>
+<ul id="rules-gameplay-list"></ul>
+<h2 id="rules-scoring-upper-title"></h2>
+<ul id="rules-scoring-upper-list"></ul>
+<h2 id="rules-scoring-lower-title"></h2>
+<ul id="rules-scoring-lower-list"></ul>
+<div class="modal-buttons">
+<button id="close-rules-btn" class="game-btn"></button>
+</div>
+</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const lang = {
-    title: "Yatzy",
-    rules: "Rules",
-    mode: "Mode",
-    freeChoice: "Free",
-    forcedOrder: "Forced",
-    rollsLeft: "Rolls left",
-    rollDice: "Roll Dice",
-    finishTurn: "Finish Turn",
-    chooseOnBoard: "Choose on the scoreboard!",
-    category: "Category",
-    ones: "Ones",
-    twos: "Twos",
-    threes: "Threes",
-    fours: "Fours",
-    fives: "Fives",
-    sixes: "Sixes",
-    bonus: "Bonus",
-    upperTotal: "Upper Total",
-    threeOfAKind: "3 of a Kind",
-    fourOfAKind: "4 of a Kind",
-    fullHouse: "Full House",
-    smallStraight: "Small Straight",
-    largeStraight: "Large Straight",
-    yatzy: "Yatzy",
-    chance: "Chance",
-    lowerTotal: "Lower Total",
-    grandTotal: "GRAND TOTAL",
-    welcomeTitle: "Welcome to Yatzy!",
-    modeSelectText: "Select game mode:",
-    gameOverTitle: "Game Over!",
-    playAgain: "Play Again",
-    rulesHowToTitle: "How to Play Yatzy",
-    rulesGoalText: "The goal is to score the most points by rolling five dice to make certain combinations.",
-    rulesGameplayTitle: "Gameplay",
-    rulesGameplay1: "On your turn, you can roll the dice up to <strong>3 times</strong>.",
-    rulesGameplay2: "After the first and second rolls, you can click on dice to 'hold' them. Held dice will not be re-rolled.",
-    rulesGameplay3: "After your rolls, you must choose an available category on the scoreboard to place your score.",
-    rulesScoringUpperTitle: "Scoring: Upper Section",
-    rulesScoringUpper1: "<strong>Ones to Sixes:</strong> Get the sum of dice showing that number. For example, three 4s in the 'Fours' category scores 12 points.",
-    rulesScoringUpper2: "<strong>Bonus:</strong> If the total of the upper section is <strong>63 or more</strong>, you get a <strong>50 point bonus</strong>.",
-    rulesScoringLowerTitle: "Scoring: Lower Section",
-    rulesScoringLower1: "<strong>3 & 4 of a Kind:</strong> At least 3 or 4 dice with the same value. Scores the sum of all 5 dice.",
-    rulesScoringLower2: "<strong>Full House:</strong> Three of a kind and a pair (e.g., 4, 4, 4, 2, 2). Scores <strong>25 points</strong>.",
-    rulesScoringLower3: "<strong>Small Straight:</strong> Four dice in a sequence (e.g., 1-2-3-4). Scores <strong>30 points</strong>.",
-    rulesScoringLower4: "<strong>Large Straight:</strong> Five dice in a sequence (e.g., 1-2-3-4-5). Scores <strong>40 points</strong>.",
-    rulesScoringLower5: "<strong>Yatzy:</strong> All five dice are the same. Scores <strong>50 points</strong>.",
-    rulesScoringLower6: "<strong>Chance:</strong> Any combination. Scores the sum of all 5 dice.",
-    rulesGotIt: "Got it!",
-    playerYou: "You",
-    playerRobby: "Robby",
-    playerProfessor: "The Professor",
-    playerThinker: "The Thinker"
-  };
-  const ROLLS_PER_TURN = 3;
-  const UPPER_SECTION_BONUS_THRESHOLD = 63;
-  const UPPER_SECTION_BONUS_POINTS = 50;
-  const SCORE_FOR_FULL_HOUSE = 25;
-  const SCORE_FOR_SMALL_STRAIGHT = 30;
-  const SCORE_FOR_LARGE_STRAIGHT = 40;
-  const SCORE_FOR_YATZY = 50;
-  const AI_THINKING_TIME = 1000;
-  const PLAYERS_CONFIG = [
-  { name: lang.playerYou, emoji: '🧑‍💻', isAI: false },
-  { name: lang.playerRobby, emoji: '🤖', isAI: true },
-  { name: lang.playerProfessor, emoji: '🧐', isAI: true },
-  { name: lang.playerThinker, emoji: '🤔', isAI: true }
+const lang = {
+title: "Yatzy",
+rules: "Rules",
+mode: "Mode",
+freeChoice: "Free",
+forcedOrder: "Forced",
+rollsLeft: "Rolls left",
+rollDice: "Roll Dice",
+finishTurn: "Finish Turn",
+chooseOnBoard: "Choose on the scoreboard!",
+category: "Category",
+ones: "Ones",
+twos: "Twos",
+threes: "Threes",
+fours: "Fours",
+fives: "Fives",
+sixes: "Sixes",
+bonus: "Bonus",
+upperTotal: "Upper Total",
+threeOfAKind: "3 of a Kind",
+fourOfAKind: "4 of a Kind",
+fullHouse: "Full House",
+smallStraight: "Small Straight",
+largeStraight: "Large Straight",
+yatzy: "Yatzy",
+chance: "Chance",
+lowerTotal: "Lower Total",
+grandTotal: "GRAND TOTAL",
+welcomeTitle: "Welcome to Yatzy!",
+modeSelectText: "Select game mode:",
+gameOverTitle: "Game Over!",
+playAgain: "Play Again",
+rulesHowToTitle: "How to Play Yatzy",
+rulesGoalText: "The goal is to score the most points by rolling five dice to make certain combinations.",
+rulesGameplayTitle: "Gameplay",
+rulesGameplay1: "On your turn, you can roll the dice up to <strong>3 times</strong>.",
+rulesGameplay2: "After the first and second rolls, you can click on dice to 'hold' them. Held dice will not be re-rolled.",
+rulesGameplay3: "After your rolls, you must choose an available category on the scoreboard to place your score.",
+rulesScoringUpperTitle: "Scoring: Upper Section",
+rulesScoringUpper1: "<strong>Ones to Sixes:</strong> Get the sum of dice showing that number. For example, three 4s in the 'Fours' category scores 12 points.",
+rulesScoringUpper2: "<strong>Bonus:</strong> If the total of the upper section is <strong>63 or more</strong>, you get a <strong>50 point bonus</strong>.",
+rulesScoringLowerTitle: "Scoring: Lower Section",
+rulesScoringLower1: "<strong>3 & 4 of a Kind:</strong> At least 3 or 4 dice with the same value. Scores the sum of all 5 dice.",
+rulesScoringLower2: "<strong>Full House:</strong> Three of a kind and a pair (e.g., 4, 4, 4, 2, 2). Scores <strong>25 points</strong>.",
+rulesScoringLower3: "<strong>Small Straight:</strong> Four dice in a sequence (e.g., 1-2-3-4). Scores <strong>30 points</strong>.",
+rulesScoringLower4: "<strong>Large Straight:</strong> Five dice in a sequence (e.g., 1-2-3-4-5). Scores <strong>40 points</strong>.",
+rulesScoringLower5: "<strong>Yatzy:</strong> All five dice are the same. Scores <strong>50 points</strong>.",
+rulesScoringLower6: "<strong>Chance:</strong> Any combination. Scores the sum of all 5 dice.",
+rulesGotIt: "Got it!",
+playerYou: "You",
+playerRobby: "Robby",
+playerProfessor: "The Professor",
+playerThinker: "The Thinker"
+};
+const ROLLS_PER_TURN = 3;
+const UPPER_SECTION_BONUS_THRESHOLD = 63;
+const UPPER_SECTION_BONUS_POINTS = 50;
+const SCORE_FOR_FULL_HOUSE = 25;
+const SCORE_FOR_SMALL_STRAIGHT = 30;
+const SCORE_FOR_LARGE_STRAIGHT = 40;
+const SCORE_FOR_YATZY = 50;
+const AI_THINKING_TIME = 1000;
+const PLAYERS_CONFIG = [
+{ name: lang.playerYou, emoji: '🧑‍💻', isAI: false },
+{ name: lang.playerRobby, emoji: '🤖', isAI: true },
+{ name: lang.playerProfessor, emoji: '🧐', isAI: true },
+{ name: lang.playerThinker, emoji: '🤔', isAI: true }
 ];
-  const SCORE_CATEGORIES = [
-  { id: 'ones', name: lang.ones, value: 1, section: 'upper' },
-  { id: 'twos', name: lang.twos, value: 2, section: 'upper' },
-  { id: 'threes', name: lang.threes, value: 3, section: 'upper' },
-  { id: 'fours', name: lang.fours, value: 4, section: 'upper' },
-  { id: 'fives', name: lang.fives, value: 5, section: 'upper' },
-  { id: 'sixes', name: lang.sixes, value: 6, section: 'upper' },
-  { id: 'upperBonus', name: lang.bonus, isBonus: true },
-  { id: 'upperTotal', name: lang.upperTotal, isTotal: true },
-  { id: 'threeOfAKind', name: lang.threeOfAKind, section: 'lower' },
-  { id: 'fourOfAKind', name: lang.fourOfAKind, section: 'lower' },
-  { id: 'fullHouse', name: lang.fullHouse, section: 'lower' },
-  { id: 'smallStraight', name: lang.smallStraight, section: 'lower' },
-  { id: 'largeStraight', name: lang.largeStraight, section: 'lower' },
-  { id: 'yatzy', name: lang.yatzy, section: 'lower' },
-  { id: 'chance', name: lang.chance, section: 'lower' },
-  { id: 'lowerTotal', name: lang.lowerTotal, isTotal: true },
-  { id: 'grandTotal', name: lang.grandTotal, isTotal: true }
+const SCORE_CATEGORIES = [
+{ id: 'ones', name: lang.ones, value: 1, section: 'upper' },
+{ id: 'twos', name: lang.twos, value: 2, section: 'upper' },
+{ id: 'threes', name: lang.threes, value: 3, section: 'upper' },
+{ id: 'fours', name: lang.fours, value: 4, section: 'upper' },
+{ id: 'fives', name: lang.fives, value: 5, section: 'upper' },
+{ id: 'sixes', name: lang.sixes, value: 6, section: 'upper' },
+{ id: 'upperBonus', name: lang.bonus, isBonus: true },
+{ id: 'upperTotal', name: lang.upperTotal, isTotal: true },
+{ id: 'threeOfAKind', name: lang.threeOfAKind, section: 'lower' },
+{ id: 'fourOfAKind', name: lang.fourOfAKind, section: 'lower' },
+{ id: 'fullHouse', name: lang.fullHouse, section: 'lower' },
+{ id: 'smallStraight', name: lang.smallStraight, section: 'lower' },
+{ id: 'largeStraight', name: lang.largeStraight, section: 'lower' },
+{ id: 'yatzy', name: lang.yatzy, section: 'lower' },
+{ id: 'chance', name: lang.chance, section: 'lower' },
+{ id: 'lowerTotal', name: lang.lowerTotal, isTotal: true },
+{ id: 'grandTotal', name: lang.grandTotal, isTotal: true }
 ];
-  const scoreboardEl = document.getElementById('scoreboard');
-  const diceContainerEl = document.getElementById('dice-container');
-  const rollBtn = document.getElementById('roll-btn');
-  const confirmBtn = document.getElementById('confirm-btn');
-  const rollsLeftEl = document.getElementById('rolls-left');
-  const currentPlayerNameEl = document.getElementById('current-player-name');
-  const gameModeDisplayEl = document.getElementById('game-mode-display');
-  const rulesBtn = document.getElementById('rules-btn');
-  const closeRulesBtn = document.getElementById('close-rules-btn');
-  const startModal = document.getElementById('start-modal');
-  const gameOverModal = document.getElementById('game-over-modal');
-  const rulesModal = document.getElementById('rules-modal');
-  const freeModeBtn = document.getElementById('free-mode-btn');
-  const forcedModeBtn = document.getElementById('forced-mode-btn');
-  const playAgainBtn = document.getElementById('play-again-btn');
-  let state = {};
+const scoreboardEl = document.getElementById('scoreboard');
+const diceContainerEl = document.getElementById('dice-container');
+const rollBtn = document.getElementById('roll-btn');
+const confirmBtn = document.getElementById('confirm-btn');
+const rollsLeftEl = document.getElementById('rolls-left');
+const currentPlayerNameEl = document.getElementById('current-player-name');
+const gameModeDisplayEl = document.getElementById('game-mode-display');
+const rulesBtn = document.getElementById('rules-btn');
+const closeRulesBtn = document.getElementById('close-rules-btn');
+const startModal = document.getElementById('start-modal');
+const gameOverModal = document.getElementById('game-over-modal');
+const rulesModal = document.getElementById('rules-modal');
+const freeModeBtn = document.getElementById('free-mode-btn');
+const forcedModeBtn = document.getElementById('forced-mode-btn');
+const playAgainBtn = document.getElementById('play-again-btn');
+let state = {};
 function updateStaticUIText() {
-  document.title = lang.title;
-  gameModeDisplayEl.textContent = `${lang.mode}:`;
-  rulesBtn.textContent = lang.rules;
-  rollBtn.textContent = lang.rollDice;
-  document.getElementById('welcome-title').textContent = lang.welcomeTitle;
-  document.getElementById('mode-select-text').textContent = lang.modeSelectText;
-  freeModeBtn.textContent = lang.freeChoice;
-  forcedModeBtn.textContent = lang.forcedOrder;
-  document.getElementById('game-over-title').textContent = lang.gameOverTitle;
-  playAgainBtn.textContent = lang.playAgain;
-  document.getElementById('rules-how-to-title').textContent = lang.rulesHowToTitle;
-  document.getElementById('rules-goal-text').textContent = lang.rulesGoalText;
-  document.getElementById('rules-gameplay-title').textContent = lang.rulesGameplayTitle;
-  document.getElementById('rules-gameplay-list').innerHTML = `
+document.title = lang.title;
+gameModeDisplayEl.textContent = `${lang.mode}:`;
+rulesBtn.textContent = lang.rules;
+rollBtn.textContent = lang.rollDice;
+document.getElementById('welcome-title').textContent = lang.welcomeTitle;
+document.getElementById('mode-select-text').textContent = lang.modeSelectText;
+freeModeBtn.textContent = lang.freeChoice;
+forcedModeBtn.textContent = lang.forcedOrder;
+document.getElementById('game-over-title').textContent = lang.gameOverTitle;
+playAgainBtn.textContent = lang.playAgain;
+document.getElementById('rules-how-to-title').textContent = lang.rulesHowToTitle;
+document.getElementById('rules-goal-text').textContent = lang.rulesGoalText;
+document.getElementById('rules-gameplay-title').textContent = lang.rulesGameplayTitle;
+document.getElementById('rules-gameplay-list').innerHTML = `
   <li>${lang.rulesGameplay1}</li>
   <li>${lang.rulesGameplay2}</li>
   <li>${lang.rulesGameplay3}</li>`;
-  document.getElementById('rules-scoring-upper-title').textContent = lang.rulesScoringUpperTitle;
-  document.getElementById('rules-scoring-upper-list').innerHTML = `
+document.getElementById('rules-scoring-upper-title').textContent = lang.rulesScoringUpperTitle;
+document.getElementById('rules-scoring-upper-list').innerHTML = `
   <li>${lang.rulesScoringUpper1}</li>
   <li>${lang.rulesScoringUpper2}</li>`;
-  document.getElementById('rules-scoring-lower-title').textContent = lang.rulesScoringLowerTitle;
-  document.getElementById('rules-scoring-lower-list').innerHTML = `
+document.getElementById('rules-scoring-lower-title').textContent = lang.rulesScoringLowerTitle;
+document.getElementById('rules-scoring-lower-list').innerHTML = `
   <li>${lang.rulesScoringLower1}</li>
   <li>${lang.rulesScoringLower2}</li>
   <li>${lang.rulesScoringLower3}</li>
   <li>${lang.rulesScoringLower4}</li>
   <li>${lang.rulesScoringLower5}</li>
   <li>${lang.rulesScoringLower6}</li>`;
-  closeRulesBtn.textContent = lang.rulesGotIt;
+closeRulesBtn.textContent = lang.rulesGotIt;
 }
 function init() {
-  state = {
-    players: PLAYERS_CONFIG.map(p => ({ ...p, scores: {} })),
-    currentPlayerIndex: 0,
-    rollsLeft: ROLLS_PER_TURN,
-    dice: [1, 2, 3, 4, 5],
-    heldDice: [false, false, false, false, false],
-    gameMode: 'free',
-    phase: 'new',
-    gameOver: false,
-    turnCount: 0
-  };
-  SCORE_CATEGORIES.forEach(cat => {
-    if (!cat.isBonus && !cat.isTotal) {
-      state.players.forEach(p => { p.scores[cat.id] = null; });
-    }
-  });
-  setupBoard();
-  updateUI();
-  startModal.classList.add('visible');
-  gameOverModal.classList.remove('visible');
+state = {
+players: PLAYERS_CONFIG.map(p => ({ ...p, scores: {} })),
+currentPlayerIndex: 0,
+rollsLeft: ROLLS_PER_TURN,
+dice: [1, 2, 3, 4, 5],
+heldDice: [false, false, false, false, false],
+gameMode: 'free',
+phase: 'new',
+gameOver: false,
+turnCount: 0
+};
+SCORE_CATEGORIES.forEach(cat => {
+if (!cat.isBonus && !cat.isTotal) {
+state.players.forEach(p => { p.scores[cat.id] = null; });
+}
+});
+setupBoard();
+updateUI();
+startModal.classList.add('visible');
+gameOverModal.classList.remove('visible');
 }
 function startGame(mode) {
-  state.gameMode = mode;
-  gameModeDisplayEl.textContent = `${lang.mode}: ${mode === 'free' ? lang.freeChoice : lang.forcedOrder}`;
-  startModal.classList.remove('visible');
-  newTurn();
+state.gameMode = mode;
+gameModeDisplayEl.textContent = `${lang.mode}: ${mode === 'free' ? lang.freeChoice : lang.forcedOrder}`;
+startModal.classList.remove('visible');
+newTurn();
 }
 function setupBoard() {
-  let headerHTML = '<thead><tr>';
-  headerHTML += `<th>${lang.category}</th>`;
-  state.players.forEach(p => headerHTML += `<th class="player-header">${p.emoji}</th>`);
-  headerHTML += '</tr></thead>';
-  let bodyHTML = '<tbody>';
-  SCORE_CATEGORIES.forEach(cat => {
-    bodyHTML += `<tr class="${cat.isTotal ? 'total-score-row' : ''}" id="row-${cat.id}">`;
-    bodyHTML += `<td>${cat.name}</td>`;
-    state.players.forEach((p, pIndex) => {
-      if (cat.isBonus || cat.isTotal) {
-        bodyHTML += `<td id="${cat.id}-${pIndex}">0</td>`;
-      } else {
-        bodyHTML += `<td class="score-cell" id="${cat.id}-${pIndex}" data-cat="${cat.id}" data-player="${pIndex}">-</td>`;
-      }
-    });
-    bodyHTML += '</tr>';
-  });
-  bodyHTML += '</tbody>';
-  scoreboardEl.innerHTML = headerHTML + bodyHTML;
-  addScoreCellListeners();
+let headerHTML = '<thead><tr>';
+headerHTML += `<th>${lang.category}</th>`;
+state.players.forEach(p => headerHTML += `<th class="player-header">${p.emoji}</th>`);
+headerHTML += '</tr></thead>';
+let bodyHTML = '<tbody>';
+SCORE_CATEGORIES.forEach(cat => {
+bodyHTML += `<tr class="${cat.isTotal ? 'total-score-row' : ''}" id="row-${cat.id}">`;
+bodyHTML += `<td>${cat.name}</td>`;
+state.players.forEach((p, pIndex) => {
+if (cat.isBonus || cat.isTotal) {
+bodyHTML += `<td id="${cat.id}-${pIndex}">0</td>`;
+} else {
+bodyHTML += `<td class="score-cell" id="${cat.id}-${pIndex}" data-cat="${cat.id}" data-player="${pIndex}">-</td>`;
+}
+});
+bodyHTML += '</tr>';
+});
+bodyHTML += '</tbody>';
+scoreboardEl.innerHTML = headerHTML + bodyHTML;
+addScoreCellListeners();
 }
 function renderDice() {
-  const player = state.players[state.currentPlayerIndex];
-  diceContainerEl.innerHTML = '';
-  state.dice.forEach((value, i) => {
-    const die = document.createElement('div');
-    die.className = 'dice';
-    die.dataset.value = value;
-    if (state.heldDice[i]) die.classList.add('held');
-    if (player.isAI || state.phase !== 'rolling' || state.rollsLeft === ROLLS_PER_TURN) {
-      die.classList.add('no-click');
-    }
-    for (let j = 0; j < value; j++) {
-      die.innerHTML += '<span class="dot"></span>';
-    }
-    die.addEventListener('click', () => toggleHold(i));
-    diceContainerEl.appendChild(die);
-  });
+const player = state.players[state.currentPlayerIndex];
+diceContainerEl.innerHTML = '';
+state.dice.forEach((value, i) => {
+const die = document.createElement('div');
+die.className = 'dice';
+die.dataset.value = value;
+if (state.heldDice[i]) die.classList.add('held');
+if (player.isAI || state.phase !== 'rolling' || state.rollsLeft === ROLLS_PER_TURN) {
+die.classList.add('no-click');
+}
+for (let j = 0; j < value; j++) {
+die.innerHTML += '<span class="dot"></span>';
+}
+die.addEventListener('click', () => toggleHold(i));
+diceContainerEl.appendChild(die);
+});
 }
 function updateUI() {
-  const player = state.players[state.currentPlayerIndex];
-  const isHuman = !player.isAI;
-  currentPlayerNameEl.textContent = (player.name === lang.playerYou) ? "Your turn" : `${player.name}'s turn`;
+const player = state.players[state.currentPlayerIndex];
+const isHuman = !player.isAI;
+currentPlayerNameEl.textContent = (player.name === lang.playerYou) ? "Your turn" : `${player.name}'s turn`;
   rollsLeftEl.textContent = `${lang.rollsLeft}: ${state.rollsLeft}`;
   if (isHuman) {
     if (state.phase === 'rolling') {
