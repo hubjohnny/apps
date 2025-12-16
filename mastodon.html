@@ -780,8 +780,28 @@ const currentLineIdx = this.state.cursor.row;
 let found = null;
 const check = (r) => {
 const line = lines[r];
+const mode = (this.highlighter.lineModes && this.highlighter.lineModes[r]) ? this.highlighter.lineModes[r] : 'html';
 if (type === 'comment') {
-const lineComMatch = line.match(/\/\/.*/);
+let lineComMatch = null;
+let inString = false;
+let stringChar = '';
+for (let i = 0; i < line.length - 1; i++) {
+const char = line[i];
+if (inString) {
+if (char === stringChar && line[i - 1] !== '\\') {
+inString = false;
+}
+} else {
+if (char === '"' || char === "'" || char === '`') {
+inString = true;
+stringChar = char;
+}
+else if (char === '/' && line[i + 1] === '/') {
+lineComMatch = { index: i, 0: line.substring(i) };
+break;
+}
+}
+}
 const blockComMatch = line.match(/\/\*/);
 if (lineComMatch && (!blockComMatch || lineComMatch.index < blockComMatch.index)) {
 return {
@@ -822,6 +842,7 @@ return { start: { r, c: 0 }, end: { r, c: line.length }, select: false };
 }
 }
 else if (type === 'function') {
+if (mode !== 'javascript') return null;
 const m = line.match(/(?:^|\s)function\s+\w+|^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{/);
 if (m) {
 return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
