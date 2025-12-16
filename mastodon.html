@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mastodon Engine</title>
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn6ajPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
-
 <style>
 :root {
   --bg-color: #1e1e1e;
@@ -28,7 +27,6 @@
   --c-selector: #d7ba7d;
   --c-property: #9cdcfe;
 }
-
 body {
   margin: 0;
   overflow: hidden;
@@ -36,7 +34,6 @@ body {
   color: var(--text-color);
   font-family: var(--font-family);
 }
-
 #editor {
   position: relative;
   top: 40px;
@@ -46,7 +43,6 @@ body {
   outline: none;
   cursor: text;
 }
-
 #scroll-phantom {
   position: absolute;
   top: 0;
@@ -55,7 +51,6 @@ body {
   width: 1px;
   height: 1px;
 }
-
 #view-port {
   position: absolute;
   top: 0;
@@ -64,7 +59,6 @@ body {
   pointer-events: none;
   will-change: transform;
 }
-
 .line {
   height: var(--line-height);
   line-height: var(--line-height);
@@ -79,7 +73,6 @@ body {
   font-variant-ligatures: none;
   letter-spacing: 0px;
 }
-
 .line-number {
   position: sticky;
   left: 0;
@@ -96,7 +89,6 @@ body {
   user-select: none;
   z-index: 20;
 }
-
 .selection-layer {
   position: absolute;
   left: 65px;
@@ -106,18 +98,15 @@ body {
   z-index: 1;
   pointer-events: none;
 }
-
 .is-selected {
   background-color: var(--selection-bg);
 }
-
 .line-content {
   padding-left: 5px;
   position: relative;
   z-index: 2;
   pointer-events: none;
 }
-
 .tok-com { color: var(--c-comment); }
 .tok-str { color: var(--c-string); }
 .tok-num { color: var(--c-number); }
@@ -127,21 +116,19 @@ body {
 .tok-attr { color: var(--c-attr); }
 .tok-sel { color: var(--c-selector); }
 .tok-prop { color: var(--c-property); }
-
 #cursor {
   position: absolute;
-  width: 2px;
+  width: 1ch;
   height: var(--line-height);
-  background-color: var(--cursor-color);
+  background-color: #6a9955;
+  border-radius: 3px;
+  opacity: 0.5;
   z-index: 10;
   pointer-events: none;
-  transition: top 0.05s, left 0.05s;
 }
-
 .blink {
   animation: blink 1s step-end infinite;
 }
-
 #toolbar {
   position: fixed;
   top: 0;
@@ -159,7 +146,6 @@ body {
   font-size: 13px;
   gap: 10px;
 }
-
 #toolbar input {
   background: #1e1e1e;
   border: 1px solid #333;
@@ -169,9 +155,7 @@ body {
   outline: none;
   font-family: sans-serif;
 }
-
 #toolbar input:focus { border-color: #007acc; }
-
 #toolbar button {
   background: #2d2d2d;
   border: 1px solid #333;
@@ -183,7 +167,6 @@ body {
 }
 #toolbar button:hover { background: #3d3d3d; }
 #toolbar button:active { background: #007acc; color: white; }
-
 #search-stats {
   color: #858585;
   font-size: 12px;
@@ -191,7 +174,6 @@ body {
   right: 20px;
   white-space: nowrap;
 }
-
 #statusbar {
   position: fixed;
   bottom: 0;
@@ -210,7 +192,6 @@ body {
   box-sizing: border-box;
   border-top: 1px solid #1a1614;
 }
-
 #file-status {
   flex: 1;
   text-align: left;
@@ -218,7 +199,6 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 #message-area {
   flex: 1;
   text-align: right;
@@ -226,13 +206,11 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 #shortcuts {
   flex: 0 0 auto;
   display: flex;
   gap: 5px;
 }
-
 #shortcuts button {
   background: #2d2d2d;
   border: 1px solid #333;
@@ -244,12 +222,10 @@ body {
 }
 #shortcuts button:hover { background: #3d3d3d; }
 #shortcuts button:active { background: #007acc; color: white; }
-
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
-
 .modal-overlay {
   position: fixed;
   top: 0; left: 0;
@@ -261,7 +237,6 @@ body {
   justify-content: center;
   align-items: center;
 }
-
 .modal-box {
   background: #252526;
   color: #cccccc;
@@ -275,7 +250,6 @@ body {
   overflow: hidden;
   animation: modalFadeIn 0.3s ease-out;
 }
-
 .modal-header {
   background: #2d2d2d;
   padding: 15px 20px;
@@ -284,28 +258,23 @@ body {
   font-weight: 600;
   color: #fff;
 }
-
 .modal-body {
   padding: 20px;
   font-size: 14px;
   line-height: 1.6;
 }
-
 .modal-body h3 {
   color: #4fc1ff;
   margin-top: 0;
   font-size: 15px;
 }
-
 .modal-body ul {
   padding-left: 20px;
   margin-bottom: 20px;
 }
-
 .modal-body li {
   margin-bottom: 8px;
 }
-
 .modal-footer {
   padding: 15px 20px;
   background: #2d2d2d;
@@ -314,7 +283,6 @@ body {
   justify-content: space-between;
   align-items: center;
 }
-
 .modal-btn {
   background: #007acc;
   color: white;
@@ -325,9 +293,7 @@ body {
   font-size: 13px;
   transition: background 0.2s;
 }
-
 .modal-btn:hover { background: #005f9e; }
-
 .modal-checkbox-label {
   font-size: 13px;
   color: #999;
@@ -337,37 +303,30 @@ body {
   gap: 8px;
   user-select: none;
 }
-
 @keyframes modalFadeIn {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 </style>
-
 </head>
 <body>
-
 <div id="intro-modal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
       Welcome to Mastodon Engine&nbsp;&nbsp;🦣&nbsp;&nbsp;<small>(beta)</small>
     </div>
-
     <div class="modal-body">
       <p>You are now using a specialized code editor tailored for building and optimizing <strong>Single-File Web Applications</strong>.</p>
-
       <h3>Key Features:</h3>
       <ul>
         <li>
-          <strong>Unrivaled Performance:</strong> Engineered to handle massive files that choke standard editors. Capable of processing <strong>650,000+ lines</strong> on entry-level hardware, significantly faster than other well known editors in large single files.
+          <strong>Unrivaled Performance:</strong> Engineered to handle massive files that choke standard editors. Capable of processing <strong>650,000+ lines</strong> on entry-level hardware.
         </li>
         <li>
           <strong>Syntax Highlighting:</strong> Custom-built highlighting specifically tuned for mixed-mode development (HTML/JS/CSS).
         </li>
       </ul>
     </div>
-
     <div class="modal-footer">
       <label class="modal-checkbox-label">
         <input type="checkbox" id="dont-show-again"> Don't show again
@@ -376,9 +335,6 @@ body {
     </div>
   </div>
 </div>
-
-
-
 <div id="toolbar">
   <input type="text" id="find-input" placeholder="Find..." style="width: 150px;">
   <input type="text" id="replace-input" placeholder="Replace..." style="width: 150px;">
@@ -387,568 +343,564 @@ body {
   <button onclick="editor.search.replaceAll()">All</button>
   <span id="search-stats"></span>
 </div>
-
 <div id="editor" tabindex="0">
   <div id="scroll-phantom"></div>
   <div id="view-port"></div>
   <div id="cursor" class="blink"></div>
 </div>
 <div id="statusbar">
-
-  <div id="statusbar">
-    <span id="file-status">Untitled.txt</span>
-
-    <div id="shortcuts">
-      <button onclick="editor.openFile()">Open</button>
-      <button onclick="editor.saveFile()">Save</button>
-      <button onclick="editor.newFile()" style="margin-right: 20px;">New</button>
-      <button onclick="editor.previewFile()">Preview</button>
-    </div>
-
-    <span id="message-area">Mastodon Engine</span>
+  <span id="file-status">Untitled.txt</span>
+  <div id="shortcuts">
+    <button onclick="editor.openFile()">Open</button>
+    <button onclick="editor.saveFile()">Save</button>
+    <button onclick="editor.newFile()" style="margin-right: 0;">New</button>
+    <button onclick="editor.previewFile()">Preview</button>
+    <span style="display:inline-block; width: 10px; margin-right: 10px; height: 16px; opacity: 0.5;"></span>
+    <button onclick="editor.cycleNext('comment')">↻ Comment</button>
+    <button onclick="editor.cycleNext('whitespace')">↻ Whitespace</button>
+    <button onclick="editor.cycleNext('empty')">↻ Empty Line</button>
+    <button onclick="editor.cycleNext('function')">↻ Function</button>
   </div>
-
+  <span id="message-area">Mastodon Engine</span>
 </div>
 <script>
 "use strict";
-
-
-
 function checkIntroModal() {
   const hide = localStorage.getItem('mastodon_hide_intro');
   if (!hide) {
     document.getElementById('intro-modal').style.display = 'flex';
   }
 }
-
 function closeIntroModal() {
   const checkbox = document.getElementById('dont-show-again');
   if (checkbox.checked) {
     localStorage.setItem('mastodon_hide_intro', 'true');
   }
   document.getElementById('intro-modal').style.display = 'none';
-  
-  // Setter fokus tilbake til editoren
   if(window.editor && window.editor.dom) {
-      window.editor.dom.editor.focus();
+    window.editor.dom.editor.focus();
   }
 }
-
-
-
-
-
 class SyntaxHighlighter {
-  highlight(text) {
-    if (!text) return '&nbsp;';
-    let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const tokens = [];
-    const save = (content, cls) => {
-      tokens.push(`<span class="${cls}">${content}</span>`);
-      return `§T${tokens.length - 1}T§`;
-    };
-    html = html.replace(/(\/\/.*|\/\*[\s\S]*?\*\/|&lt;!--[\s\S]*?--&gt;)/g, m => save(m, 'tok-com'));
-    html = html.replace(/(".*?"|'.*?'|`[^`\\]*(?:\\.[^`\\]*)*`)/g, m => save(m, 'tok-str'));
-    html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+&gt;)/g, m => save(m, 'tok-tag'));
-    html = html.replace(/(&lt;[a-zA-Z0-9-]+)(?=\s)/g, m => save(m, 'tok-tag'));
-    html = html.replace(/(\.[a-zA-Z_-][\w-]*|#[a-zA-Z_-][\w-]*)/g, m => save(m, 'tok-sel'));
-    html = html.replace(/(?<!§)\b([a-z][a-z0-9-]*)(?=\s*\{)/gi, m => save(m, 'tok-sel'));
-      html = html.replace(/([a-zA-Z-]+)(?=\s*:)/g, m => save(m, 'tok-prop'));
-
-      const kw = /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await|try|catch|new|this|typeof|void|debugger|delete|extends|implements|interface|package|private|protected|public|static|yield|break|continue|switch|case|default)\b/g;
-      html = html.replace(kw, m => save(m, 'tok-kwd'));
-      html = html.replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\()/g, m => save(m, 'tok-func'));
-      html = html.replace(/\b([a-zA-Z-]+)(?==)/g, m => save(m, 'tok-attr'));
-      html = html.replace(/\b\d+(\.\d+)?([a-z%]+)?\b/gi, m => save(m, 'tok-num'));
-
-      html = html.replace(/§T(\d+)T§/g, (_, i) => tokens[i]);
-      return html;
-    }
+highlight(text) {
+  if (!text) return '&nbsp;';
+  let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const tokens = [];
+  const save = (content, cls) => {
+    tokens.push(`<span class="${cls}">${content}</span>`);
+    return `§T${tokens.length - 1}T§`;
+  };
+  html = html.replace(/(\/\/.*|\/\*[\s\S]*?\*\/|&lt;!--[\s\S]*?--&gt;)/g, m => save(m, 'tok-com'));
+  html = html.replace(/(".*?"|'.*?'|`[^`\\]*(?:\\.[^`\\]*)*`)/g, m => save(m, 'tok-str'));
+  html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+&gt;)/g, m => save(m, 'tok-tag'));
+  html = html.replace(/(&lt;[a-zA-Z0-9-]+)(?=\s)/g, m => save(m, 'tok-tag'));
+  html = html.replace(/(\.[a-zA-Z_-][\w-]*|#[a-zA-Z_-][\w-]*)/g, m => save(m, 'tok-sel'));
+  html = html.replace(/(?<!§)\b([a-z][a-z0-9-]*)(?=\s*\{)/gi, m => save(m, 'tok-sel'));
+    html = html.replace(/([a-zA-Z-]+)(?=\s*:)/g, m => save(m, 'tok-prop'));
+    const kw = /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await|try|catch|new|this|typeof|void|debugger|delete|extends|implements|interface|package|private|protected|public|static|yield|break|continue|switch|case|default)\b/g;
+    html = html.replace(kw, m => save(m, 'tok-kwd'));
+    html = html.replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\()/g, m => save(m, 'tok-func'));
+    html = html.replace(/\b([a-zA-Z-]+)(?==)/g, m => save(m, 'tok-attr'));
+    html = html.replace(/\b\d+(\.\d+)?([a-z%]+)?\b/gi, m => save(m, 'tok-num'));
+    html = html.replace(/§T(\d+)T§/g, (_, i) => tokens[i]);
+    return html;
   }
-
+}
 class HistoryManager {
-  constructor(editor) {
-    this.editor = editor;
-    this.undoStack = [];
-    this.redoStack = [];
-    this.lastEditTime = 0;
-  }
-  record(op) {
-    const now = Date.now();
-    const isTyping = op.text.length === 1 && op.oldText.length === 0;
-    const isDel = op.oldText.length === 1 && op.text.length === 0;
-
-    if (this.undoStack.length > 0 && (now - this.lastEditTime) < 500) {
-      const last = this.undoStack[this.undoStack.length - 1];
-      if (isTyping && last.type === 'ins' && last.endRow === op.startRow && last.endCol === op.startCol) {
-        last.text += op.text; last.endCol += op.text.length; last.cursorAfter = op.cursorAfter;
-        this.lastEditTime = now; return;
-      }
-      if (isDel && last.type === 'del' && op.endRow === last.startRow && op.endCol === last.startCol) {
-        last.oldText = op.oldText + last.oldText; last.startCol = op.startCol; last.cursorAfter = op.cursorAfter;
-        this.lastEditTime = now; return;
-      }
-    }
-    op.type = isTyping ? 'ins' : (isDel ? 'del' : 'blk');
-    this.undoStack.push(op);
-    this.redoStack = [];
-    this.lastEditTime = now;
-    if (this.undoStack.length > 300) this.undoStack.shift();
-  }
-  undo() {
-    if (this.undoStack.length === 0) return;
-    const op = this.undoStack.pop();
-    this.redoStack.push(op);
-    this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.cursorAfter.col, op.oldText, false);
-    this.editor.state.cursor = { ...op.cursorBefore };
-    this.editor.finalizeUpdate();
-  }
-  redo() {
-    if (this.redoStack.length === 0) return;
-    const op = this.redoStack.pop();
-    this.undoStack.push(op);
-    this.editor.applyEditInternal(op.startRow, op.startCol, op.endRow, op.endCol, op.text, false);
-    this.editor.state.cursor = { ...op.cursorAfter };
-    this.editor.finalizeUpdate();
-  }
+constructor(editor) {
+  this.editor = editor;
+  this.undoStack = [];
+  this.redoStack = [];
+  this.lastEditTime = 0;
 }
-
+record(op) {
+  const now = Date.now();
+  const isTyping = op.text.length === 1 && op.oldText.length === 0;
+  const isDel = op.oldText.length === 1 && op.text.length === 0;
+  if (this.undoStack.length > 0 && (now - this.lastEditTime) < 500) {
+    const last = this.undoStack[this.undoStack.length - 1];
+    if (isTyping && last.type === 'ins' && last.endRow === op.startRow && last.endCol === op.startCol) {
+      last.text += op.text; last.endCol += op.text.length; last.cursorAfter = op.cursorAfter;
+      this.lastEditTime = now; return;
+    }
+    if (isDel && last.type === 'del' && op.endRow === last.startRow && op.endCol === last.startCol) {
+      last.oldText = op.oldText + last.oldText; last.startCol = op.startCol; last.cursorAfter = op.cursorAfter;
+      this.lastEditTime = now; return;
+    }
+  }
+  op.type = isTyping ? 'ins' : (isDel ? 'del' : 'blk');
+  this.undoStack.push(op);
+  this.redoStack = [];
+  this.lastEditTime = now;
+  if (this.undoStack.length > 300) this.undoStack.shift();
+}
+undo() {
+  if (this.undoStack.length === 0) return;
+  const op = this.undoStack.pop();
+  this.redoStack.push(op);
+  this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.cursorAfter.col, op.oldText, false);
+  this.editor.state.cursor = { ...op.cursorBefore };
+  this.editor.finalizeUpdate();
+}
+redo() {
+  if (this.redoStack.length === 0) return;
+  const op = this.redoStack.pop();
+  this.undoStack.push(op);
+  this.editor.applyEditInternal(op.startRow, op.startCol, op.endRow, op.endCol, op.text, false);
+  this.editor.state.cursor = { ...op.cursorAfter };
+  this.editor.finalizeUpdate();
+}
+}
 class SearchManager {
-  constructor(editor) {
-    this.editor = editor;
-    this.matches = [];
-    this.currentIndex = -1;
-    this.lastQuery = "";
-  }
-
-  find(query) {
-    if (!query) return;
-    if (query === this.lastQuery && this.matches.length > 0) return;
-
-    this.matches = [];
-    const lines = this.editor.state.lines;
-
-    for (let r = 0; r < lines.length; r++) {
-      const line = lines[r];
-      let pos = line.indexOf(query);
-      while (pos !== -1) {
-        this.matches.push({ row: r, col: pos, len: query.length });
-        pos = line.indexOf(query, pos + 1);
-      }
-    }
-
-    this.lastQuery = query;
-    this.currentIndex = -1;
-
-    const statEl = document.getElementById('search-stats');
-    if (this.matches.length === 0) {
-      statEl.textContent = "No matches";
-    } else {
-      statEl.textContent = `Found ${this.matches.length}`;
-      this.findNext();
+constructor(editor) {
+  this.editor = editor;
+  this.matches = [];
+  this.currentIndex = -1;
+  this.lastQuery = "";
+}
+find(query) {
+  if (!query) return;
+  if (query === this.lastQuery && this.matches.length > 0) return;
+  this.matches = [];
+  const lines = this.editor.state.lines;
+  for (let r = 0; r < lines.length; r++) {
+    const line = lines[r];
+    let pos = line.indexOf(query);
+    while (pos !== -1) {
+      this.matches.push({ row: r, col: pos, len: query.length });
+      pos = line.indexOf(query, pos + 1);
     }
   }
-
-  findNext() {
-
-    const inputVal = document.getElementById('find-input').value;
-    if (inputVal !== this.lastQuery) this.find(inputVal);
-
-    if (this.matches.length === 0) return;
-
-    this.currentIndex = (this.currentIndex + 1) % this.matches.length;
-    const m = this.matches[this.currentIndex];
-
-    document.getElementById('search-stats').textContent = `${this.currentIndex + 1} of ${this.matches.length}`;
-
-    this.editor.state.selectionAnchor = { row: m.row, col: m.col };
-    this.editor.state.cursor = { row: m.row, col: m.col + m.len };
-    this.editor.state.desiredCol = m.col + m.len;
-
-    this.editor.finalizeUpdate();
-  }
-
-  replace() {
-    if (this.matches.length === 0) return;
-
-    const replacement = document.getElementById('replace-input').value;
-    const m = this.matches[this.currentIndex];
-
-    const cursor = this.editor.state.cursor;
-    const anchor = this.editor.state.selectionAnchor;
-
-    if (anchor && cursor.row === m.row && Math.abs(cursor.col - anchor.col) === m.len) {
-      this.editor.applyChange(replacement);
-
-      this.lastQuery = "";
-      this.findNext();
-    } else {
-      this.findNext();
-    }
-  }
-
-  replaceAll() {
-    const query = document.getElementById('find-input').value;
-    const replacement = document.getElementById('replace-input').value;
-    if (!query) return;
-
-    if (!confirm(`Replace all occurrences of "${query}"?`)) return;
-
-    const lines = this.editor.state.lines;
-    let count = 0;
-
-    const newLines = lines.map(line => {
-
-      if (line.includes(query)) {
-        const parts = line.split(query);
-        count += parts.length - 1;
-        return parts.join(replacement);
-      }
-      return line;
-    });
-
-    if (count > 0) {
-      const newText = newLines.join('\n');
-
-      this.editor.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
-      this.editor.setStatus(`Replaced ${count} occurrences`);
-
-      this.matches = [];
-      this.lastQuery = "";
-      document.getElementById('search-stats').textContent = "";
-    } else {
-      this.editor.setStatus("Nothing found");
-    }
+  this.lastQuery = query;
+  this.currentIndex = -1;
+  const statEl = document.getElementById('search-stats');
+  if (this.matches.length === 0) {
+    statEl.textContent = "No matches";
+  } else {
+    statEl.textContent = `Found ${this.matches.length}`;
+    this.findNext();
   }
 }
-
+findNext() {
+  const inputVal = document.getElementById('find-input').value;
+  if (inputVal !== this.lastQuery) this.find(inputVal);
+  if (this.matches.length === 0) return;
+  this.currentIndex = (this.currentIndex + 1) % this.matches.length;
+  const m = this.matches[this.currentIndex];
+  document.getElementById('search-stats').textContent = `${this.currentIndex + 1} of ${this.matches.length}`;
+  this.editor.state.selectionAnchor = { row: m.row, col: m.col };
+  this.editor.state.cursor = { row: m.row, col: m.col + m.len };
+  this.editor.state.desiredCol = m.col + m.len;
+  this.editor.finalizeUpdate();
+}
+replace() {
+  if (this.matches.length === 0) return;
+  const replacement = document.getElementById('replace-input').value;
+  const m = this.matches[this.currentIndex];
+  const cursor = this.editor.state.cursor;
+  const anchor = this.editor.state.selectionAnchor;
+  if (anchor && cursor.row === m.row && Math.abs(cursor.col - anchor.col) === m.len) {
+    this.editor.applyChange(replacement);
+    this.lastQuery = "";
+    this.findNext();
+  } else {
+    this.findNext();
+  }
+}
+replaceAll() {
+  const query = document.getElementById('find-input').value;
+  const replacement = document.getElementById('replace-input').value;
+  if (!query) return;
+  if (!confirm(`Replace all occurrences of "${query}"?`)) return;
+  const lines = this.editor.state.lines;
+  let count = 0;
+  const newLines = lines.map(line => {
+    if (line.includes(query)) {
+      const parts = line.split(query);
+      count += parts.length - 1;
+      return parts.join(replacement);
+    }
+    return line;
+  });
+  if (count > 0) {
+    const newText = newLines.join('\n');
+    this.editor.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+    this.editor.setStatus(`Replaced ${count} occurrences`);
+    this.matches = [];
+    this.lastQuery = "";
+    document.getElementById('search-stats').textContent = "";
+  } else {
+    this.editor.setStatus("Nothing found");
+  }
+}
+}
 class EditorEngine {
-  constructor() {
-    this.config = {
-      lineHeight: 24,
-      charWidth: 9.02,
-      xOffset: 65,
-      viewBuffer: 15
-    };
-    this.state = {
-      lines: [""],
-      cursor: { row: 0, col: 0 },
-      selectionAnchor: null,
-      isDragging: false,
-      clickCount: 0,
-      lastClickTime: 0,
-      scrollTop: 0,
-      viewportHeight: 0,
-      fileName: 'Untitled.txt',
-      fileHandle: null,
-      isDirty: false,
-      desiredCol: 0
-    };
-    this.dom = {
-      editor: document.getElementById('editor'),
-      phantom: document.getElementById('scroll-phantom'),
-      viewport: document.getElementById('view-port'),
-      cursor: document.getElementById('cursor'),
-      fileStatus: document.getElementById('file-status'),
-      messageArea: document.getElementById('message-area')
-    };
-    this.history = new HistoryManager(this);
-    this.search = new SearchManager(this);
-    this.highlighter = new SyntaxHighlighter();
-    this.init();
-  }
-
-  init() {
-
-    document.getElementById('find-input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.search.findNext();
-    });
-
+constructor() {
+  this.config = {
+    lineHeight: 24,
+    charWidth: 9,
+    xOffset: 65,
+    viewBuffer: 15
+  };
+  this.state = {
+    lines: [""],
+    cursor: { row: 0, col: 0 },
+    selectionAnchor: null,
+    isDragging: false,
+    clickCount: 0,
+    lastClickTime: 0,
+    scrollTop: 0,
+    viewportHeight: 0,
+    fileName: 'Untitled.txt',
+    fileHandle: null,
+    isDirty: false,
+    desiredCol: 0
+  };
+  this.dom = {
+    editor: document.getElementById('editor'),
+    phantom: document.getElementById('scroll-phantom'),
+    viewport: document.getElementById('view-port'),
+    cursor: document.getElementById('cursor'),
+    fileStatus: document.getElementById('file-status'),
+    messageArea: document.getElementById('message-area')
+  };
+  this.history = new HistoryManager(this);
+  this.search = new SearchManager(this);
+  this.highlighter = new SyntaxHighlighter();
+  this.init();
+}
+init() {
+  document.getElementById('find-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') this.search.findNext();
+  });
+  this.state.viewportHeight = this.dom.editor.clientHeight;
+  document.fonts.ready.then(() => {
+    this.recalculateLayout();
+  });
+  window.addEventListener('beforeunload', (e) => {
+    if (this.state.isDirty) { e.preventDefault(); e.returnValue = ''; }
+  });
+  this.dom.editor.addEventListener('scroll', () => this.onScroll());
+  this.dom.editor.addEventListener('keydown', (e) => this.handleInput(e));
+  this.dom.editor.addEventListener('paste', (e) => this.handlePaste(e));
+  this.dom.editor.addEventListener('copy', (e) => this.handleCopyCut(e, false));
+  this.dom.editor.addEventListener('cut', (e) => this.handleCopyCut(e, true));
+  this.dom.editor.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+  window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+  window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+  window.addEventListener('resize', () => {
     this.state.viewportHeight = this.dom.editor.clientHeight;
-
-    document.fonts.ready.then(() => {
-      this.recalculateLayout();
-    });
-
-    window.addEventListener('beforeunload', (e) => {
-      if (this.state.isDirty) { e.preventDefault(); e.returnValue = ''; }
-    });
-
-    this.dom.editor.addEventListener('scroll', () => this.onScroll());
-    this.dom.editor.addEventListener('keydown', (e) => this.handleInput(e));
-    this.dom.editor.addEventListener('paste', (e) => this.handlePaste(e));
-    this.dom.editor.addEventListener('copy', (e) => this.handleCopyCut(e, false));
-    this.dom.editor.addEventListener('cut', (e) => this.handleCopyCut(e, true));
-    this.dom.editor.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-    window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-    window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-    window.addEventListener('resize', () => {
-      this.state.viewportHeight = this.dom.editor.clientHeight;
-      this.recalculateLayout();
-    });
-
-    document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
+    this.recalculateLayout();
+  });
+  document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
+  this.dom.editor.focus();
+  this.finalizeUpdate();
+}
+cycleNext(type) {
+  const lines = this.state.lines;
+  const currentLineIdx = this.state.cursor.row;
+  let found = null;
+  const check = (r) => {
+    const line = lines[r];
+    if (type === 'comment') {
+      const lineComMatch = line.match(/\/\/.*/);
+      const blockComMatch = line.match(/\/\*/);
+      if (lineComMatch && (!blockComMatch || lineComMatch.index < blockComMatch.index)) {
+        return {
+          start: { r, c: lineComMatch.index },
+          end: { r, c: lineComMatch.index + lineComMatch[0].length },
+          select: true
+        };
+      }
+      if (blockComMatch) {
+        const startCol = blockComMatch.index;
+        for (let k = r; k < lines.length; k++) {
+          const offset = (k === r) ? startCol + 2 : 0;
+          const closeIdx = lines[k].indexOf('*/', offset);
+          if (closeIdx !== -1) {
+            return {
+              start: { r, c: startCol },
+              end: { r: k, c: closeIdx + 2 },
+              select: true
+            };
+          }
+        }
+        return { start: { r, c: startCol }, end: { r, c: line.length }, select: true };
+      }
+    }
+  else if (type === 'whitespace') {
+      const m = line.match(/[ \t]+$/);
+      if (m && m[0].length > 0) {
+        return {
+          start: { r, c: m.index },
+          end: { r, c: m.index + m[0].length },
+          select: true
+        };
+      }
+    }
+  else if (type === 'empty') {
+      if (/^\s*$/.test(line)) {
+        return { start: { r, c: 0 }, end: { r, c: line.length }, select: false };
+      }
+    }
+  else if (type === 'function') {
+      const m = line.match(/(?:^|\s)function\s+\w+|^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{/);
+        if (m) {
+          return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
+        }
+      }
+      return null;
+    };
+    for (let i = currentLineIdx + 1; i < lines.length; i++) {
+      found = check(i);
+      if (found) break;
+    }
+    if (!found) {
+      for (let i = 0; i <= currentLineIdx; i++) {
+        found = check(i);
+        if (found) break;
+      }
+    }
+    if (found) {
+      if (found.select) {
+        this.state.selectionAnchor = { row: found.start.r, col: found.start.c };
+        this.state.cursor = { row: found.end.r, col: found.end.c };
+      } else {
+        this.state.selectionAnchor = null;
+        this.state.cursor = { row: found.start.r, col: found.start.c };
+      }
+      this.state.desiredCol = this.state.cursor.col;
+      const lh = this.config.lineHeight;
+      const targetRow = this.state.cursor.row;
+      const desiredBottomPixel = (targetRow + 9) * lh;
+      let newScrollTop = desiredBottomPixel - this.state.viewportHeight;
+      newScrollTop = Math.max(0, newScrollTop);
+      if (newScrollTop > targetRow * lh) {
+        newScrollTop = targetRow * lh;
+      }
+      this.dom.editor.scrollTop = newScrollTop;
+      this.finalizeUpdate();
+      this.setStatus(`Found ${type}`);
+    } else {
+      this.setStatus(`No ${type} found`);
+    }
     this.dom.editor.focus();
-    this.finalizeUpdate();
   }
-
-  render() {
-    const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
-    const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
-
-    const firstVisibleLine = Math.floor(scrollTop / lineHeight);
-    const startIndex = Math.max(0, firstVisibleLine - viewBuffer);
-    const visibleLinesCount = Math.ceil(viewportHeight / lineHeight);
-    const endIndex = Math.min(lines.length, firstVisibleLine + visibleLinesCount + viewBuffer);
-
-    this.dom.viewport.innerHTML = '';
-    const topOffset = startIndex * lineHeight;
-    this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
-
-    let selStart = null, selEnd = null;
-    if (selectionAnchor) {
-      const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
-      (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
-      selStart = anchorIsBefore ? selectionAnchor : cursor;
-      selEnd = anchorIsBefore ? cursor : selectionAnchor;
-      if (selStart.row === selEnd.row && selStart.col === selEnd.col) selStart = null;
+render() {
+  const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
+  const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
+  const firstVisibleLine = Math.floor(scrollTop / lineHeight);
+  const startIndex = Math.max(0, firstVisibleLine - viewBuffer);
+  const visibleLinesCount = Math.ceil(viewportHeight / lineHeight);
+  const endIndex = Math.min(lines.length, firstVisibleLine + visibleLinesCount + viewBuffer);
+  this.dom.viewport.innerHTML = '';
+  const topOffset = startIndex * lineHeight;
+  this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
+  let selStart = null, selEnd = null;
+  if (selectionAnchor) {
+    const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
+    (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+    selStart = anchorIsBefore ? selectionAnchor : cursor;
+    selEnd = anchorIsBefore ? cursor : selectionAnchor;
+    if (selStart.row === selEnd.row && selStart.col === selEnd.col) selStart = null;
+  }
+  const fragment = document.createDocumentFragment();
+  for (let i = startIndex; i < endIndex; i++) {
+    const lineDiv = document.createElement('div');
+    lineDiv.className = 'line';
+    const numSpan = document.createElement('div');
+    numSpan.className = 'line-number';
+    numSpan.textContent = i + 1;
+    const contentSpan = document.createElement('div');
+    contentSpan.className = 'line-content';
+    contentSpan.innerHTML = this.highlighter.highlight(lines[i]);
+    const selectionDiv = document.createElement('div');
+    selectionDiv.className = 'selection-layer';
+    if (selStart && i >= selStart.row && i <= selEnd.row) {
+      let colStart = 0;
+      let colEnd = lines[i].length;
+      if (i === selStart.row) colStart = selStart.col;
+      if (i === selEnd.row) colEnd = selEnd.col;
+      let width = (colEnd - colStart) * charWidth;
+      if (i < selEnd.row) width += charWidth * 0.5;
+      selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
+      selectionDiv.style.width = `${Math.max(0, width)}px`;
+      selectionDiv.classList.add('is-selected');
     }
-
-    const fragment = document.createDocumentFragment();
-    for (let i = startIndex; i < endIndex; i++) {
-      const lineDiv = document.createElement('div');
-      lineDiv.className = 'line';
-
-      const numSpan = document.createElement('div');
-      numSpan.className = 'line-number';
-      numSpan.textContent = i + 1;
-
-      const contentSpan = document.createElement('div');
-      contentSpan.className = 'line-content';
-      contentSpan.innerHTML = this.highlighter.highlight(lines[i]);
-
-      const selectionDiv = document.createElement('div');
-      selectionDiv.className = 'selection-layer';
-
-      if (selStart && i >= selStart.row && i <= selEnd.row) {
-        let colStart = 0;
-        let colEnd = lines[i].length;
-        if (i === selStart.row) colStart = selStart.col;
-        if (i === selEnd.row) colEnd = selEnd.col;
-
-        let width = (colEnd - colStart) * charWidth;
-        if (i < selEnd.row) width += charWidth * 0.5;
-
-        selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
-        selectionDiv.style.width = `${Math.max(0, width)}px`;
-        selectionDiv.classList.add('is-selected');
-      }
-
-      lineDiv.appendChild(numSpan);
-      lineDiv.appendChild(selectionDiv);
-      lineDiv.appendChild(contentSpan);
-      fragment.appendChild(lineDiv);
-    }
-    this.dom.viewport.appendChild(fragment);
-    this.updateCursor();
+    lineDiv.appendChild(numSpan);
+    lineDiv.appendChild(selectionDiv);
+    lineDiv.appendChild(contentSpan);
+    fragment.appendChild(lineDiv);
   }
-
-  updateCursor() {
-    const { row, col } = this.state.cursor;
-    const { lineHeight, charWidth, xOffset } = this.config;
-    const top = row * lineHeight;
-    const left = xOffset + (col * charWidth);
-    this.dom.cursor.style.top = `${top}px`;
-    this.dom.cursor.style.left = `${left}px`;
-    this.dom.cursor.classList.remove('blink');
-    clearTimeout(this.blinkTimeout);
-    this.blinkTimeout = setTimeout(() => this.dom.cursor.classList.add('blink'), 500);
+  this.dom.viewport.appendChild(fragment);
+  this.updateCursor();
+}
+updateCursor() {
+  const { row, col } = this.state.cursor;
+  const { lineHeight, charWidth, xOffset } = this.config;
+  const top = row * lineHeight;
+  const left = xOffset + (col * charWidth);
+  this.dom.cursor.style.top = `${top}px`;
+  this.dom.cursor.style.left = `${left}px`;
+  this.dom.cursor.classList.remove('blink');
+  clearTimeout(this.blinkTimeout);
+  this.blinkTimeout = setTimeout(() => this.dom.cursor.classList.add('blink'), 500);
+}
+updateDimensions() {
+  const { lines, viewportHeight } = this.state;
+  const { lineHeight, charWidth, xOffset } = this.config;
+  const height = (lines.length + 5) * lineHeight;
+  const maxLen = lines.reduce((max, line) => Math.max(max, line.length), 0);
+  const width = xOffset + ((maxLen + 5) * charWidth);
+  this.dom.phantom.style.height = `${Math.max(height, viewportHeight)}px`;
+  this.dom.phantom.style.width = `${Math.max(width, window.innerWidth)}px`;
+  this.dom.viewport.style.width = `${width}px`;
+}
+finalizeUpdate() {
+  this.updateDimensions();
+  this.ensureCursorVisible();
+  this.render();
+}
+recalculateLayout() {
+  const t = document.createElement('div');
+  t.className = 'line';
+  t.style.position = 'absolute';
+  t.style.visibility = 'hidden';
+  t.style.width = 'auto';
+  t.style.padding = '0';
+  t.textContent = 'M'.repeat(1000);
+  this.dom.viewport.appendChild(t);
+  const rect = t.getBoundingClientRect();
+  const w = rect.width / 1000;
+  const h = rect.height;
+  this.dom.viewport.removeChild(t);
+  let needsUpdate = false;
+  if (w > 0 && Math.abs(this.config.charWidth - w) > 0.0001) {
+    this.config.charWidth = w;
+    needsUpdate = true;
   }
-
-  updateDimensions() {
-    const { lines, viewportHeight } = this.state;
-    const { lineHeight, charWidth, xOffset } = this.config;
-    const height = (lines.length + 5) * lineHeight;
-    const maxLen = lines.reduce((max, line) => Math.max(max, line.length), 0);
-    const width = xOffset + ((maxLen + 5) * charWidth);
-
-    this.dom.phantom.style.height = `${Math.max(height, viewportHeight)}px`;
-    this.dom.phantom.style.width = `${Math.max(width, window.innerWidth)}px`;
-    this.dom.viewport.style.width = `${width}px`;
+  if (h > 0 && Math.abs(this.config.lineHeight - h) > 0.0001) {
+    this.config.lineHeight = h;
+    document.documentElement.style.setProperty('--line-height', `${h}px`);
+    needsUpdate = true;
   }
-
-  finalizeUpdate() {
-    this.updateDimensions();
-    this.ensureCursorVisible();
-    this.render();
+  if (needsUpdate) this.finalizeUpdate();
+}
+onScroll() {
+  const currentLeft = this.dom.editor.scrollLeft;
+  if (currentLeft > 0 && currentLeft < 6) {
+    this.dom.editor.scrollLeft = 0;
+    return;
   }
-
-  recalculateLayout() {
-    const t = document.createElement('div');
-    t.className = 'line';
-    t.style.position = 'absolute';
-    t.style.visibility = 'hidden';
-    t.style.width = 'auto';
-    t.style.padding = '0';
-
-    t.textContent = 'M'.repeat(1000);
-    this.dom.viewport.appendChild(t);
-    const rect = t.getBoundingClientRect();
-    const w = rect.width / 1000;
-
-    const h = rect.height;
-
-    this.dom.viewport.removeChild(t);
-
-    let needsUpdate = false;
-    if (w > 0 && Math.abs(this.config.charWidth - w) > 0.0001) {
-      this.config.charWidth = w;
-      needsUpdate = true;
-    }
-    if (h > 0 && Math.abs(this.config.lineHeight - h) > 0.0001) {
-      this.config.lineHeight = h;
-
-      document.documentElement.style.setProperty('--line-height', `${h}px`);
-      needsUpdate = true;
-    }
-
-    if (needsUpdate) this.finalizeUpdate();
+  this.state.scrollTop = this.dom.editor.scrollTop;
+  clearTimeout(this.scrollTimeout);
+  this.scrollTimeout = setTimeout(() => this.render(), 16);
+  this.render();
+}
+applyChange(txt) {
+  const { cursor, selectionAnchor } = this.state;
+  let sr = cursor.row, sc = cursor.col;
+  let er = cursor.row, ec = cursor.col;
+  if (selectionAnchor) {
+    const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
+    (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+    sr = anchorIsBefore ? selectionAnchor.row : cursor.row;
+    sc = anchorIsBefore ? selectionAnchor.col : cursor.col;
+    er = anchorIsBefore ? cursor.row : selectionAnchor.row;
+    ec = anchorIsBefore ? cursor.col : selectionAnchor.col;
   }
-
-  onScroll() {
-    const currentLeft = this.dom.editor.scrollLeft;
-
-    if (currentLeft > 0 && currentLeft < 6) {
-      this.dom.editor.scrollLeft = 0;
-      return;
-    }
-    this.state.scrollTop = this.dom.editor.scrollTop;
-    clearTimeout(this.scrollTimeout);
-    this.scrollTimeout = setTimeout(() => this.render(), 16);
-    this.render();
-  }
-
-  applyChange(txt) {
-    const { cursor, selectionAnchor } = this.state;
-    let sr = cursor.row, sc = cursor.col;
-    let er = cursor.row, ec = cursor.col;
-    if (selectionAnchor) {
-      const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
-      (selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
-      sr = anchorIsBefore ? selectionAnchor.row : cursor.row;
-      sc = anchorIsBefore ? selectionAnchor.col : cursor.col;
-      er = anchorIsBefore ? cursor.row : selectionAnchor.row;
-      ec = anchorIsBefore ? cursor.col : selectionAnchor.col;
-    }
-
-    this.state.selectionAnchor = null;
-    this.applyEditInternal(sr, sc, er, ec, txt, true);
-
-    this.state.desiredCol = this.state.cursor.col;
-    this.ensureCursorVisible();
-  }
-
-  applyEditInternal(sr, sc, er, ec, txt, hist) {
-    let l = this.state.lines;
-
-    let old = "";
-
-    const isFullReplace = (sr === 0 && er === l.length - 1 && sc === 0 && ec === l[er].length);
-
-    if (isFullReplace) {
-
-      old = l.join('\n');
+  this.state.selectionAnchor = null;
+  this.applyEditInternal(sr, sc, er, ec, txt, true);
+  this.state.desiredCol = this.state.cursor.col;
+  this.ensureCursorVisible();
+}
+applyEditInternal(sr, sc, er, ec, txt, hist) {
+  let l = this.state.lines;
+  let old = "";
+  const isFullReplace = (sr === 0 && er === l.length - 1 && sc === 0 && ec === l[er].length);
+  if (isFullReplace) {
+    old = l.join('\n');
+  } else {
+    if (sr === er) {
+      old = l[sr].slice(sc, ec);
     } else {
-      if (sr === er) {
-        old = l[sr].slice(sc, ec);
-      } else {
-        old = [l[sr].slice(sc), ...l.slice(sr + 1, er), l[er].slice(0, ec)].join('\n');
-      }
+      old = [l[sr].slice(sc), ...l.slice(sr + 1, er), l[er].slice(0, ec)].join('\n');
     }
-
-    const prefix = l[sr].slice(0, sc);
-    const suffix = l[er].slice(ec);
-    const newSegs = txt.split('\n');
-
-    newSegs[0] = prefix + newSegs[0];
-    newSegs[newSegs.length - 1] += suffix;
-
-    if (newSegs.length > 5000 || isFullReplace) {
-
-      const pre = l.slice(0, sr);
-      const post = l.slice(er + 1);
-      this.state.lines = pre.concat(newSegs).concat(post);
-    } else {
-
-      if (sr === er && newSegs.length === 1) {
-        l[sr] = newSegs[0];
-      } else {
-        l.splice(sr, er - sr + 1, ...newSegs);
-      }
-    }
-
-    const nr = sr + newSegs.length - 1;
-    const nc = (newSegs.length === 1 ? sc : 0) + txt.split('\n').pop().length;
-
-    if (hist) {
-      this.setDirty(true);
-      this.history.record({
-        startRow: sr, startCol: sc, endRow: er, endCol: ec,
-        text: txt, oldText: old,
-        cursorBefore: { row: sr, col: sc },
-        cursorAfter: { row: nr, col: nc }
-      });
-    }
-
-    this.state.cursor = { row: nr, col: nc };
-    this.finalizeUpdate();
   }
-
-  handleInput(e) {
-    const k = e.key;
-    const ctrl = e.ctrlKey || e.metaKey;
-    const { cursor: c, lines: l } = this.state;
-    if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
-
-    if (k === 'Tab') {
-      e.preventDefault();
-      if (e.shiftKey) {
-        this.state.selectionAnchor ? this.blockEdit(l => l.replace(/^ {1,2}/, "")) : this.blockEdit(l => l.replace(/^ {1,2}/, ""), c.row, c.row);
-      } else {
-        this.state.selectionAnchor ? this.blockEdit(l => "  " + l) : this.applyChange("  ");
-      }
-      return;
+  const prefix = l[sr].slice(0, sc);
+  const suffix = l[er].slice(ec);
+  const newSegs = txt.split('\n');
+  newSegs[0] = prefix + newSegs[0];
+  newSegs[newSegs.length - 1] += suffix;
+  if (newSegs.length > 5000 || isFullReplace) {
+    const pre = l.slice(0, sr);
+    const post = l.slice(er + 1);
+    this.state.lines = pre.concat(newSegs).concat(post);
+  } else {
+    if (sr === er && newSegs.length === 1) {
+      l[sr] = newSegs[0];
+    } else {
+      l.splice(sr, er - sr + 1, ...newSegs);
     }
-    if (k === 'Backspace') {
-      e.preventDefault();
-      if (this.state.selectionAnchor) this.applyChange("");
-    else if (c.col > 0) { this.state.selectionAnchor = { row: c.row, col: c.col - 1 }; this.applyChange(""); }
-    else if (c.row > 0) { this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length }; this.applyChange(""); }
-      return;
+  }
+  const nr = sr + newSegs.length - 1;
+  const nc = (newSegs.length === 1 ? sc : 0) + txt.split('\n').pop().length;
+  if (hist) {
+    this.setDirty(true);
+    this.history.record({
+      startRow: sr, startCol: sc, endRow: er, endCol: ec,
+      text: txt, oldText: old,
+      cursorBefore: { row: sr, col: sc },
+      cursorAfter: { row: nr, col: nc }
+    });
+  }
+  this.state.cursor = { row: nr, col: nc };
+  this.finalizeUpdate();
+}
+handleInput(e) {
+  const k = e.key;
+  const ctrl = e.ctrlKey || e.metaKey;
+  const { cursor: c, lines: l } = this.state;
+  if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
+  if (k === 'Tab') {
+    e.preventDefault();
+    if (e.shiftKey) {
+      this.state.selectionAnchor ? this.blockEdit(l => l.replace(/^ {1,2}/, "")) : this.blockEdit(l => l.replace(/^ {1,2}/, ""), c.row, c.row);
+    } else {
+      this.state.selectionAnchor ? this.blockEdit(l => "  " + l) : this.applyChange("  ");
     }
-    if (k === 'Delete') {
-      e.preventDefault();
-      if (this.state.selectionAnchor) this.applyChange("");
-    else if (c.col < l[c.row].length) {
-        this.state.selectionAnchor = { row: c.row, col: c.col + 1 };
-        const oldC = { ...c };
-        this.applyChange("");
-        this.state.cursor = oldC;
-        this.finalizeUpdate();
-      }
-    else if (c.row < l.length - 1) {
-        this.state.selectionAnchor = { row: c.row + 1, col: 0 };
-        const oldC = { ...c };
-        this.applyChange("");
-        this.state.cursor = oldC;
-        this.finalizeUpdate();
-      }
-      return;
+    return;
+  }
+  if (k === 'Backspace') {
+    e.preventDefault();
+    if (this.state.selectionAnchor) this.applyChange("");
+  else if (c.col > 0) { this.state.selectionAnchor = { row: c.row, col: c.col - 1 }; this.applyChange(""); }
+  else if (c.row > 0) { this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length }; this.applyChange(""); }
+    return;
+  }
+  if (k === 'Delete') {
+    e.preventDefault();
+    if (this.state.selectionAnchor) this.applyChange("");
+  else if (c.col < l[c.row].length) {
+      this.state.selectionAnchor = { row: c.row, col: c.col + 1 };
+      const oldC = { ...c };
+      this.applyChange("");
+      this.state.cursor = oldC;
+      this.finalizeUpdate();
     }
-    if (k === 'Enter') {
-      e.preventDefault();
-      const indent = l[c.row].match(/^\s*/)[0];
-      let extra = l[c.row].trim().endsWith('{') ? "  " : "";
+  else if (c.row < l.length - 1) {
+      this.state.selectionAnchor = { row: c.row + 1, col: 0 };
+      const oldC = { ...c };
+      this.applyChange("");
+      this.state.cursor = oldC;
+      this.finalizeUpdate();
+    }
+    return;
+  }
+  if (k === 'Enter') {
+    e.preventDefault();
+    const indent = l[c.row].match(/^\s*/)[0];
+    let extra = l[c.row].trim().endsWith('{') ? "  " : "";
       this.applyChange("\n" + indent + extra);
       return;
     }
@@ -966,290 +918,255 @@ class EditorEngine {
       this.applyChange(k);
     }
   }
-
-  handleNavigation(k, wordJump) {
-    const { cursor: c, lines: l } = this.state;
-    let tr = c.row, tc = c.col;
-
-    if (k === 'ArrowUp') { if (tr > 0) tr--; tc = Math.min(this.state.desiredCol, l[tr].length); }
-  else if (k === 'ArrowDown') { if (tr < l.length - 1) tr++; tc = Math.min(this.state.desiredCol, l[tr].length); }
-  else if (k === 'ArrowLeft') {
-      if (wordJump) tc = this.findWordBoundary(tr, tc, -1);
-    else if (tc > 0) tc--;
-    else if (tr > 0) { tr--; tc = l[tr].length; }
-      this.state.desiredCol = tc;
-    } else if (k === 'ArrowRight') {
-      if (wordJump) tc = this.findWordBoundary(tr, tc, 1);
-    else if (tc < l[tr].length) tc++;
-    else if (tr < l.length - 1) { tr++; tc = 0; }
-      this.state.desiredCol = tc;
-    } else if (k === 'Home') {
-      const fc = (l[tr].match(/^\s*/) || [''])[0].length;
-      tc = (tc === fc) ? 0 : fc;
-      this.state.desiredCol = tc;
-    } else if (k === 'End') {
-      tc = l[tr].length;
-      this.state.desiredCol = tc;
-    } else if (k === 'PageUp') {
-      tr = Math.max(0, tr - Math.floor(this.state.viewportHeight / this.config.lineHeight));
-      tc = Math.min(tc, l[tr].length);
-    } else if (k === 'PageDown') {
-      tr = Math.min(l.length - 1, tr + Math.floor(this.state.viewportHeight / this.config.lineHeight));
-      tc = Math.min(tc, l[tr].length);
-    }
-    c.row = tr; c.col = tc;
-    this.ensureCursorVisible();
+handleNavigation(k, wordJump) {
+  const { cursor: c, lines: l } = this.state;
+  let tr = c.row, tc = c.col;
+  if (k === 'ArrowUp') { if (tr > 0) tr--; tc = Math.min(this.state.desiredCol, l[tr].length); }
+else if (k === 'ArrowDown') { if (tr < l.length - 1) tr++; tc = Math.min(this.state.desiredCol, l[tr].length); }
+else if (k === 'ArrowLeft') {
+    if (wordJump) tc = this.findWordBoundary(tr, tc, -1);
+  else if (tc > 0) tc--;
+  else if (tr > 0) { tr--; tc = l[tr].length; }
+    this.state.desiredCol = tc;
+  } else if (k === 'ArrowRight') {
+    if (wordJump) tc = this.findWordBoundary(tr, tc, 1);
+  else if (tc < l[tr].length) tc++;
+  else if (tr < l.length - 1) { tr++; tc = 0; }
+    this.state.desiredCol = tc;
+  } else if (k === 'Home') {
+    const fc = (l[tr].match(/^\s*/) || [''])[0].length;
+    tc = (tc === fc) ? 0 : fc;
+    this.state.desiredCol = tc;
+  } else if (k === 'End') {
+    tc = l[tr].length;
+    this.state.desiredCol = tc;
+  } else if (k === 'PageUp') {
+    tr = Math.max(0, tr - Math.floor(this.state.viewportHeight / this.config.lineHeight));
+    tc = Math.min(tc, l[tr].length);
+  } else if (k === 'PageDown') {
+    tr = Math.min(l.length - 1, tr + Math.floor(this.state.viewportHeight / this.config.lineHeight));
+    tc = Math.min(tc, l[tr].length);
   }
-
-  findWordBoundary(r, c, d) {
-    const ln = this.state.lines[r];
-    let i = c;
-    if (d > 0) {
-      if (i >= ln.length) return i;
-      const type = /\w/.test(ln[i]);
-      while (i < ln.length && /\w/.test(ln[i]) === type) i++;
-    } else {
-      if (i <= 0) return 0;
-      i--;
-      const type = /\w/.test(ln[i]);
-      while (i > 0 && /\w/.test(ln[i-1]) === type) i--;
-    }
-    return i;
+  c.row = tr; c.col = tc;
+  this.ensureCursorVisible();
+}
+findWordBoundary(r, c, d) {
+  const ln = this.state.lines[r];
+  let i = c;
+  if (d > 0) {
+    if (i >= ln.length) return i;
+    const type = /\w/.test(ln[i]);
+    while (i < ln.length && /\w/.test(ln[i]) === type) i++;
+  } else {
+    if (i <= 0) return 0;
+    i--;
+    const type = /\w/.test(ln[i]);
+    while (i > 0 && /\w/.test(ln[i-1]) === type) i--;
   }
-
-  handlePaste(e) {
+  return i;
+}
+handlePaste(e) {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  this.applyChange(text);
+}
+handleCopyCut(e, cut) {
+  const t = this.getSelectionText();
+  if (t) {
     e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    this.applyChange(text);
+    e.clipboardData.setData('text/plain', t);
+    if (cut) { this.applyChange(""); this.setStatus("Cut"); }
+  else this.setStatus("Copied");
   }
-
-  handleCopyCut(e, cut) {
-    const t = this.getSelectionText();
-    if (t) {
-      e.preventDefault();
-      e.clipboardData.setData('text/plain', t);
-      if (cut) { this.applyChange(""); this.setStatus("Cut"); }
-    else this.setStatus("Copied");
-    }
-  }
-
-  handleMouseDown(e) {
-    if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
-    e.preventDefault();
-    const now = Date.now();
-    this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
-    this.state.lastClickTime = now;
-
-    const p = this.getPosFromMouse(e);
-    if (this.state.clickCount === 2) {
-      const s = this.findWordBoundary(p.row, p.col, -1);
-      const e = this.findWordBoundary(p.row, p.col, 1);
-      this.state.selectionAnchor = { row: p.row, col: s };
-      this.state.cursor = { row: p.row, col: e };
-      this.state.isDragging = false;
-    } else if (this.state.clickCount === 3) {
-      this.state.selectionAnchor = { row: p.row, col: 0 };
-      this.state.cursor = { row: p.row, col: this.state.lines[p.row].length };
-      this.state.isDragging = false;
-    } else {
-      this.state.cursor = { ...p };
-      this.state.selectionAnchor = { ...p };
-      this.state.isDragging = true;
-    }
-    this.state.desiredCol = this.state.cursor.col;
-    this.dom.editor.focus();
-    this.render();
-  }
-
-handleMouseMove(e) {
-    if (!this.state.isDragging) return;
-    const p = this.getPosFromMouse(e);
-    this.state.cursor = { ...p };
-    this.state.desiredCol = p.col;
-
-    // --- FIX START: Hindre hopping til venstre ---
-    const rect = this.dom.editor.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const edgeMargin = 50; // Hvor nærme kanten man må være for å scrolle
-
-    // Sjekk om musen er nær venstre eller høyre kant av editoren
-    const isNearEdge = mouseX < edgeMargin || mouseX > rect.width - edgeMargin;
-
-    if (isNearEdge) {
-      // Hvis vi drar mot kanten, bruk standard oppførsel (slik at man kan scrolle)
-      this.ensureCursorVisible();
-    } else {
-      // Hvis musen er trygt midt på skjermen, kun sørg for at vi scroller VERTIKALT.
-      // Vi ignorerer horisontal posisjon for å unngå "hoppet" til venstre.
-      const { row } = this.state.cursor;
-      const { lineHeight } = this.config;
-      const top = row * lineHeight;
-      const bottom = top + lineHeight;
-      const vH = this.state.viewportHeight;
-      const sT = this.dom.editor.scrollTop;
-
-      if (top < sT) this.dom.editor.scrollTop = top;
-      else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
-    }
-    // --- FIX END ---
-
-    this.render();
-  }
-
-  handleMouseUp() {
+}
+handleMouseDown(e) {
+  if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
+  e.preventDefault();
+  const now = Date.now();
+  this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
+  this.state.lastClickTime = now;
+  const p = this.getPosFromMouse(e);
+  if (this.state.clickCount === 2) {
+    const s = this.findWordBoundary(p.row, p.col, -1);
+    const e = this.findWordBoundary(p.row, p.col, 1);
+    this.state.selectionAnchor = { row: p.row, col: s };
+    this.state.cursor = { row: p.row, col: e };
     this.state.isDragging = false;
-    const { cursor, selectionAnchor } = this.state;
-    if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col)
-    this.state.selectionAnchor = null;
-    this.render();
+  } else if (this.state.clickCount === 3) {
+    this.state.selectionAnchor = { row: p.row, col: 0 };
+    this.state.cursor = { row: p.row, col: this.state.lines[p.row].length };
+    this.state.isDragging = false;
+  } else {
+    this.state.cursor = { ...p };
+    this.state.selectionAnchor = { ...p };
+    this.state.isDragging = true;
   }
-
-  getPosFromMouse(e) {
-    const r = this.dom.editor.getBoundingClientRect();
-    const x = e.clientX - r.left + this.dom.editor.scrollLeft;
-    const y = e.clientY - r.top + this.dom.editor.scrollTop;
-    let row = Math.floor(y / this.config.lineHeight);
-    let col = Math.round((x - this.config.xOffset) / this.config.charWidth);
-    row = Math.max(0, Math.min(row, this.state.lines.length - 1));
-    col = Math.max(0, Math.min(col, this.state.lines[row].length));
-    return { row, col };
-  }
-
-  ensureCursorVisible() {
-    const { row, col } = this.state.cursor;
-    const { lineHeight, charWidth, xOffset } = this.config;
+  this.state.desiredCol = this.state.cursor.col;
+  this.dom.editor.focus();
+  this.render();
+}
+handleMouseMove(e) {
+  if (!this.state.isDragging) return;
+  const p = this.getPosFromMouse(e);
+  this.state.cursor = { ...p };
+  this.state.desiredCol = p.col;
+  const rect = this.dom.editor.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const edgeMargin = 50;
+  const isNearEdge = mouseX < edgeMargin || mouseX > rect.width - edgeMargin;
+  if (isNearEdge) {
+    this.ensureCursorVisible();
+  } else {
+    const { row } = this.state.cursor;
+    const { lineHeight } = this.config;
     const top = row * lineHeight;
     const bottom = top + lineHeight;
     const vH = this.state.viewportHeight;
     const sT = this.dom.editor.scrollTop;
     if (top < sT) this.dom.editor.scrollTop = top;
   else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
-    const left = xOffset + (col * charWidth);
-    const sL = this.dom.editor.scrollLeft;
-    const cW = this.dom.editor.clientWidth;
-    if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
-  else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
   }
-
-  blockEdit(mod, sr = null, er = null) {
-    const { cursor: c, selectionAnchor: s, lines: l } = this.state;
-    sr = sr ?? Math.min(c.row, s ? s.row : c.row);
-    er = er ?? Math.max(c.row, s ? s.row : c.row);
-    const orig = l.slice(sr, er + 1).join('\n');
-    const modded = l.slice(sr, er + 1).map(mod).join('\n');
-    if (orig !== modded) {
-      this.applyEditInternal(sr, 0, er, l[er].length, modded, true);
-      this.state.selectionAnchor = { row: sr, col: 0 };
-      this.state.cursor = { row: er, col: l[er].length };
-      this.finalizeUpdate();
+  this.render();
+}
+handleMouseUp() {
+  this.state.isDragging = false;
+  const { cursor, selectionAnchor } = this.state;
+  if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col)
+  this.state.selectionAnchor = null;
+  this.render();
+}
+getPosFromMouse(e) {
+  const r = this.dom.editor.getBoundingClientRect();
+  const x = e.clientX - r.left + this.dom.editor.scrollLeft;
+  const y = e.clientY - r.top + this.dom.editor.scrollTop;
+  let row = Math.floor(y / this.config.lineHeight);
+  let col = Math.round((x - this.config.xOffset) / this.config.charWidth);
+  row = Math.max(0, Math.min(row, this.state.lines.length - 1));
+  col = Math.max(0, Math.min(col, this.state.lines[row].length));
+  return { row, col };
+}
+ensureCursorVisible() {
+  const { row, col } = this.state.cursor;
+  const { lineHeight, charWidth, xOffset } = this.config;
+  const top = row * lineHeight;
+  const bottom = top + lineHeight;
+  const vH = this.state.viewportHeight;
+  const sT = this.dom.editor.scrollTop;
+  if (top < sT) this.dom.editor.scrollTop = top;
+else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
+  const left = xOffset + (col * charWidth);
+  const sL = this.dom.editor.scrollLeft;
+  const cW = this.dom.editor.clientWidth;
+  if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
+else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
+}
+blockEdit(mod, sr = null, er = null) {
+  const { cursor: c, selectionAnchor: s, lines: l } = this.state;
+  sr = sr ?? Math.min(c.row, s ? s.row : c.row);
+  er = er ?? Math.max(c.row, s ? s.row : c.row);
+  const orig = l.slice(sr, er + 1).join('\n');
+  const modded = l.slice(sr, er + 1).map(mod).join('\n');
+  if (orig !== modded) {
+    this.applyEditInternal(sr, 0, er, l[er].length, modded, true);
+    this.state.selectionAnchor = { row: sr, col: 0 };
+    this.state.cursor = { row: er, col: l[er].length };
+    this.finalizeUpdate();
+  }
+}
+async handleGlobalShortcuts(e) {
+  const k = e.key.toLowerCase();
+  const ctrl = e.ctrlKey || e.metaKey;
+  if (ctrl && k === 's') { e.preventDefault(); }
+  if (ctrl) {
+    if (k === 'z') { e.preventDefault(); e.shiftKey ? this.history.redo() : this.history.undo(); this.setStatus(e.shiftKey ? "Redo" : "Undo"); }
+    if (k === 'y') { e.preventDefault(); this.history.redo(); this.setStatus("Redo"); }
+    if (k === 's') { e.preventDefault(); await this.saveFile(); }
+    if (k === 'o') { e.preventDefault(); await this.openFile(); }
+    if (k === 'a') {
+      e.preventDefault();
+      this.state.selectionAnchor = { row: 0, col: 0 };
+      this.state.cursor = { row: this.state.lines.length - 1, col: this.state.lines[this.state.lines.length - 1].length };
+      this.render();
     }
   }
-
-  async handleGlobalShortcuts(e) {
-    const k = e.key.toLowerCase();
-    const ctrl = e.ctrlKey || e.metaKey;
-
-    if (ctrl && k === 's') { e.preventDefault(); }
-
-    if (ctrl) {
-      if (k === 'z') { e.preventDefault(); e.shiftKey ? this.history.redo() : this.history.undo(); this.setStatus(e.shiftKey ? "Redo" : "Undo"); }
-      if (k === 'y') { e.preventDefault(); this.history.redo(); this.setStatus("Redo"); }
-      if (k === 's') { e.preventDefault(); await this.saveFile(); }
-      if (k === 'o') { e.preventDefault(); await this.openFile(); }
-      if (k === 'a') {
-        e.preventDefault();
-        this.state.selectionAnchor = { row: 0, col: 0 };
-        this.state.cursor = { row: this.state.lines.length - 1, col: this.state.lines[this.state.lines.length - 1].length };
-        this.render();
-      }
-    }
-    if (e.altKey) {
-      if (k === 'n') { e.preventDefault(); this.newFile(); }
-      if (k === 'p') { e.preventDefault(); this.previewFile(); }
-    }
+  if (e.altKey) {
+    if (k === 'n') { e.preventDefault(); this.newFile(); }
+    if (k === 'p') { e.preventDefault(); this.previewFile(); }
   }
-
-  getSelectionText() {
-    const { cursor: c, selectionAnchor: s, lines: l } = this.state;
-    if (!s || (s.row === c.row && s.col === c.col)) return null;
-    const start = (s.row < c.row || (s.row === c.row && s.col < c.col)) ? s : c;
-    const end = (start === s) ? c : s;
-    if (start.row === end.row) return l[start.row].slice(start.col, end.col);
-    const r = [l[start.row].slice(start.col)];
-    for (let i = start.row + 1; i < end.row; i++) r.push(l[i]);
-    r.push(l[end.row].slice(0, end.col));
-    return r.join('\n');
-  }
-
-  newFile() {
-    if (this.state.isDirty && !confirm("Discard changes?")) return;
-    this.state.lines = [""];
+}
+getSelectionText() {
+  const { cursor: c, selectionAnchor: s, lines: l } = this.state;
+  if (!s || (s.row === c.row && s.col === c.col)) return null;
+  const start = (s.row < c.row || (s.row === c.row && s.col < c.col)) ? s : c;
+  const end = (start === s) ? c : s;
+  if (start.row === end.row) return l[start.row].slice(start.col, end.col);
+  const r = [l[start.row].slice(start.col)];
+  for (let i = start.row + 1; i < end.row; i++) r.push(l[i]);
+  r.push(l[end.row].slice(0, end.col));
+  return r.join('\n');
+}
+newFile() {
+  if (this.state.isDirty && !confirm("Discard changes?")) return;
+  this.state.lines = [""];
+  this.state.cursor = { row: 0, col: 0 };
+  this.state.selectionAnchor = null;
+  this.state.fileName = 'Untitled.txt';
+  this.state.fileHandle = null;
+  this.setDirty(false);
+  this.history.undoStack = [];
+  this.finalizeUpdate();
+  this.setStatus("New File");
+}
+previewFile() {
+  const win = window.open();
+  if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
+}
+setDirty(dirty) {
+  this.state.isDirty = dirty;
+  this.dom.fileStatus.textContent = (dirty ? "* " : "") + this.state.fileName;
+  document.title = this.dom.fileStatus.textContent + " - Mastodon";
+}
+setStatus(msg) {
+  this.dom.messageArea.textContent = msg;
+  clearTimeout(this.statusTimeout);
+  this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine', 3000);
+}
+async openFile() {
+  if (this.state.isDirty && !confirm("Discard changes?")) return;
+  try {
+    const [h] = await window.showOpenFilePicker();
+    const f = await h.getFile();
+    this.state.fileHandle = h;
+    this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
+    this.state.fileName = f.name;
     this.state.cursor = { row: 0, col: 0 };
     this.state.selectionAnchor = null;
-    this.state.fileName = 'Untitled.txt';
-    this.state.fileHandle = null;
     this.setDirty(false);
     this.history.undoStack = [];
     this.finalizeUpdate();
-    this.setStatus("New File");
-  }
-
-  previewFile() {
-    const win = window.open();
-    if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
-  }
-
-  setDirty(dirty) {
-    this.state.isDirty = dirty;
-    this.dom.fileStatus.textContent = (dirty ? "* " : "") + this.state.fileName;
-    document.title = this.dom.fileStatus.textContent + " - Mastodon";
-  }
-
-  setStatus(msg) {
-    this.dom.messageArea.textContent = msg;
-    clearTimeout(this.statusTimeout);
-    this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine', 3000);
-  }
-
-  async openFile() {
-    if (this.state.isDirty && !confirm("Discard changes?")) return;
+    this.setStatus("Opened: " + f.name);
+  } catch (e) {}
+}
+async saveFile() {
+  if (!this.state.fileHandle) {
     try {
-      const [h] = await window.showOpenFilePicker();
-      const f = await h.getFile();
-      this.state.fileHandle = h;
-      this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
-      this.state.fileName = f.name;
-      this.state.cursor = { row: 0, col: 0 };
-      this.state.selectionAnchor = null;
-      this.setDirty(false);
-      this.history.undoStack = [];
-      this.finalizeUpdate();
-      this.setStatus("Opened: " + f.name);
-    } catch (e) {}
+      this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
+      this.state.fileName = this.state.fileHandle.name;
+    } catch (e) { return; }
   }
-
-  async saveFile() {
-    if (!this.state.fileHandle) {
-      try {
-        this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
-        this.state.fileName = this.state.fileHandle.name;
-      } catch (e) { return; }
-    }
-    try {
-      const w = await this.state.fileHandle.createWritable();
-      await w.write(this.state.lines.join('\n'));
-          await w.close();
-          this.setDirty(false);
-          this.setStatus("Saved!");
-        } catch (e) { this.setStatus("Save failed"); }
-      }
-    }
-
-    window.onload = () => {
-      window.editor = new EditorEngine();
-      checkIntroModal();
-    };
-
+  try {
+    const w = await this.state.fileHandle.createWritable();
+    await w.write(this.state.lines.join('\n'));
+    await w.close();
+    this.setDirty(false);
+    this.setStatus("Saved!");
+  } catch (e) { this.setStatus("Save failed"); }
+}
+}
+window.onload = () => {
+  window.editor = new EditorEngine();
+  checkIntroModal();
+};
 </script>
 </body>
 </html>
