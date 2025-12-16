@@ -964,9 +964,10 @@ const newLines = new Array(lines.length);
 let hasChanges = false;
 let inBacktickBlock = false;
 let inBlockComment = false;
+let inHtmlPre = false;
 for (let i = 0; i < lines.length; i++) {
 const line = lines[i];
-if (inBacktickBlock || inBlockComment) {
+if (inBacktickBlock || inBlockComment || inHtmlPre) {
 newLines[i] = line;
 } else {
 newLines[i] = line.replace(/^\s+/, '');
@@ -990,6 +991,11 @@ if (char === '/' && nextChar === '*') { inBlockComment = true; j++; continue; }
 if (char === '*' && nextChar === '/') { inBlockComment = false; j++; continue; }
 }
 if (inBlockComment) continue;
+if (char === '<' && !inSingleQuote && !inDoubleQuote && !inRegex && !inBacktickBlock) {
+const rest = line.slice(j);
+if (/^<(pre|textarea)(\s|>)/i.test(rest)) inHtmlPre = true;
+if (/^<\/(pre|textarea)>/i.test(rest)) inHtmlPre = false;
+}
 if (char === '/' && !inSingleQuote && !inDoubleQuote && !inRegex && !inBacktickBlock) {
 if (nextChar === '/') break;
 }
