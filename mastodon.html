@@ -1,15 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mastodon Engine</title>
-<link rel="icon"
-href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn6ajPC90ZXh0Pjwvc3ZnPg=="
-type="image/svg+xml">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-vsc-dark-plus.min.css" rel="stylesheet" /> 
-
 <style>
 
 :root {
@@ -306,7 +300,7 @@ color: white;
   background: #2d2d2d;
   padding: 15px 20px;
   border-bottom: 1px solid #333;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 600;
   color: #fff;
 }
@@ -394,73 +388,74 @@ to {
 <body>
 
 <div id="intro-modal" class="modal-overlay">
-<div class="modal-box">
-<div class="modal-header">
-Welcome to Mastodon Engine&nbsp;&nbsp;🦣&nbsp;&nbsp;<small>(beta)</small>
+  <div class="modal-box">
+    <div class="modal-header">
+      <big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.2
+    </div>
+    <div class="modal-body">
+      <p>You are now using a specialized code editor tailored for building and optimizing
+      <strong>Single-File Web Applications</strong>.</p>
+      <h3>Key Features:</h3>
+        <ul>
+          <li>
+            <strong>Unrivaled Performance:</strong> Engineered to handle massive files that choke standard editors.
+            Capable of processing <strong>650,000+ lines</strong> on entry-level hardware.
+          </li>
+          <li>
+            <strong>Syntax Highlighting:</strong> Custom-built highlighting specifically tuned for mixed-mode
+            development (HTML/JS/CSS).
+          </li>
+        </ul>
+    </div>
+    <div class="modal-footer">
+      <label class="modal-checkbox-label">
+        <input type="checkbox" id="dont-show-again"> Don't show again
+      </label>
+    <button class="modal-btn" onclick="closeIntroModal()">Start coding</button>
+    </div>
+  </div>
 </div>
-<div class="modal-body">
-<p>You are now using a specialized code editor tailored for building and optimizing <strong>Single-File Web
-Applications</strong>.</p>
-<h3>Key Features:</h3>
-<ul>
-<li>
-<strong>Unrivaled Performance:</strong> Engineered to handle massive files that choke standard editors.
-Capable of processing <strong>650,000+ lines</strong> on entry-level hardware.
-</li>
-<li>
-<strong>Syntax Highlighting:</strong> Custom-built highlighting specifically tuned for mixed-mode
-development (HTML/JS/CSS).
-</li>
-</ul>
-</div>
-<div class="modal-footer">
-<label class="modal-checkbox-label">
-<input type="checkbox" id="dont-show-again"> Don't show again
-</label>
-<button class="modal-btn" onclick="closeIntroModal()">Get Started</button>
-</div>
-</div>
-</div>
+
 <div id="toolbar">
-<input type="text" id="find-input" placeholder="Find..." style="width: 150px;">
-<input type="text" id="replace-input" placeholder="Replace..." style="width: 150px;">
-<button onclick="editor.search.findNext()">Next</button>
-<button onclick="editor.search.replace()">Replace</button>
-<button onclick="editor.search.replaceAll()">All</button>
-<span id="search-stats"></span>
+  <input type="text" id="find-input" placeholder="Find..." style="width: 150px;">
+  <input type="text" id="replace-input" placeholder="Replace..." style="width: 150px;">
+  <button onclick="editor.search.findNext()">Next</button>
+  <button onclick="editor.search.replace()">Replace</button>
+  <button onclick="editor.search.replaceAll()">All</button>
+  <span id="search-stats"></span>
 </div>
+
 <div id="editor" tabindex="0">
-<div id="scroll-phantom"></div>
-<div id="view-port"></div>
-<div id="cursor" class="blink"></div>
+  <div id="scroll-phantom"></div>
+  <div id="view-port"></div>
+  <div id="cursor" class="blink"></div>
 </div>
 <div id="statusbar">
-<span id="file-status">Untitled.txt</span>
-<div id="shortcuts">
-<button onclick="editor.openFile()" title="Open File (Alt+O)">Open</button>
-<button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
-<button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
-<button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
-<button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻
-Comment</button>
-<button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻
-Whitespace</button>
-<button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
-<button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻
-Function</button>
-</div>
-<span id="message-area">Mastodon Engine</span>
+  <span id="file-status">Untitled.txt</span>
+    <div id="shortcuts">
+      <button onclick="editor.openFile()" title="Open File (Alt+O)">Open</button>
+      <button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
+      <button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
+      <button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
+      <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comment</button>
+      <button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Whitespace</button>
+      <button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
+      <button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Function</button>
+    </div>
+  <span id="message-area">Mastodon Engine</span>
 </div>
 
 <script>
 
 "use strict";
+
 function checkIntroModal() {
 const hide = localStorage.getItem('mastodon_hide_intro');
 if (!hide) {
 document.getElementById('intro-modal').style.display = 'flex';
 }
 }
+
 function closeIntroModal() {
 const checkbox = document.getElementById('dont-show-again');
 if (checkbox.checked) {
@@ -471,8 +466,8 @@ if (window.editor && window.editor.dom) {
 window.editor.dom.editor.focus();
 }
 }
-
 class SyntaxHighlighter {
+
 constructor() {
 this.lineModes = [];
 }
@@ -480,21 +475,19 @@ this.lineModes = [];
 analyze(lines) {
 let mode = 'html';
 this.lineModes = new Array(lines.length);
-
 for (let i = 0; i < lines.length; i++) {
 const line = lines[i];
-let thisLineMode = mode; 
-
+let thisLineMode = mode;
 if (mode === 'html') {
 if (line.match(/<script/i)) {
-thisLineMode = 'html'; 
+thisLineMode = 'html';
 if (!line.match(/<\/script/i)) mode = 'javascript';
-} 
+}
 else if (line.match(/<style/i)) {
 thisLineMode = 'html';
 if (!line.match(/<\/style/i)) mode = 'css';
 }
-} 
+}
 else if (mode === 'javascript') {
 if (line.match(/<\/script/i)) {
 thisLineMode = 'html';
@@ -502,7 +495,7 @@ mode = 'html';
 } else {
 thisLineMode = 'javascript';
 }
-} 
+}
 else if (mode === 'css') {
 if (line.match(/<\/style/i)) {
 thisLineMode = 'html';
@@ -515,24 +508,15 @@ this.lineModes[i] = thisLineMode;
 }
 }
 
-// --- HER ER MAGIEN FRA CODER2 IMPLEMENTERT ---
-
 highlight(text, rowIndex) {
 if (!text) return '&nbsp;';
-
-// 1. Bestem modus basert på analysen
 const mode = (this.lineModes && this.lineModes[rowIndex]) ? this.lineModes[rowIndex] : 'html';
-
-// 2. Escape HTML først (viktig fordi Coder2-regex forventer escaped kode)
 let escaped = this.escapeHTML(text);
-
-// 3. Velg riktig fargelegger
 if (mode === 'javascript') {
 return this.highlightJS(escaped);
 } else if (mode === 'css') {
 return this.highlightCSS(escaped);
 } else {
-// HTML modus (standard)
 return this.highlightHTMLLine(escaped);
 }
 }
@@ -543,17 +527,12 @@ return str.replace(/&/g, '&amp;')
 .replace(/>/g, '&gt;');
 }
 
-// Hentet direkte fra coder2, men tilpasset for å motta ferdig escaped tekst
 highlightJS(code) {
-// Regex for strings, keywords, numbers, functions
-// Merk: Vi fjernet blokk-kommentarer over flere linjer her for å ikke ødelegge single-line rendering,
-// men linjekommentarer (//) fungerer fint.
 const pattern = /(".*?"|'.*?'|`[\s\S]*?`|\/\/.*)|(\b(?:const|let|var|function|return|if|else|for|while|class|new|this|async|await|import|export|from|try|catch)\b)|(\b\d+\.?\d*\b)|(\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\())/g;
-
 return code.replace(pattern, (match, string, keyword, number, func) => {
 if (string) {
-return string.startsWith('//') 
-? `<span class="token comment">${string}</span>` 
+return string.startsWith('//')
+? `<span class="token comment">${string}</span>`
 : `<span class="token string">${string}</span>`;
 }
 if (keyword) return `<span class="token keyword">${keyword}</span>`;
@@ -565,7 +544,6 @@ return match;
 
 highlightCSS(code) {
 try {
-// Samme regex som coder2
 const p = /(\/\*[\s\S]*?\*\/)|(".*?"|'.*?')|((-?\d+\.?\d*|\.\d+)[a-zA-Z%]*)|([\.#][\w-]+|(?<=[\}\s]|^)[a-zA-Z][\w-]*(?=\s*[\{\,\.#]))|([a-zA-Z-]+)(?=:)|(@[\w-]+)/g;
 return code.replace(p, (m, c, s, n, d, sel, prop, at) => {
 if (c) return `<span class="token comment">${c}</span>`;
@@ -583,34 +561,25 @@ return code;
 
 highlightHTMLLine(code) {
 let output = code;
-
-// Kommentarer
 output = output.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="token comment">$1</span>');
-
-// HTML Tags og Attributter (Coder2 logikk)
-// Denne regexen finner <tag attributt="verdi">
 output = output.replace(/(&lt;\/?)(\w+)([^&]*?)(&gt;)/g, (m, bracket, tag, attrs, close) => {
-
-// Fargelegg attributter inne i taggen
 const styledAttrs = attrs.replace(/([a-zA-Z-]+)(=)(".*?"|'.*?')/g,
 '<span class="token attr-name">$1</span>=$3'
 );
-
 return `${bracket}<span class="token html-tag">${tag}</span>${styledAttrs}${close}`;
 });
-
 return output;
 }
 }
-
-
 class HistoryManager {
+
 constructor(editor) {
 this.editor = editor;
 this.undoStack = [];
 this.redoStack = [];
 this.lastEditTime = 0;
 }
+
 record(op) {
 const now = Date.now();
 const isTyping = op.text.length === 1 && op.oldText.length === 0;
@@ -632,6 +601,7 @@ this.redoStack = [];
 this.lastEditTime = now;
 if (this.undoStack.length > 300) this.undoStack.shift();
 }
+
 undo() {
 if (this.undoStack.length === 0) return;
 const op = this.undoStack.pop();
@@ -640,6 +610,7 @@ this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.c
 this.editor.state.cursor = { ...op.cursorBefore };
 this.editor.finalizeUpdate();
 }
+
 redo() {
 if (this.redoStack.length === 0) return;
 const op = this.redoStack.pop();
@@ -650,12 +621,14 @@ this.editor.finalizeUpdate();
 }
 }
 class SearchManager {
+
 constructor(editor) {
 this.editor = editor;
 this.matches = [];
 this.currentIndex = -1;
 this.lastQuery = "";
 }
+
 find(query) {
 if (!query) return;
 if (query === this.lastQuery && this.matches.length > 0) return;
@@ -679,6 +652,7 @@ statEl.textContent = `Found ${this.matches.length}`;
 this.findNext();
 }
 }
+
 findNext() {
 const inputVal = document.getElementById('find-input').value;
 if (inputVal !== this.lastQuery) this.find(inputVal);
@@ -691,6 +665,7 @@ this.editor.state.cursor = { row: m.row, col: m.col + m.len };
 this.editor.state.desiredCol = m.col + m.len;
 this.editor.finalizeUpdate();
 }
+
 replace() {
 if (this.matches.length === 0) return;
 const replacement = document.getElementById('replace-input').value;
@@ -705,6 +680,7 @@ this.findNext();
 this.findNext();
 }
 }
+
 replaceAll() {
 const query = document.getElementById('find-input').value;
 const replacement = document.getElementById('replace-input').value;
@@ -733,6 +709,7 @@ this.editor.setStatus("Nothing found");
 }
 }
 class EditorEngine {
+
 constructor() {
 this.config = {
 lineHeight: 24,
@@ -768,9 +745,6 @@ this.highlighter = new SyntaxHighlighter();
 this.init();
 }
 
-
-
-
 init() {
 document.getElementById('find-input').addEventListener('keydown', (e) => {
 if (e.key === 'Enter') this.search.findNext();
@@ -796,16 +770,9 @@ this.recalculateLayout();
 });
 document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
 this.dom.editor.focus();
-
-// NY LINJE: Analyser dokumentet ved oppstart
 this.highlighter.analyze(this.state.lines);
-
 this.finalizeUpdate();
 }
-
-
-
-
 
 cycleNext(type) {
 const lines = this.state.lines;
@@ -898,13 +865,6 @@ this.setStatus(`No ${type} found`);
 this.dom.editor.focus();
 }
 
-
-
-
-
-
-
-
 render() {
 const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
 const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
@@ -932,10 +892,7 @@ numSpan.className = 'line-number';
 numSpan.textContent = i + 1;
 const contentSpan = document.createElement('div');
 contentSpan.className = 'line-content';
-
-// ENDRET HER: Sender med "i" (linjenummeret)
 contentSpan.innerHTML = this.highlighter.highlight(lines[i], i);
-
 const selectionDiv = document.createElement('div');
 selectionDiv.className = 'selection-layer';
 if (selStart && i >= selStart.row && i <= selEnd.row) {
@@ -958,11 +915,6 @@ this.dom.viewport.appendChild(fragment);
 this.updateCursor();
 }
 
-
-
-
-
-
 updateCursor() {
 const { row, col } = this.state.cursor;
 const { lineHeight, charWidth, xOffset } = this.config;
@@ -974,6 +926,7 @@ this.dom.cursor.classList.remove('blink');
 clearTimeout(this.blinkTimeout);
 this.blinkTimeout = setTimeout(() => this.dom.cursor.classList.add('blink'), 500);
 }
+
 updateDimensions() {
 const { lines, viewportHeight } = this.state;
 const { lineHeight, charWidth, xOffset } = this.config;
@@ -984,11 +937,13 @@ this.dom.phantom.style.height = `${Math.max(height, viewportHeight)}px`;
 this.dom.phantom.style.width = `${Math.max(width, window.innerWidth)}px`;
 this.dom.viewport.style.width = `${width}px`;
 }
+
 finalizeUpdate() {
 this.updateDimensions();
 this.ensureCursorVisible();
 this.render();
 }
+
 recalculateLayout() {
 const t = document.createElement('div');
 t.className = 'line';
@@ -1014,6 +969,7 @@ needsUpdate = true;
 }
 if (needsUpdate) this.finalizeUpdate();
 }
+
 onScroll() {
 const currentLeft = this.dom.editor.scrollLeft;
 if (currentLeft > 0 && currentLeft < 6) {
@@ -1025,6 +981,7 @@ clearTimeout(this.scrollTimeout);
 this.scrollTimeout = setTimeout(() => this.render(), 16);
 this.render();
 }
+
 applyChange(txt) {
 const { cursor, selectionAnchor } = this.state;
 let sr = cursor.row, sc = cursor.col;
@@ -1042,7 +999,6 @@ this.applyEditInternal(sr, sc, er, ec, txt, true);
 this.state.desiredCol = this.state.cursor.col;
 this.ensureCursorVisible();
 }
-
 
 applyEditInternal(sr, sc, er, ec, txt, hist) {
 let l = this.state.lines;
@@ -1085,39 +1041,26 @@ cursorAfter: { row: nr, col: nc }
 });
 }
 this.state.cursor = { row: nr, col: nc };
-
-// NY LINJE: Oppdater analysen etter hver endring
 this.highlighter.analyze(this.state.lines);
-
 this.finalizeUpdate();
 }
-
-
 
 handleInput(e) {
 const k = e.key;
 const ctrl = e.ctrlKey || e.metaKey;
 const { cursor: c, lines: l } = this.state;
 if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
-
-// --- START ENTER LOGIKK ---
 if (k === 'Enter') {
 e.preventDefault();
-
-// KUN HVIS CURSOR ER PÅ EN NY LINJE (dvs. ikke col 0)
 if (c.col > 0) {
 const indent = l[c.row].match(/^\s*/)[0];
-// Sjekk om forrige linje sluttet med { for å legge til 2 ekstra mellomrom
-let extra = l[c.row].trim().endsWith('{') ? "  " : ""; 
+let extra = l[c.row].trim().endsWith('{') ? "  " : "";
 this.applyChange("\n" + indent + extra);
 } else {
-// Hvis cursor er i kolonne 0, setter vi bare inn et linjeskift uten innrykk.
 this.applyChange("\n");
 }
 return;
 }
-// --- SLUTT ENTER LOGIKK ---
-
 if (k === 'Tab') {
 e.preventDefault();
 if (e.shiftKey) {
@@ -1127,57 +1070,34 @@ this.state.selectionAnchor ? this.blockEdit(l => "  " + l) : this.applyChange(" 
 }
 return;
 }
-
-// ... (resten av logikken for Backspace, Delete, Navigation, osv.) ...
-
-
 if (k === 'Backspace') {
-          e.preventDefault();
-          
-          if (this.state.selectionAnchor) {
-              // 1. Hvis noe er markert, slett markeringen som før
-              this.applyChange("");
-          } 
-          else if (c.col > 0) {
-              // 2. SMART BACKSPACE / VANLIG SLETTING (Outdent)
-              const lineStart = l[c.row].slice(0, c.col);
-              const indentUnit = '  ';
-
-              if (lineStart.trim() === '' && c.col % indentUnit.length === 0) {
-                  // Smart Backspace: Slett fullt innrykkstrinn
-                  this.state.selectionAnchor = { row: c.row, col: c.col - indentUnit.length };
-                  this.applyChange("");
-              } 
-              else {
-                  // Vanlig Backspace: Slett 1 tegn
-                  this.state.selectionAnchor = { row: c.row, col: c.col - 1 };
-                  this.applyChange("");
-              }
-          } 
-          else if (c.row > 0) {
-              // 3. SLETT LINJESKIFT (Merge Line Up)
-              
-              // Finn slutten av forrige linje
-              const prevLineLength = l[c.row - 1].length;
-              
-              // Utfør den faktiske redigeringen:
-              // Start: raden over (c.row - 1), kolonne ved slutten av den raden (prevLineLength)
-              // Slutt: nåværende rad (c.row), kolonne 0
-              // Tekst som settes inn: tom streng ("")
-              this.applyEditInternal(c.row - 1, prevLineLength, c.row, 0, "", true);
-
-              // Flytt cursor til det nye sammenslåingspunktet (slutten av den nye, sammenslåtte linjen)
-              this.state.cursor.row = c.row - 1;
-              this.state.cursor.col = prevLineLength;
-              this.state.desiredCol = prevLineLength;
-              
-              this.state.selectionAnchor = null;
-              this.finalizeUpdate();
-          }
-          return;
-        }
-
-
+e.preventDefault();
+if (this.state.selectionAnchor) {
+this.applyChange("");
+}
+else if (c.col > 0) {
+const lineStart = l[c.row].slice(0, c.col);
+const indentUnit = '  ';
+if (lineStart.trim() === '' && c.col % indentUnit.length === 0) {
+this.state.selectionAnchor = { row: c.row, col: c.col - indentUnit.length };
+this.applyChange("");
+}
+else {
+this.state.selectionAnchor = { row: c.row, col: c.col - 1 };
+this.applyChange("");
+}
+}
+else if (c.row > 0) {
+const prevLineLength = l[c.row - 1].length;
+this.applyEditInternal(c.row - 1, prevLineLength, c.row, 0, "", true);
+this.state.cursor.row = c.row - 1;
+this.state.cursor.col = prevLineLength;
+this.state.desiredCol = prevLineLength;
+this.state.selectionAnchor = null;
+this.finalizeUpdate();
+}
+return;
+}
 if (k === 'Delete') {
 e.preventDefault();
 if (this.state.selectionAnchor) this.applyChange("");
@@ -1197,7 +1117,6 @@ this.finalizeUpdate();
 }
 return;
 }
-
 const nav = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'];
 if (nav.includes(k)) {
 e.preventDefault();
@@ -1213,64 +1132,51 @@ this.applyChange(k);
 }
 }
 
-
-
-
 handleNavigation(k, wordJump) {
 const { cursor: c, lines: l } = this.state;
 let tr = c.row, tc = c.col;
 const lineText = l[tr];
-
-if (k === 'ArrowUp') { 
-if (tr > 0) tr--; 
-tc = Math.min(this.state.desiredCol, l[tr].length); 
+if (k === 'ArrowUp') {
+if (tr > 0) tr--;
+tc = Math.min(this.state.desiredCol, l[tr].length);
 }
-else if (k === 'ArrowDown') { 
-if (tr < l.length - 1) tr++; 
-tc = Math.min(this.state.desiredCol, l[tr].length); 
+else if (k === 'ArrowDown') {
+if (tr < l.length - 1) tr++;
+tc = Math.min(this.state.desiredCol, l[tr].length);
 }
 else if (k === 'ArrowLeft') {
 if (wordJump) {
 tc = this.findWordBoundary(tr, tc, -1);
-} 
+}
 else if (tc > 0) {
-// SJEKK FOR EMOJI (Surrogate Pair) MOT VENSTRE
-// Vi må sjekke om tegnet før (tc-1) og tegnet før der igjen (tc-2)
-// danner et par.
 let isEmoji = false;
 if (tc >= 2) {
 const high = lineText.charCodeAt(tc - 2);
 const low = lineText.charCodeAt(tc - 1);
-// 0xD800-0xDBFF er starten på et par, 0xDC00-0xDFFF er slutten
 if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
 isEmoji = true;
 }
 }
-
 tc -= isEmoji ? 2 : 1;
 }
-else if (tr > 0) { 
-tr--; tc = l[tr].length; 
+else if (tr > 0) {
+tr--; tc = l[tr].length;
 }
 this.state.desiredCol = tc;
-} 
+}
 else if (k === 'ArrowRight') {
 if (wordJump) {
 tc = this.findWordBoundary(tr, tc, 1);
 }
 else if (tc < lineText.length) {
-// SJEKK FOR EMOJI MOT HØYRE
-// codePointAt henter hele verdien. Hvis den er > 0xFFFF (65535),
-// betyr det at tegnet bruker 2 plasser.
 const cp = lineText.codePointAt(tc);
 tc += (cp > 0xFFFF) ? 2 : 1;
 }
-else if (tr < l.length - 1) { 
-tr++; tc = 0; 
+else if (tr < l.length - 1) {
+tr++; tc = 0;
 }
 this.state.desiredCol = tc;
-} 
-// ... (Home/End/PageUp/PageDown logikk som før) ...
+}
 else if (k === 'Home') {
 const fc = (l[tr].match(/^\s*/) || [''])[0].length;
 tc = (tc === fc) ? 0 : fc;
@@ -1285,12 +1191,9 @@ tc = Math.min(tc, l[tr].length);
 tr = Math.min(l.length - 1, tr + Math.floor(this.state.viewportHeight / this.config.lineHeight));
 tc = Math.min(tc, l[tr].length);
 }
-
 c.row = tr; c.col = tc;
 this.ensureCursorVisible();
 }
-
-
 
 findWordBoundary(r, c, d) {
 const ln = this.state.lines[r];
@@ -1307,11 +1210,13 @@ while (i > 0 && /\w/.test(ln[i - 1]) === type) i--;
 }
 return i;
 }
+
 handlePaste(e) {
 e.preventDefault();
 const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 this.applyChange(text);
 }
+
 handleCopyCut(e, cut) {
 const t = this.getSelectionText();
 if (t) {
@@ -1322,88 +1227,63 @@ else this.setStatus("Copied");
 }
 }
 
-
 handleMouseDown(e) {
-        if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
-        e.preventDefault();
-        
-        const now = Date.now();
-        this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
-        this.state.lastClickTime = now;
-        
-        const p = this.getPosFromMouse(e);
-        const lineText = this.state.lines[p.row];
-        
-        let startCol, endCol, startRow, endRow;
-
-        if (this.state.clickCount === 2) {
-          // Smart dobbeltklikk logikk...
-          
-          let foundString = false;
-          const stringMatch = lineText.match(/("|')(.*?)("|')/g); 
-          if (stringMatch) {
-            let offset = 0;
-            for (const match of stringMatch) {
-              const startIdx = lineText.indexOf(match, offset);
-              const endIdx = startIdx + match.length;
-              if (p.col > startIdx && p.col < endIdx) {
-                startCol = startIdx + 1; 
-                endCol = endIdx - 1;
-                foundString = true;
-                break;
-              }
-              offset = endIdx;
-            }
-          }
-          if (!foundString) {
-            startCol = this.findWordBoundary(p.row, p.col, -1);
-            endCol = this.findWordBoundary(p.row, p.col, 1);
-          }
-          startRow = p.row;
-          endRow = p.row;
-
-        } else if (this.state.clickCount === 3) {
-          // Smart trippelklikk logikk...
-          startRow = p.row;
-          endRow = p.row;
-          startCol = (lineText.match(/^\s*/) || [''])[0].length; 
-          endCol = lineText.length;
-          
-        } else {
-          // --- ENKELTKLIKK: DEN ENESTE KORREKTE STATE FOR BACKSPACE ---
-          
-          // NØKKEL: Tving ankeret til å være NULL ved enkeltklikk
-          this.state.selectionAnchor = null; 
-          this.state.cursor = { ...p }; 
-
-          startRow = p.row; startCol = p.col;
-          endRow = p.row; endCol = p.col;
-          
-          this.state.isDragging = true;
-          // VIKTIG: Ankeret settes KUN for dra-operasjonen (handleMouseMove).
-          // Hvis brukeren bare klikket og slapp, vil handleMouseUp fjerne isDragging.
-          this.state.selectionAnchor = { ...p }; 
-        }
-        
-        // KONTROLL: Fikser dobbelt/trippelklikk markering
-        if (this.state.clickCount > 1) {
-            this.state.isDragging = false;
-            
-            // Nullstill ankeret FØR du setter det nye valget for å unngå blinken
-            this.state.selectionAnchor = null; 
-            
-            this.state.selectionAnchor = { row: startRow, col: startCol };
-            this.state.cursor = { row: endRow, col: endCol };
-        } else {
-            this.state.cursor = { row: startRow, col: startCol };
-        }
-
-        this.state.desiredCol = this.state.cursor.col;
-        this.dom.editor.focus();
-        this.render();
-      }
-
-
+if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
+e.preventDefault();
+const now = Date.now();
+this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
+this.state.lastClickTime = now;
+const p = this.getPosFromMouse(e);
+const lineText = this.state.lines[p.row];
+let startCol, endCol, startRow, endRow;
+if (this.state.clickCount === 2) {
+let foundString = false;
+const stringMatch = lineText.match(/("|')(.*?)("|')/g);
+if (stringMatch) {
+let offset = 0;
+for (const match of stringMatch) {
+const startIdx = lineText.indexOf(match, offset);
+const endIdx = startIdx + match.length;
+if (p.col > startIdx && p.col < endIdx) {
+startCol = startIdx + 1;
+endCol = endIdx - 1;
+foundString = true;
+break;
+}
+offset = endIdx;
+}
+}
+if (!foundString) {
+startCol = this.findWordBoundary(p.row, p.col, -1);
+endCol = this.findWordBoundary(p.row, p.col, 1);
+}
+startRow = p.row;
+endRow = p.row;
+} else if (this.state.clickCount === 3) {
+startRow = p.row;
+endRow = p.row;
+startCol = (lineText.match(/^\s*/) || [''])[0].length;
+endCol = lineText.length;
+} else {
+this.state.selectionAnchor = null;
+this.state.cursor = { ...p };
+startRow = p.row; startCol = p.col;
+endRow = p.row; endCol = p.col;
+this.state.isDragging = true;
+this.state.selectionAnchor = { ...p };
+}
+if (this.state.clickCount > 1) {
+this.state.isDragging = false;
+this.state.selectionAnchor = null;
+this.state.selectionAnchor = { row: startRow, col: startCol };
+this.state.cursor = { row: endRow, col: endCol };
+} else {
+this.state.cursor = { row: startRow, col: startCol };
+}
+this.state.desiredCol = this.state.cursor.col;
+this.dom.editor.focus();
+this.render();
+}
 
 handleMouseMove(e) {
 if (!this.state.isDragging) return;
@@ -1429,24 +1309,14 @@ else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
 this.render();
 }
 
-
 handleMouseUp() {
-        // Stopper dragging uansett
-        this.state.isDragging = false;
-        
-        const { cursor, selectionAnchor } = this.state;
-        
-        // 💡 NØKKELKORREKSJON: Nullstill ankeret hvis det var et enkeltklikk UTEN drag.
-        // Hvis anker og cursor er på samme sted, betyr det at det ikke ble dratt, 
-        // men at ankeret ble satt i handleMouseDown kun for dra-formål.
-        if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col) {
-            this.state.selectionAnchor = null;
-        }
-        
-        this.render();
-      }
-
-
+this.state.isDragging = false;
+const { cursor, selectionAnchor } = this.state;
+if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col) {
+this.state.selectionAnchor = null;
+}
+this.render();
+}
 
 getPosFromMouse(e) {
 const r = this.dom.editor.getBoundingClientRect();
@@ -1458,6 +1328,7 @@ row = Math.max(0, Math.min(row, this.state.lines.length - 1));
 col = Math.max(0, Math.min(col, this.state.lines[row].length));
 return { row, col };
 }
+
 ensureCursorVisible() {
 const { row, col } = this.state.cursor;
 const { lineHeight, charWidth, xOffset } = this.config;
@@ -1473,6 +1344,7 @@ const cW = this.dom.editor.clientWidth;
 if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
 else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
 }
+
 blockEdit(mod, sr = null, er = null) {
 const { cursor: c, selectionAnchor: s, lines: l } = this.state;
 sr = sr ?? Math.min(c.row, s ? s.row : c.row);
@@ -1522,6 +1394,7 @@ if (k === 'l') { e.preventDefault(); this.cycleNext('empty'); }
 if (k === '.') { e.preventDefault(); this.cycleNext('function'); }
 }
 }
+
 getSelectionText() {
 const { cursor: c, selectionAnchor: s, lines: l } = this.state;
 if (!s || (s.row === c.row && s.col === c.col)) return null;
@@ -1534,8 +1407,6 @@ r.push(l[end.row].slice(0, end.col));
 return r.join('\n');
 }
 
-
-
 newFile() {
 if (this.state.isDirty && !confirm("Discard changes?")) return;
 this.state.lines = [""];
@@ -1543,36 +1414,29 @@ this.state.cursor = { row: 0, col: 0 };
 this.state.selectionAnchor = null;
 this.state.fileName = 'Untitled.txt';
 this.state.fileHandle = null;
-
-// --- DETTE MÅ LEGGES TIL ---
 this.highlighter.analyze(this.state.lines);
-// ---------------------------
-
 this.setDirty(false);
 this.history.undoStack = [];
 this.finalizeUpdate();
 this.setStatus("New File");
 }
 
-
 previewFile() {
 const win = window.open();
 if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
 }
+
 setDirty(dirty) {
 this.state.isDirty = dirty;
 this.dom.fileStatus.textContent = (dirty ? "* " : "") + this.state.fileName;
 document.title = this.dom.fileStatus.textContent + " - Mastodon";
 }
+
 setStatus(msg) {
 this.dom.messageArea.textContent = msg;
 clearTimeout(this.statusTimeout);
 this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine', 3000);
 }
-
-
-
-
 async openFile() {
 if (this.state.isDirty && !confirm("Discard changes?")) return;
 try {
@@ -1583,21 +1447,13 @@ this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
 this.state.fileName = f.name;
 this.state.cursor = { row: 0, col: 0 };
 this.state.selectionAnchor = null;
-
-// --- DETTE MÅ LEGGES TIL ---
 this.highlighter.analyze(this.state.lines);
-// ---------------------------
-
 this.setDirty(false);
 this.history.undoStack = [];
 this.finalizeUpdate();
 this.setStatus("Opened: " + f.name);
 } catch (e) { console.error(e); }
 }
-
-
-
-
 async saveFile() {
 if (!this.state.fileHandle) {
 try {
@@ -1618,7 +1474,7 @@ window.onload = () => {
 window.editor = new EditorEngine();
 checkIntroModal();
 };
+
 </script>
 </body>
-
 </html>
