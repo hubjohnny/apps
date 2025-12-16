@@ -1436,24 +1436,32 @@ r.push(l[end.row].slice(0, end.col));
 return r.join('\n');
 }
 
+
 newFile() {
-if (this.state.isDirty && !confirm("Discard changes?")) return;
-this.state.lines = [""];
-this.state.cursor = { row: 0, col: 0 };
-this.state.selectionAnchor = null;
-this.state.fileName = 'Untitled.txt';
-this.state.fileHandle = null;
-this.highlighter.analyze(this.state.lines);
-this.setDirty(false);
-this.history.undoStack = [];
-this.finalizeUpdate();
-this.setStatus("New File");
-}
+    if (this.state.isDirty && !confirm("Discard changes?")) {
+      this.dom.editor.focus(); // Fiks: Gi fokus tilbake selv om vi avbryter
+      return;
+    }
+    this.state.lines = [""];
+    this.state.cursor = { row: 0, col: 0 };
+    this.state.selectionAnchor = null;
+    this.state.fileName = 'Untitled.txt';
+    this.state.fileHandle = null;
+    this.highlighter.analyze(this.state.lines);
+    this.setDirty(false);
+    this.history.undoStack = [];
+    this.finalizeUpdate();
+    this.setStatus("New File");
+    this.dom.editor.focus(); // Fiks: Gi fokus tilbake etter ny fil er opprettet
+  }
+
+
 
 previewFile() {
-const win = window.open();
-if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
-}
+    const win = window.open();
+    if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
+    this.dom.editor.focus(); // Fiks: Gi fokus tilbake etter at vinduet er åpnet
+  }
 
 setDirty(dirty) {
 this.state.isDirty = dirty;
@@ -1466,39 +1474,58 @@ this.dom.messageArea.textContent = msg;
 clearTimeout(this.statusTimeout);
 this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastodon Engine', 3000);
 }
+
 async openFile() {
-if (this.state.isDirty && !confirm("Discard changes?")) return;
-try {
-const [h] = await window.showOpenFilePicker();
-const f = await h.getFile();
-this.state.fileHandle = h;
-this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
-this.state.fileName = f.name;
-this.state.cursor = { row: 0, col: 0 };
-this.state.selectionAnchor = null;
-this.highlighter.analyze(this.state.lines);
-this.setDirty(false);
-this.history.undoStack = [];
-this.finalizeUpdate();
-this.setStatus("Opened: " + f.name);
-} catch (e) { console.error(e); }
-}
+    if (this.state.isDirty && !confirm("Discard changes?")) {
+      this.dom.editor.focus(); // Fiks
+      return;
+    }
+    try {
+      const [h] = await window.showOpenFilePicker();
+      const f = await h.getFile();
+      this.state.fileHandle = h;
+      this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
+      this.state.fileName = f.name;
+      this.state.cursor = { row: 0, col: 0 };
+      this.state.selectionAnchor = null;
+      this.highlighter.analyze(this.state.lines);
+      this.setDirty(false);
+      this.history.undoStack = [];
+      this.finalizeUpdate();
+      this.setStatus("Opened: " + f.name);
+    } catch (e) { 
+      // Ignorer feil (f.eks. bruker trykket avbryt)
+    } finally {
+      this.dom.editor.focus(); // Fiks: Denne kjøres ALLTID, uansett utfall
+    }
+  }
+
 async saveFile() {
-if (!this.state.fileHandle) {
-try {
-this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
-this.state.fileName = this.state.fileHandle.name;
-} catch (e) { return; }
-}
-try {
-const w = await this.state.fileHandle.createWritable();
-await w.write(this.state.lines.join('\n'));
-await w.close();
-this.setDirty(false);
-this.setStatus("Saved!");
-} catch (e) { this.setStatus("Save failed"); }
-}
-}
+    // Sjekk om vi må velge filnavn først
+    if (!this.state.fileHandle) {
+      try {
+        this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
+        this.state.fileName = this.state.fileHandle.name;
+      } catch (e) { 
+        this.dom.editor.focus(); // Fiks: Hvis bruker avbryter "Lagre som"-dialogen
+        return; 
+      }
+    }
+    // Lagre filen
+    try {
+      const w = await this.state.fileHandle.createWritable();
+      await w.write(this.state.lines.join('\n'));
+      await w.close();
+      this.setDirty(false);
+      this.setStatus("Saved!");
+    } catch (e) { 
+      this.setStatus("Save failed"); 
+    } finally {
+      this.dom.editor.focus(); // Fiks: Denne kjøres ALLTID
+    }
+  }
+  }
+  
 window.onload = () => {
 window.editor = new EditorEngine();
 checkIntroModal();
