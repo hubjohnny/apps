@@ -1423,13 +1423,24 @@ handleNavigation(k, wordJump) {
         }
         this.render();
       }
-      handleMouseUp() {
+
+
+handleMouseUp() {
+        // Stopper dragging uansett
         this.state.isDragging = false;
+        
         const { cursor, selectionAnchor } = this.state;
-        if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col)
-          this.state.selectionAnchor = null;
+        
+        // Hvis markeringen ble gjort ved enkelt-klikk & dra, og musen endte opp på samme sted:
+        // Vi må ikke nullstille ankeret her, fordi et dobbeltklikk vil ha forskjellig cursor/anchor, 
+        // og vi vil beholde den markeringen til neste klikk.
+        
+        // Siden vi har nullstilt ankeret i handleMouseDown ved enkeltklikk, trenger vi bare å rendre.
         this.render();
       }
+
+
+
       getPosFromMouse(e) {
         const r = this.dom.editor.getBoundingClientRect();
         const x = e.clientX - r.left + this.dom.editor.scrollLeft;
