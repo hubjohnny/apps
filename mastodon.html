@@ -653,18 +653,46 @@ this.findNext();
 }
 }
 
+
 findNext() {
-const inputVal = document.getElementById('find-input').value;
-if (inputVal !== this.lastQuery) this.find(inputVal);
-if (this.matches.length === 0) return;
-this.currentIndex = (this.currentIndex + 1) % this.matches.length;
-const m = this.matches[this.currentIndex];
-document.getElementById('search-stats').textContent = `${this.currentIndex + 1} of ${this.matches.length}`;
-this.editor.state.selectionAnchor = { row: m.row, col: m.col };
-this.editor.state.cursor = { row: m.row, col: m.col + m.len };
-this.editor.state.desiredCol = m.col + m.len;
-this.editor.finalizeUpdate();
-}
+    const inputVal = document.getElementById('find-input').value;
+    if (inputVal !== this.lastQuery) this.find(inputVal);
+    if (this.matches.length === 0) return;
+
+    this.currentIndex = (this.currentIndex + 1) % this.matches.length;
+    const m = this.matches[this.currentIndex];
+    
+    document.getElementById('search-stats').textContent = `${this.currentIndex + 1} of ${this.matches.length}`;
+    
+    // Sett markering og cursor
+    this.editor.state.selectionAnchor = { row: m.row, col: m.col };
+    this.editor.state.cursor = { row: m.row, col: m.col + m.len };
+    this.editor.state.desiredCol = m.col + m.len;
+
+    // --- NY SCROLL-LOGIKK START ---
+    // Dette er samme logikk som du bruker i cycleNext for å få "luft" under
+    const lh = this.editor.config.lineHeight;
+    const targetRow = m.row;
+    
+    // Vi sikrer at vi ser f.eks. 8 linjer under treffet (eller så mye som viewport tillater)
+    const paddingLines = 8; 
+    const desiredBottomPixel = (targetRow + paddingLines) * lh;
+    
+    let newScrollTop = desiredBottomPixel - this.editor.state.viewportHeight;
+    newScrollTop = Math.max(0, newScrollTop);
+
+    // Ikke scroll så langt ned at treffet forsvinner ut av toppen
+    if (newScrollTop > targetRow * lh) {
+      newScrollTop = targetRow * lh;
+    }
+
+    this.editor.dom.editor.scrollTop = newScrollTop;
+    // --- NY SCROLL-LOGIKK SLUTT ---
+
+    this.editor.finalizeUpdate();
+  }
+
+
 
 replace() {
 if (this.matches.length === 0) return;
@@ -841,13 +869,26 @@ if (/^\s*$/.test(line)) {
 return { start: { r, c: 0 }, end: { r, c: line.length }, select: false };
 }
 }
+
+
 else if (type === 'function') {
-if (mode !== 'javascript') return null;
-const m = line.match(/(?:^|\s)function\s+\w+|^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{/);
-if (m) {
-return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
-}
-}
+        // LØSNING 2: Ignorer funksjonssøk hvis vi ikke er i Javascript-modus
+        if (mode !== 'javascript') return null;
+
+        // Denne Regex-en består av to deler separert med OR (|):
+        // 1. (?:^|\s)... : Fanger standard 'function', 'async function', 'export function'
+        // 2. ^\s*...     : Fanger klasse-metoder, inkludert async, static, get, set
+        const functionRegex = /(?:^|\s)(?:export\s+)?(?:async\s+)?function\s+\w+|^\s*(?:static\s+|async\s+|get\s+|set\s+)?(?!if|for|while|switch|catch|return|await)\w+\s*\(.*?\)\s*\{/;
+        
+        const m = line.match(functionRegex);
+        
+        if (m) {
+          return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
+        }
+      }
+
+
+
 return null;
 };
 for (let i = currentLineIdx + 1; i < lines.length; i++) {
