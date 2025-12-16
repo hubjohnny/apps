@@ -8,7 +8,6 @@
   <link rel="icon"
     href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiBmaWxsPSIjMDAwMDAwIj7wn6ajPC90ZXh0Pjwvc3ZnPg=="
     type="image/svg+xml">
-
 <link href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-vsc-dark-plus.min.css" rel="stylesheet" /> 
 
   <style>
@@ -1107,13 +1106,30 @@ render() {
  
  
  
- 
- 
-      handleInput(e) {
+ handleInput(e) {
         const k = e.key;
         const ctrl = e.ctrlKey || e.metaKey;
         const { cursor: c, lines: l } = this.state;
         if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
+        
+        // --- START ENTER LOGIKK ---
+        if (k === 'Enter') {
+          e.preventDefault();
+
+          // KUN HVIS CURSOR ER PÅ EN NY LINJE (dvs. ikke col 0)
+          if (c.col > 0) {
+              const indent = l[c.row].match(/^\s*/)[0];
+              // Sjekk om forrige linje sluttet med { for å legge til 2 ekstra mellomrom
+              let extra = l[c.row].trim().endsWith('{') ? "  " : ""; 
+              this.applyChange("\n" + indent + extra);
+          } else {
+              // Hvis cursor er i kolonne 0, setter vi bare inn et linjeskift uten innrykk.
+              this.applyChange("\n");
+          }
+          return;
+        }
+        // --- SLUTT ENTER LOGIKK ---
+
         if (k === 'Tab') {
           e.preventDefault();
           if (e.shiftKey) {
@@ -1123,13 +1139,45 @@ render() {
           }
           return;
         }
-        if (k === 'Backspace') {
+        
+        // ... (resten av logikken for Backspace, Delete, Navigation, osv.) ...
+        
+
+if (k === 'Backspace') {
           e.preventDefault();
-          if (this.state.selectionAnchor) this.applyChange("");
-          else if (c.col > 0) { this.state.selectionAnchor = { row: c.row, col: c.col - 1 }; this.applyChange(""); }
-          else if (c.row > 0) { this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length }; this.applyChange(""); }
+          
+          if (this.state.selectionAnchor) {
+              // 1. Hvis noe er markert, slett markeringen som før
+              this.applyChange("");
+          } 
+          else if (c.col > 0) {
+              // 2. SMART BACKSPACE (Outdent)
+              const lineStart = l[c.row].slice(0, c.col); // Tekst fra start av linjen til cursor
+              const indentUnit = '  '; // Din standard innrykk (2 mellomrom)
+
+              if (lineStart.trim() === '' && c.col % indentUnit.length === 0) {
+                  // Hvis alt FØR cursor kun er whitespace, OG cursor står på grensen
+                  // av et fullt innrykkstrinn (f.eks. kolonne 2, 4, 6)
+                  
+                  // Slett to tegn (et fullt innrykkstrinn)
+                  this.state.selectionAnchor = { row: c.row, col: c.col - indentUnit.length };
+                  this.applyChange("");
+              } 
+              else {
+                  // Vanlig backspace (slett 1 tegn)
+                  this.state.selectionAnchor = { row: c.row, col: c.col - 1 };
+                  this.applyChange("");
+              }
+          } 
+          else if (c.row > 0) {
+              // 3. Hvis i kolonne 0, hopp til slutten av forrige linje
+              this.state.selectionAnchor = { row: c.row - 1, col: l[c.row - 1].length };
+              this.applyChange("");
+          }
           return;
         }
+
+
         if (k === 'Delete') {
           e.preventDefault();
           if (this.state.selectionAnchor) this.applyChange("");
@@ -1149,13 +1197,7 @@ render() {
           }
           return;
         }
-        if (k === 'Enter') {
-          e.preventDefault();
-          const indent = l[c.row].match(/^\s*/)[0];
-          let extra = l[c.row].trim().endsWith('{') ? "  " : "";
-          this.applyChange("\n" + indent + extra);
-          return;
-        }
+        
         const nav = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'];
         if (nav.includes(k)) {
           e.preventDefault();
@@ -1170,6 +1212,8 @@ render() {
           this.applyChange(k);
         }
       }
+ 
+ 
 
 
 handleNavigation(k, wordJump) {
@@ -1277,32 +1321,85 @@ handleNavigation(k, wordJump) {
           else this.setStatus("Copied");
         }
       }
-      handleMouseDown(e) {
+ 
+ 
+ handleMouseDown(e) {
         if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
         e.preventDefault();
+        
         const now = Date.now();
         this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
         this.state.lastClickTime = now;
+        
         const p = this.getPosFromMouse(e);
+        const lineText = this.state.lines[p.row];
+        
+        let startCol, endCol, startRow, endRow;
+
         if (this.state.clickCount === 2) {
-          const s = this.findWordBoundary(p.row, p.col, -1);
-          const e = this.findWordBoundary(p.row, p.col, 1);
-          this.state.selectionAnchor = { row: p.row, col: s };
-          this.state.cursor = { row: p.row, col: e };
-          this.state.isDragging = false;
+          // Smart dobbeltklikk logikk...
+          
+          let foundString = false;
+          const stringMatch = lineText.match(/("|')(.*?)("|')/g); 
+          if (stringMatch) {
+            let offset = 0;
+            for (const match of stringMatch) {
+              const startIdx = lineText.indexOf(match, offset);
+              const endIdx = startIdx + match.length;
+              if (p.col > startIdx && p.col < endIdx) {
+                startCol = startIdx + 1; 
+                endCol = endIdx - 1;
+                foundString = true;
+                break;
+              }
+              offset = endIdx;
+            }
+          }
+          
+          if (!foundString) {
+            startCol = this.findWordBoundary(p.row, p.col, -1);
+            endCol = this.findWordBoundary(p.row, p.col, 1);
+          }
+          
+          startRow = p.row;
+          endRow = p.row;
+
         } else if (this.state.clickCount === 3) {
-          this.state.selectionAnchor = { row: p.row, col: 0 };
-          this.state.cursor = { row: p.row, col: this.state.lines[p.row].length };
-          this.state.isDragging = false;
+          // Smart trippelklikk logikk...
+          
+          startRow = p.row;
+          endRow = p.row;
+          startCol = (lineText.match(/^\s*/) || [''])[0].length; 
+          endCol = lineText.length;
+          
         } else {
-          this.state.cursor = { ...p };
-          this.state.selectionAnchor = { ...p };
+          // --- KORRIGERT ENKELTKLIKK: START PÅ NYTT ---
+          // Fjern gammel markering og sett ny cursor/anker
+          this.state.selectionAnchor = null; // VIKTIG: Nullstill ankeret her
+          
+          startRow = p.row; startCol = p.col;
+          endRow = p.row; endCol = p.col;
           this.state.isDragging = true;
+          this.state.selectionAnchor = { ...p }; // Setter ankeret for dragging
         }
+        
+        // Setter cursor og sikrer at isDragging er avslått ved flermålsklikk
+        if (this.state.clickCount > 1) {
+            this.state.isDragging = false;
+            this.state.selectionAnchor = { row: startRow, col: startCol };
+            this.state.cursor = { row: endRow, col: endCol };
+        } else {
+            // Kun oppdater cursor ved enkeltklikk (anker ble satt lenger opp)
+            this.state.cursor = { row: startRow, col: startCol };
+        }
+
         this.state.desiredCol = this.state.cursor.col;
         this.dom.editor.focus();
         this.render();
       }
+ 
+ 
+ 
       handleMouseMove(e) {
         if (!this.state.isDragging) return;
         const p = this.getPosFromMouse(e);
