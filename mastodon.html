@@ -1170,22 +1170,64 @@ render() {
           this.applyChange(k);
         }
       }
-      handleNavigation(k, wordJump) {
+
+
+handleNavigation(k, wordJump) {
         const { cursor: c, lines: l } = this.state;
         let tr = c.row, tc = c.col;
-        if (k === 'ArrowUp') { if (tr > 0) tr--; tc = Math.min(this.state.desiredCol, l[tr].length); }
-        else if (k === 'ArrowDown') { if (tr < l.length - 1) tr++; tc = Math.min(this.state.desiredCol, l[tr].length); }
+        const lineText = l[tr];
+
+        if (k === 'ArrowUp') { 
+            if (tr > 0) tr--; 
+            tc = Math.min(this.state.desiredCol, l[tr].length); 
+        }
+        else if (k === 'ArrowDown') { 
+            if (tr < l.length - 1) tr++; 
+            tc = Math.min(this.state.desiredCol, l[tr].length); 
+        }
         else if (k === 'ArrowLeft') {
-          if (wordJump) tc = this.findWordBoundary(tr, tc, -1);
-          else if (tc > 0) tc--;
-          else if (tr > 0) { tr--; tc = l[tr].length; }
+          if (wordJump) {
+            tc = this.findWordBoundary(tr, tc, -1);
+          } 
+          else if (tc > 0) {
+            // SJEKK FOR EMOJI (Surrogate Pair) MOT VENSTRE
+            // Vi må sjekke om tegnet før (tc-1) og tegnet før der igjen (tc-2)
+            // danner et par.
+            let isEmoji = false;
+            if (tc >= 2) {
+                const high = lineText.charCodeAt(tc - 2);
+                const low = lineText.charCodeAt(tc - 1);
+                // 0xD800-0xDBFF er starten på et par, 0xDC00-0xDFFF er slutten
+                if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+                    isEmoji = true;
+                }
+            }
+            
+            tc -= isEmoji ? 2 : 1;
+          }
+          else if (tr > 0) { 
+              tr--; tc = l[tr].length; 
+          }
           this.state.desiredCol = tc;
-        } else if (k === 'ArrowRight') {
-          if (wordJump) tc = this.findWordBoundary(tr, tc, 1);
-          else if (tc < l[tr].length) tc++;
-          else if (tr < l.length - 1) { tr++; tc = 0; }
+        } 
+        else if (k === 'ArrowRight') {
+          if (wordJump) {
+            tc = this.findWordBoundary(tr, tc, 1);
+          }
+          else if (tc < lineText.length) {
+            // SJEKK FOR EMOJI MOT HØYRE
+            // codePointAt henter hele verdien. Hvis den er > 0xFFFF (65535),
+            // betyr det at tegnet bruker 2 plasser.
+            const cp = lineText.codePointAt(tc);
+            tc += (cp > 0xFFFF) ? 2 : 1;
+          }
+          else if (tr < l.length - 1) { 
+              tr++; tc = 0; 
+          }
           this.state.desiredCol = tc;
-        } else if (k === 'Home') {
+        } 
+        // ... (Home/End/PageUp/PageDown logikk som før) ...
+        else if (k === 'Home') {
           const fc = (l[tr].match(/^\s*/) || [''])[0].length;
           tc = (tc === fc) ? 0 : fc;
           this.state.desiredCol = tc;
@@ -1199,9 +1241,13 @@ render() {
           tr = Math.min(l.length - 1, tr + Math.floor(this.state.viewportHeight / this.config.lineHeight));
           tc = Math.min(tc, l[tr].length);
         }
+        
         c.row = tr; c.col = tc;
         this.ensureCursorVisible();
       }
+
+
+
       findWordBoundary(r, c, d) {
         const ln = this.state.lines[r];
         let i = c;
