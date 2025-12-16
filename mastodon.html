@@ -653,46 +653,28 @@ this.findNext();
 }
 }
 
-
 findNext() {
-    const inputVal = document.getElementById('find-input').value;
-    if (inputVal !== this.lastQuery) this.find(inputVal);
-    if (this.matches.length === 0) return;
-
-    this.currentIndex = (this.currentIndex + 1) % this.matches.length;
-    const m = this.matches[this.currentIndex];
-    
-    document.getElementById('search-stats').textContent = `${this.currentIndex + 1} of ${this.matches.length}`;
-    
-    // Sett markering og cursor
-    this.editor.state.selectionAnchor = { row: m.row, col: m.col };
-    this.editor.state.cursor = { row: m.row, col: m.col + m.len };
-    this.editor.state.desiredCol = m.col + m.len;
-
-    // --- NY SCROLL-LOGIKK START ---
-    // Dette er samme logikk som du bruker i cycleNext for å få "luft" under
-    const lh = this.editor.config.lineHeight;
-    const targetRow = m.row;
-    
-    // Vi sikrer at vi ser f.eks. 8 linjer under treffet (eller så mye som viewport tillater)
-    const paddingLines = 8; 
-    const desiredBottomPixel = (targetRow + paddingLines) * lh;
-    
-    let newScrollTop = desiredBottomPixel - this.editor.state.viewportHeight;
-    newScrollTop = Math.max(0, newScrollTop);
-
-    // Ikke scroll så langt ned at treffet forsvinner ut av toppen
-    if (newScrollTop > targetRow * lh) {
-      newScrollTop = targetRow * lh;
-    }
-
-    this.editor.dom.editor.scrollTop = newScrollTop;
-    // --- NY SCROLL-LOGIKK SLUTT ---
-
-    this.editor.finalizeUpdate();
-  }
-
-
+const inputVal = document.getElementById('find-input').value;
+if (inputVal !== this.lastQuery) this.find(inputVal);
+if (this.matches.length === 0) return;
+this.currentIndex = (this.currentIndex + 1) % this.matches.length;
+const m = this.matches[this.currentIndex];
+document.getElementById('search-stats').textContent = `${this.currentIndex + 1} of ${this.matches.length}`;
+this.editor.state.selectionAnchor = { row: m.row, col: m.col };
+this.editor.state.cursor = { row: m.row, col: m.col + m.len };
+this.editor.state.desiredCol = m.col + m.len;
+const lh = this.editor.config.lineHeight;
+const targetRow = m.row;
+const paddingLines = 8; 
+const desiredBottomPixel = (targetRow + paddingLines) * lh;
+let newScrollTop = desiredBottomPixel - this.editor.state.viewportHeight;
+newScrollTop = Math.max(0, newScrollTop);
+if (newScrollTop > targetRow * lh) {
+newScrollTop = targetRow * lh;
+}
+this.editor.dom.editor.scrollTop = newScrollTop;
+this.editor.finalizeUpdate();
+}
 
 replace() {
 if (this.matches.length === 0) return;
@@ -869,26 +851,14 @@ if (/^\s*$/.test(line)) {
 return { start: { r, c: 0 }, end: { r, c: line.length }, select: false };
 }
 }
-
-
 else if (type === 'function') {
-        // LØSNING 2: Ignorer funksjonssøk hvis vi ikke er i Javascript-modus
-        if (mode !== 'javascript') return null;
-
-        // Denne Regex-en består av to deler separert med OR (|):
-        // 1. (?:^|\s)... : Fanger standard 'function', 'async function', 'export function'
-        // 2. ^\s*...     : Fanger klasse-metoder, inkludert async, static, get, set
-        const functionRegex = /(?:^|\s)(?:export\s+)?(?:async\s+)?function\s+\w+|^\s*(?:static\s+|async\s+|get\s+|set\s+)?(?!if|for|while|switch|catch|return|await)\w+\s*\(.*?\)\s*\{/;
-        
-        const m = line.match(functionRegex);
-        
-        if (m) {
-          return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
-        }
-      }
-
-
-
+if (mode !== 'javascript') return null;
+const functionRegex = /(?:^|\s)(?:export\s+)?(?:async\s+)?function\s+\w+|^\s*(?:static\s+|async\s+|get\s+|set\s+)?(?!if|for|while|switch|catch|return|await)\w+\s*\(.*?\)\s*\{/;
+const m = line.match(functionRegex);
+if (m) {
+return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
+}
+}
 return null;
 };
 for (let i = currentLineIdx + 1; i < lines.length; i++) {
@@ -1477,32 +1447,29 @@ r.push(l[end.row].slice(0, end.col));
 return r.join('\n');
 }
 
-
 newFile() {
-    if (this.state.isDirty && !confirm("Discard changes?")) {
-      this.dom.editor.focus(); // Fiks: Gi fokus tilbake selv om vi avbryter
-      return;
-    }
-    this.state.lines = [""];
-    this.state.cursor = { row: 0, col: 0 };
-    this.state.selectionAnchor = null;
-    this.state.fileName = 'Untitled.txt';
-    this.state.fileHandle = null;
-    this.highlighter.analyze(this.state.lines);
-    this.setDirty(false);
-    this.history.undoStack = [];
-    this.finalizeUpdate();
-    this.setStatus("New File");
-    this.dom.editor.focus(); // Fiks: Gi fokus tilbake etter ny fil er opprettet
-  }
-
-
+if (this.state.isDirty && !confirm("Discard changes?")) {
+this.dom.editor.focus(); 
+return;
+}
+this.state.lines = [""];
+this.state.cursor = { row: 0, col: 0 };
+this.state.selectionAnchor = null;
+this.state.fileName = 'Untitled.txt';
+this.state.fileHandle = null;
+this.highlighter.analyze(this.state.lines);
+this.setDirty(false);
+this.history.undoStack = [];
+this.finalizeUpdate();
+this.setStatus("New File");
+this.dom.editor.focus(); 
+}
 
 previewFile() {
-    const win = window.open();
-    if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
-    this.dom.editor.focus(); // Fiks: Gi fokus tilbake etter at vinduet er åpnet
-  }
+const win = window.open();
+if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
+this.dom.editor.focus(); 
+}
 
 setDirty(dirty) {
 this.state.isDirty = dirty;
@@ -1517,56 +1484,53 @@ this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Mastod
 }
 
 async openFile() {
-    if (this.state.isDirty && !confirm("Discard changes?")) {
-      this.dom.editor.focus(); // Fiks
-      return;
-    }
-    try {
-      const [h] = await window.showOpenFilePicker();
-      const f = await h.getFile();
-      this.state.fileHandle = h;
-      this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
-      this.state.fileName = f.name;
-      this.state.cursor = { row: 0, col: 0 };
-      this.state.selectionAnchor = null;
-      this.highlighter.analyze(this.state.lines);
-      this.setDirty(false);
-      this.history.undoStack = [];
-      this.finalizeUpdate();
-      this.setStatus("Opened: " + f.name);
-    } catch (e) { 
-      // Ignorer feil (f.eks. bruker trykket avbryt)
-    } finally {
-      this.dom.editor.focus(); // Fiks: Denne kjøres ALLTID, uansett utfall
-    }
-  }
+if (this.state.isDirty && !confirm("Discard changes?")) {
+this.dom.editor.focus(); 
+return;
+}
+try {
+const [h] = await window.showOpenFilePicker();
+const f = await h.getFile();
+this.state.fileHandle = h;
+this.state.lines = (await f.text()).split(/\r\n|\n|\r/);
+this.state.fileName = f.name;
+this.state.cursor = { row: 0, col: 0 };
+this.state.selectionAnchor = null;
+this.highlighter.analyze(this.state.lines);
+this.setDirty(false);
+this.history.undoStack = [];
+this.finalizeUpdate();
+this.setStatus("Opened: " + f.name);
+} catch (e) { 
+} finally {
+this.dom.editor.focus(); 
+}
+}
 
 async saveFile() {
-    // Sjekk om vi må velge filnavn først
-    if (!this.state.fileHandle) {
-      try {
-        this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
-        this.state.fileName = this.state.fileHandle.name;
-      } catch (e) { 
-        this.dom.editor.focus(); // Fiks: Hvis bruker avbryter "Lagre som"-dialogen
-        return; 
-      }
-    }
-    // Lagre filen
-    try {
-      const w = await this.state.fileHandle.createWritable();
-      await w.write(this.state.lines.join('\n'));
-      await w.close();
-      this.setDirty(false);
-      this.setStatus("Saved!");
-    } catch (e) { 
-      this.setStatus("Save failed"); 
-    } finally {
-      this.dom.editor.focus(); // Fiks: Denne kjøres ALLTID
-    }
-  }
-  }
-  
+if (!this.state.fileHandle) {
+try {
+this.state.fileHandle = await window.showSaveFilePicker({ suggestedName: this.state.fileName });
+this.state.fileName = this.state.fileHandle.name;
+} catch (e) { 
+this.dom.editor.focus(); 
+return; 
+}
+}
+try {
+const w = await this.state.fileHandle.createWritable();
+await w.write(this.state.lines.join('\n'));
+await w.close();
+this.setDirty(false);
+this.setStatus("Saved!");
+} catch (e) { 
+this.setStatus("Save failed"); 
+} finally {
+this.dom.editor.focus(); 
+}
+}
+}
+
 window.onload = () => {
 window.editor = new EditorEngine();
 checkIntroModal();
