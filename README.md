@@ -1,4 +1,4 @@
-# 🕹️ Hub Johnny
+# 🕹️ Johnny Heggelund
 
 **Specializing in fast, single-file browser games & tools for PC users.**
 
