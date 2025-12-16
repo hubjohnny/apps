@@ -443,7 +443,9 @@ development (HTML/JS/CSS).
 <button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
 <button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Function</button>
 
+<button onclick="editor.removeComments()" title="Fjern kommentarer (Alt+R)" style="margin-left: 10px;">Rx Comm</button>
 <button onclick="editor.removeEmptyLines()" title="Fjern tomme linjer (Alt+E)" style="margin-left: 10px;">Rx Empty</button>
+
 
 </div>
 <span id="message-area">Mastodon Engine</span>
@@ -873,6 +875,145 @@ removeEmptyLines() {
 }
 
 
+
+
+removeComments() {
+    const lines = this.state.lines;
+    const newLines = [];
+    
+    // GLOBALE TILSTANDER
+    let inBackticks = false;
+    let inBlockComment = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        let builtLine = "";
+        
+        // LOKALE TILSTANDER
+        let inSingleQuote = false;
+        let inDoubleQuote = false;
+        let inRegex = false;      // NY: Er vi inni /.../ ?
+        let inRegexClass = false; // NY: Er vi inni [...] i en regex?
+        let charEscaped = false;
+        
+        // Vi må huske forrige "ekte" tegn for å gjette om / er regex eller dele
+        let lastRealChar = ''; 
+
+        for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            const nextChar = line[j + 1];
+
+            // 1. ESCAPE HÅNDTERING (\)
+            if (charEscaped) {
+                charEscaped = false;
+                if (!inBlockComment) builtLine += char;
+                // Oppdater lastRealChar hvis det ikke er whitespace
+                if (/\S/.test(char)) lastRealChar = char;
+                continue;
+            }
+            if (char === '\\') {
+                charEscaped = true;
+                if (!inBlockComment) builtLine += char;
+                continue;
+            }
+
+            // 2. SOKOBAN / BACKTICK VAKT
+            if (inBackticks) {
+                builtLine += char;
+                if (char === '`') inBackticks = false;
+                continue;
+            }
+
+            // 3. BLOKK-KOMMENTAR (/* ... */)
+            if (inBlockComment) {
+                if (char === '*' && nextChar === '/') {
+                    inBlockComment = false;
+                    j++; 
+                }
+                continue;
+            }
+
+            // 4. REGEX VAKT (NY!)
+            // Hvis vi er inni en regex, ignorerer vi ' og " og //
+            if (inRegex) {
+                builtLine += char;
+                
+                // Håndter tegn-klasser [ ... ] inni regex (fordi / inni [] ikke avslutter regex)
+                if (inRegexClass) {
+                    if (char === ']') inRegexClass = false;
+                } else {
+                    if (char === '[') inRegexClass = true;
+                    // Slutt på regex?
+                    else if (char === '/') {
+                        inRegex = false;
+                    }
+                }
+                // Oppdater lastRealChar
+                if (/\S/.test(char)) lastRealChar = char;
+                continue;
+            }
+
+            // 5. STRING VAKT (' og ")
+            if (!inSingleQuote && !inDoubleQuote) {
+                if (char === "'") { inSingleQuote = true; builtLine += char; continue; }
+                if (char === '"') { inDoubleQuote = true; builtLine += char; continue; }
+                if (char === '`') { inBackticks = true; builtLine += char; continue; }
+                
+                // --- SJEKK FOR / (Kommentar, Regex eller Dele?) ---
+                
+                if (char === '/') {
+                    // A) Start på Blokk-kommentar (/*)
+                    if (nextChar === '*') {
+                        inBlockComment = true;
+                        j++; 
+                        continue;
+                    }
+
+                    // B) Start på Linje-kommentar (//)
+                    if (nextChar === '/') {
+                        break; // Slett resten av linjen
+                    }
+
+                    // C) Start på REGEX? (/.../)
+                    // Vi gjetter at det er regex hvis forrige tegn var en "operator" eller start-parentes
+                    // Tegn som ofte kommer før regex: ( = , : ? [ { ! & | return
+                    const regexStarters = ['(', '=', ',', ':', '?', '[', '{', '!', '&', '|', 'return', 'case', 'throw'];
+                    
+                    // Sjekk om lastRealChar er en av dem, eller om vi er helt i starten av linjen
+                    // (Enkel sjekk på lastRealChar fungerer for symbolene. For nøkkelord som 'return' er det litt verre 
+                    // i denne enkle loopen, men vi dekker 99% ved å sjekke symbolene)
+                    if (regexStarters.includes(lastRealChar) || builtLine.trim().length === 0) {
+                        inRegex = true;
+                        builtLine += char;
+                        continue;
+                    }
+                }
+            } 
+            else {
+                // Vi er inni en string -> Sjekk slutt
+                if (inSingleQuote && char === "'") inSingleQuote = false;
+                if (inDoubleQuote && char === '"') inDoubleQuote = false;
+            }
+
+            // Legg til tegnet
+            builtLine += char;
+            
+            // Oppdater historikk for Regex-gjetting (hopp over mellomrom)
+            if (/\S/.test(char)) lastRealChar = char;
+        }
+
+        newLines.push(builtLine);
+    }
+
+    // Lagre
+    const newText = newLines.join('\n');
+    if (newText !== lines.join('\n')) {
+        this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+        this.setStatus("Kommentarer fjernet");
+    } else {
+        this.setStatus("Ingen kommentarer funnet");
+    }
+}
 
 
 
@@ -1762,6 +1903,7 @@ if (k === 'o') { e.preventDefault(); await this.openFile(); }
 if (k === 'n') { e.preventDefault(); this.newFile(); }
 if (k === 'p') { e.preventDefault(); this.previewFile(); }
 if (k === 'i') { e.preventDefault(); this.smartIndent(); }
+if (k === 'r') { e.preventDefault(); this.removeComments(); }
 if (k === 'e') { e.preventDefault(); this.removeEmptyLines(); }
 }
 }
