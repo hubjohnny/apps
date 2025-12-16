@@ -466,6 +466,7 @@ if (window.editor && window.editor.dom) {
 window.editor.dom.editor.focus();
 }
 }
+
 class SyntaxHighlighter {
 
 constructor() {
@@ -571,6 +572,7 @@ return `${bracket}<span class="token html-tag">${tag}</span>${styledAttrs}${clos
 return output;
 }
 }
+
 class HistoryManager {
 
 constructor(editor) {
@@ -620,6 +622,7 @@ this.editor.state.cursor = { ...op.cursorAfter };
 this.editor.finalizeUpdate();
 }
 }
+
 class SearchManager {
 
 constructor(editor) {
@@ -718,6 +721,7 @@ this.editor.setStatus("Nothing found");
 }
 }
 }
+
 class EditorEngine {
 
 constructor() {
@@ -853,7 +857,7 @@ return { start: { r, c: 0 }, end: { r, c: line.length }, select: false };
 }
 else if (type === 'function') {
 if (mode !== 'javascript') return null;
-const functionRegex = /(?:^|\s)(?:export\s+)?(?:async\s+)?function\s+\w+|^\s*(?:static\s+|async\s+|get\s+|set\s+)?(?!if|for|while|switch|catch|return|await)\w+\s*\(.*?\)\s*\{/;
+const functionRegex = /(?:^|\s)(?:export\s+)?(?:async\s+)?(?:function|class)\s+\w+|^\s*(?:static\s+|async\s+|get\s+|set\s+)?(?!if|for|while|switch|catch|return|await)\w+\s*\(.*?\)\s*\{/;
 const m = line.match(functionRegex);
 if (m) {
 return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
