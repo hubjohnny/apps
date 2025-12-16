@@ -10,7 +10,7 @@
   --text-color: #d4d4d4;
   --line-height: 24px;
   --font-size: 15px;
-  --font-family: 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
+  --font-family: 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', 'Segoe UI Emoji', 'Apple Color Emoji', monospace;
   --selection-bg: #264f78;
   --cursor-color: #aeafad;
   --line-num-bg: #1e1e1e;
@@ -57,6 +57,7 @@ body {
   min-width: 100%;
   pointer-events: none;
   will-change: transform;
+  z-index: 5;
 }
 .line {
   height: var(--line-height);
@@ -119,7 +120,7 @@ body {
   background-color: #6a9955;
   border-radius: 3px;
   opacity: 0.5;
-  z-index: 10;
+  z-index: 4;
   pointer-events: none;
 }
 .blink {
@@ -340,6 +341,26 @@ body {
 .token.keyword { color: #c586c0; }
 .token.function { color: #dcdcaa; }
 .token.trailing-space { background-color: rgba(255, 0, 0, 0.3); border-radius: 2px; }
+.token.emoji {
+  display: inline-block;
+  width: 2ch !important;
+  text-align: center;
+  vertical-align: middle;
+  box-sizing: content-box;
+}
+#measure-line {
+  position: absolute;
+  visibility: hidden;
+  height: auto;
+  width: auto;
+  white-space: pre;
+  font-family: 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace !important;
+  font-size: var(--font-size);
+  font-variant-ligatures: none;
+  letter-spacing: 0px;
+  padding-left: 0;
+  z-index: -100;
+}
 </style>
 </head>
 <body>
@@ -463,13 +484,15 @@ highlight(text, rowIndex) {
   if (!text) return '&nbsp;';
   const mode = (this.lineModes && this.lineModes[rowIndex]) ? this.lineModes[rowIndex] : 'html';
   let escaped = this.escapeHTML(text);
+  let result = '';
   if (mode === 'javascript') {
-    return this.highlightJS(escaped);
+    result = this.highlightJS(escaped);
   } else if (mode === 'css') {
-    return this.highlightCSS(escaped);
+    result = this.highlightCSS(escaped);
   } else {
-    return this.highlightHTMLLine(escaped);
+    result = this.highlightHTMLLine(escaped);
   }
+  return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g, '<span class="token emoji">$1</span>');
 }
 escapeHTML(str) {
   return str.replace(/&/g, '&amp;')
@@ -692,6 +715,10 @@ constructor() {
   this.init();
 }
 init() {
+  const measureLine = document.createElement('div');
+  measureLine.id = 'measure-line';
+  document.body.appendChild(measureLine);
+  this.dom.measureLine = measureLine;
   document.getElementById('find-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this.search.findNext();
     });
@@ -1235,9 +1262,13 @@ render() {
 }
 updateCursor() {
   const { row, col } = this.state.cursor;
-  const { lineHeight, charWidth, xOffset } = this.config;
+  const { lineHeight, xOffset } = this.config;
   const top = row * lineHeight;
-  const left = xOffset + (col * charWidth);
+  const currentLine = this.state.lines[row] || "";
+  const textUpToCursor = currentLine.substring(0, col);
+  this.dom.measureLine.textContent = textUpToCursor;
+  const measuredWidth = this.dom.measureLine.getBoundingClientRect().width;
+  const left = xOffset + measuredWidth;
   this.dom.cursor.style.top = `${top}px`;
   this.dom.cursor.style.left = `${left}px`;
   this.dom.cursor.classList.remove('blink');
@@ -1275,6 +1306,7 @@ recalculateLayout() {
   let needsUpdate = false;
   if (w > 0 && Math.abs(this.config.charWidth - w) > 0.0001) {
     this.config.charWidth = w;
+    document.documentElement.style.setProperty('--char-width', `${w}px`);
     needsUpdate = true;
   }
   if (h > 0 && Math.abs(this.config.lineHeight - h) > 0.0001) {
