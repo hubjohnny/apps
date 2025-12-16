@@ -351,15 +351,16 @@ body {
 <div id="statusbar">
   <span id="file-status">Untitled.txt</span>
   <div id="shortcuts">
-    <button onclick="editor.openFile()">Open</button>
-    <button onclick="editor.saveFile()">Save</button>
-    <button onclick="editor.newFile()" style="margin-right: 0;">New</button>
-    <button onclick="editor.previewFile()">Preview</button>
+    <button onclick="editor.openFile()" title="Open File (Alt+O)">Open</button>
+    <button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
+    <button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
+    <button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
     <span style="display:inline-block; width: 10px; margin-right: 10px; height: 16px; opacity: 0.5;"></span>
-    <button onclick="editor.cycleNext('comment')">↻ Comment</button>
-    <button onclick="editor.cycleNext('whitespace')">↻ Whitespace</button>
-    <button onclick="editor.cycleNext('empty')">↻ Empty Line</button>
-    <button onclick="editor.cycleNext('function')">↻ Function</button>
+    <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)">↻ Comment</button>
+    <button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Whitespace</button>
+    <button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
+    <button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Function</button>
+    <button onclick="editor.beautify()" title="Format code and fix indentation (Alt+B)" style="border-left: 1px solid #444; margin-left: 5px;">✨ Beautify</button>
   </div>
   <span id="message-area">Mastodon Engine</span>
 </div>
@@ -686,6 +687,57 @@ cycleNext(type) {
     }
     this.dom.editor.focus();
   }
+beautify() {
+  const originalText = this.state.lines.join('\n');
+  let lines = originalText.split('\n')
+  .map(l => l.trim())
+  .filter(l => l.length > 0);
+  const formattedLines = [];
+  let currentLevel = 0;
+  const indentUnit = '  ';
+  const voidTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype'];
+  const rootTags = ['html', 'head', 'body', 'script', 'style', '!doctype'];
+  lines.forEach((line) => {
+    let tagName = '';
+    const tagMatch = line.match(/^<\/?([a-zA-Z0-9-]+)/);
+    if (tagMatch) tagName = tagMatch[1].toLowerCase();
+    const isHtmlRoot = rootTags.includes(tagName);
+    const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(line);
+    const isMethodDef = /^\s*(async\s+)?(?!(if|for|while|switch|catch)\b)[a-zA-Z_$][\w$]*\s*\(.*?\)\s*\{/.test(line);
+      const isJsRoot = isStandardDef || isMethodDef;
+      if (isJsRoot || isHtmlRoot) {
+        currentLevel = 0;
+      }
+      const openBraces = (line.match(/\{/g) || []).length;
+        const closeBraces = (line.match(/\}/g) || []).length;
+      let openTags = 0;
+      let closeTags = 0;
+      if (/^<[a-zA-Z0-9-]+/.test(line) && !line.includes('</') && !line.endsWith('/>') && !voidTags.includes(tagName)) {
+        if (!isHtmlRoot) openTags = 1;
+      }
+      if (line.match(/^<\/[a-zA-Z0-9-]+/)) {
+        if (!isHtmlRoot) closeTags = 1;
+      }
+      let printLevel = currentLevel;
+      const startsWithClosing = line.match(/^(\}|\]|\)|\<\/)/);
+    const isContinuation = /^(else|catch|finally)/.test(line);
+    if (startsWithClosing || isContinuation) {
+      printLevel = Math.max(0, currentLevel - 1);
+    }
+    formattedLines.push(indentUnit.repeat(printLevel) + line);
+    const netChange = (openBraces - closeBraces) + (openTags - closeTags);
+    currentLevel = Math.max(0, currentLevel + netChange);
+  });
+  const newText = formattedLines.join('\n');
+  if (originalText !== newText) {
+    const lastRow = this.state.lines.length - 1;
+    const lastCol = this.state.lines[lastRow].length;
+    this.applyEditInternal(0, 0, lastRow, lastCol, newText, true);
+    this.setStatus("Code beautified ✨");
+  } else {
+    this.setStatus("Already clean ✨");
+  }
+}
 render() {
   const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
   const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
@@ -1076,22 +1128,38 @@ blockEdit(mod, sr = null, er = null) {
 async handleGlobalShortcuts(e) {
   const k = e.key.toLowerCase();
   const ctrl = e.ctrlKey || e.metaKey;
-  if (ctrl && k === 's') { e.preventDefault(); }
+  const alt = e.altKey;
   if (ctrl) {
-    if (k === 'z') { e.preventDefault(); e.shiftKey ? this.history.redo() : this.history.undo(); this.setStatus(e.shiftKey ? "Redo" : "Undo"); }
-    if (k === 'y') { e.preventDefault(); this.history.redo(); this.setStatus("Redo"); }
-    if (k === 's') { e.preventDefault(); await this.saveFile(); }
-    if (k === 'o') { e.preventDefault(); await this.openFile(); }
+    if (k === 'z') {
+      e.preventDefault();
+      e.shiftKey ? this.history.redo() : this.history.undo();
+      this.setStatus(e.shiftKey ? "Redo" : "Undo");
+    }
+    if (k === 'y') {
+      e.preventDefault();
+      this.history.redo();
+      this.setStatus("Redo");
+    }
     if (k === 'a') {
       e.preventDefault();
       this.state.selectionAnchor = { row: 0, col: 0 };
-      this.state.cursor = { row: this.state.lines.length - 1, col: this.state.lines[this.state.lines.length - 1].length };
+      this.state.cursor = {
+        row: this.state.lines.length - 1,
+        col: this.state.lines[this.state.lines.length - 1].length
+      };
       this.render();
     }
   }
-  if (e.altKey) {
+  if (alt) {
+    if (k === 's') { e.preventDefault(); await this.saveFile(); }
+    if (k === 'o') { e.preventDefault(); await this.openFile(); }
     if (k === 'n') { e.preventDefault(); this.newFile(); }
     if (k === 'p') { e.preventDefault(); this.previewFile(); }
+    if (k === 'c') { e.preventDefault(); this.cycleNext('comment'); }
+    if (k === 'w') { e.preventDefault(); this.cycleNext('whitespace'); }
+    if (k === 'l') { e.preventDefault(); this.cycleNext('empty'); }
+    if (k === '.') { e.preventDefault(); this.cycleNext('function'); }
+    if (k === 'b') { e.preventDefault(); this.beautify(); }
   }
 }
 getSelectionText() {
