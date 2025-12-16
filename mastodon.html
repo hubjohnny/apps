@@ -1066,12 +1066,38 @@ class EditorEngine {
     this.render();
   }
 
-  handleMouseMove(e) {
+handleMouseMove(e) {
     if (!this.state.isDragging) return;
     const p = this.getPosFromMouse(e);
     this.state.cursor = { ...p };
     this.state.desiredCol = p.col;
-    this.ensureCursorVisible();
+
+    // --- FIX START: Hindre hopping til venstre ---
+    const rect = this.dom.editor.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const edgeMargin = 50; // Hvor nærme kanten man må være for å scrolle
+
+    // Sjekk om musen er nær venstre eller høyre kant av editoren
+    const isNearEdge = mouseX < edgeMargin || mouseX > rect.width - edgeMargin;
+
+    if (isNearEdge) {
+      // Hvis vi drar mot kanten, bruk standard oppførsel (slik at man kan scrolle)
+      this.ensureCursorVisible();
+    } else {
+      // Hvis musen er trygt midt på skjermen, kun sørg for at vi scroller VERTIKALT.
+      // Vi ignorerer horisontal posisjon for å unngå "hoppet" til venstre.
+      const { row } = this.state.cursor;
+      const { lineHeight } = this.config;
+      const top = row * lineHeight;
+      const bottom = top + lineHeight;
+      const vH = this.state.viewportHeight;
+      const sT = this.dom.editor.scrollTop;
+
+      if (top < sT) this.dom.editor.scrollTop = top;
+      else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
+    }
+    // --- FIX END ---
+
     this.render();
   }
 
