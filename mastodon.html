@@ -360,9 +360,6 @@ body {
       <h3>Key Features:</h3>
       <ul>
         <li>
-          <strong>The "Beautify" Powerhouse:</strong> More than just formatting. It aggressively cleans your code by stripping all comments, removing empty lines, and trimming trailing whitespace, leaving you with a perfectly optimized production file.
-        </li>
-        <li>
           <strong>Unrivaled Performance:</strong> Engineered to handle massive files that choke standard editors. Capable of processing <strong>650,000+ lines</strong> on entry-level hardware, significantly faster than other well known editors in large single files.
         </li>
         <li>
@@ -405,8 +402,6 @@ body {
       <button onclick="editor.openFile()">Open</button>
       <button onclick="editor.saveFile()">Save</button>
       <button onclick="editor.newFile()" style="margin-right: 20px;">New</button>
-
-      <button onclick="editor.cleanCode()">Beautify</button>
       <button onclick="editor.previewFile()">Preview</button>
     </div>
 
@@ -1150,99 +1145,6 @@ handleMouseMove(e) {
     }
   }
 
-  cleanCode() {
-    this.setStatus("Cleaning code... (This may take a moment)");
-
-    setTimeout(() => {
-      try {
-        const originalText = this.state.lines.join('\n');
-        const stringStore = [];
-
-        const re = /(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|`[^`\\]*(?:\\.[^`\\]*)*`)/g;
-
-        const textSafe = originalText.replace(re, (match, block, line, str) => {
-          if (block || line) return '';
-
-          stringStore.push(match);
-          return `§STR${stringStore.length - 1}§`;
-        });
-
-        let lines = textSafe.split('\n');
-
-        while(lines.length > 0 && lines[0].trim() === '') lines.shift();
-        while(lines.length > 0 && lines[lines.length-1].trim() === '') lines.pop();
-
-        if (lines.length === 0) lines = [""];
-
-        const formattedLines = [];
-        let currentLevel = 0;
-        const indentUnit = '  ';
-
-        const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype']);
-        const rootTags = new Set(['html', 'head', 'body', 'script', 'style', '!doctype']);
-
-        for (let i = 0; i < lines.length; i++) {
-          const trimmedLine = lines[i].trim();
-
-          if (trimmedLine.length === 0) {
-            if (formattedLines.length > 0 && formattedLines[formattedLines.length-1] !== '') formattedLines.push('');
-            continue;
-          }
-
-          let tagName = '';
-          const tagMatch = trimmedLine.match(/^<\/?([a-zA-Z0-9-]+)/);
-          if (tagMatch) tagName = tagMatch[1].toLowerCase();
-
-          const isHtmlRoot = rootTags.has(tagName);
-          const isStandardDef = /^(export\s+)?(async\s+)?(function|class)\b/.test(trimmedLine);
-
-          const isJsRoot = isStandardDef || (trimmedLine.includes('function') && trimmedLine.endsWith('{'));
-
-          if (isJsRoot || isHtmlRoot) currentLevel = 0;
-
-          let openBraces = 0, closeBraces = 0;
-          for (const char of trimmedLine) {
-            if (char === '{') openBraces++;
-          else if (char === '}') closeBraces++;
-          }
-
-          let openTags = 0, closeTags = 0;
-          if (tagMatch && !trimmedLine.includes('</') && !trimmedLine.endsWith('/>') && !voidTags.has(tagName)) {
-            if (!isHtmlRoot && !trimmedLine.startsWith('</')) openTags = 1;
-          }
-          if (tagMatch && trimmedLine.startsWith('</')) {
-            if (!isHtmlRoot) closeTags = 1;
-          }
-
-          let printLevel = currentLevel;
-          if (trimmedLine.startsWith('}') || trimmedLine.startsWith(']') || trimmedLine.startsWith(')') || trimmedLine.startsWith('</') ||
-          trimmedLine.startsWith('else') || trimmedLine.startsWith('catch') || trimmedLine.startsWith('finally')) {
-            printLevel = Math.max(0, currentLevel - 1);
-          }
-
-          formattedLines.push(indentUnit.repeat(printLevel) + trimmedLine);
-          currentLevel = Math.max(0, currentLevel + (openBraces - closeBraces) + (openTags - closeTags));
-        }
-
-        let newText = formattedLines.join('\n');
-
-        newText = newText.replace(/§STR(\d+)§/g, (match, index) => {
-          return stringStore[parseInt(index)];
-        });
-
-        if (newText !== originalText) {
-          this.applyEditInternal(0, 0, this.state.lines.length - 1, this.state.lines[this.state.lines.length - 1].length, newText, true);
-          this.setStatus(`Code cleaned!`);
-        } else {
-          this.setStatus("Already clean!");
-        }
-      } catch (err) {
-        console.error(err);
-        this.setStatus("Error: " + err.message);
-      }
-    }, 50);
-  }
-
   async handleGlobalShortcuts(e) {
     const k = e.key.toLowerCase();
     const ctrl = e.ctrlKey || e.metaKey;
@@ -1262,7 +1164,6 @@ handleMouseMove(e) {
       }
     }
     if (e.altKey) {
-      if (k === 'b') { e.preventDefault(); this.cleanCode(); }
       if (k === 'n') { e.preventDefault(); this.newFile(); }
       if (k === 'p') { e.preventDefault(); this.previewFile(); }
     }
