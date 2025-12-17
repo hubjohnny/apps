@@ -1700,20 +1700,36 @@ tc = Math.min(tc, l[tr].length);
 c.row = tr; c.col = tc;
 this.ensureCursorVisible();
 }
-findWordBoundary(r, c, d) {
-const ln = this.state.lines[r];
+findWordBoundary(r, c, direction) {
+const line = this.state.lines[r];
+const len = line.length;
+const getCat = (char) => {
+if (!char) return 0;
+if (/\s/.test(char)) return 0;
+if (/[\w\d_$æøåÆØÅ]/.test(char)) return 1;
+return 2;
+};
 let i = c;
-if (d > 0) {
-if (i >= ln.length) return i;
-const type = /\w/.test(ln[i]);
-while (i < ln.length && /\w/.test(ln[i]) === type) i++;
+if (direction === 1) {
+if (i >= len) return len;
+while (i < len && getCat(line[i]) === 0) i++;
+if (i >= len) return len;
+const startCat = getCat(line[i]);
+while (i < len && getCat(line[i]) === startCat) {
+i++;
+}
+while (i < len && getCat(line[i]) === 0) i++;
+return i;
 } else {
 if (i <= 0) return 0;
 i--;
-const type = /\w/.test(ln[i]);
-while (i > 0 && /\w/.test(ln[i - 1]) === type) i--;
+while (i > 0 && getCat(line[i]) === 0) i--;
+const startCat = getCat(line[i]);
+while (i > 0 && getCat(line[i - 1]) === startCat) {
+i--;
 }
 return i;
+}
 }
 handlePaste(e) {
 e.preventDefault();
