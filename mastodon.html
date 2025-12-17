@@ -1473,22 +1473,24 @@ if (this.state.selectionAnchor) {
 this.applyChange("");
 }
 else if (c.col > 0) {
+let deleteCount = 1;
+if (c.col >= 2) {
+const high = currentLine.charCodeAt(c.col - 2);
+const low = currentLine.charCodeAt(c.col - 1);
+if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+deleteCount = 2;
+}
+}
 const lineStart = currentLine.slice(0, c.col);
 const indentUnit = '  ';
-if (lineStart.trim() === '' && c.col % indentUnit.length === 0) {
+if (deleteCount === 1 && lineStart.trim() === '' && c.col % indentUnit.length === 0) {
 this.state.selectionAnchor = { row: c.row, col: c.col - indentUnit.length };
+this.applyChange("");
 }
 else {
-let backAmt = 1;
-if (c.col >= 2) {
-const lastTwo = currentLine.substring(c.col - 2, c.col);
-if (/[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(lastTwo)) {
-backAmt = 2;
-}
-}
-this.state.selectionAnchor = { row: c.row, col: c.col - backAmt };
-}
+this.state.selectionAnchor = { row: c.row, col: c.col - deleteCount };
 this.applyChange("");
+}
 }
 else if (c.row > 0) {
 const prevLineLength = lines[c.row - 1].length;
@@ -1554,15 +1556,18 @@ if (wordJump) {
 tc = this.findWordBoundary(tr, tc, -1);
 }
 else if (tc > 0) {
-let isEmoji = false;
-if (tc >= 2) {
+let step = 1;
+if (tc >= 2 && lineText.charCodeAt(tc - 1) === 0xFE0F) {
+step = 2;
+}
+else if (tc >= 2) {
 const high = lineText.charCodeAt(tc - 2);
 const low = lineText.charCodeAt(tc - 1);
 if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
-isEmoji = true;
+step = 2;
 }
 }
-tc -= isEmoji ? 2 : 1;
+tc -= step;
 }
 else if (tr > 0) {
 tr--; tc = l[tr].length;
@@ -1574,8 +1579,17 @@ if (wordJump) {
 tc = this.findWordBoundary(tr, tc, 1);
 }
 else if (tc < lineText.length) {
+let step = 1;
 const cp = lineText.codePointAt(tc);
-tc += (cp > 0xFFFF) ? 2 : 1;
+if (cp > 0xFFFF) {
+step = 2;
+}
+if (step === 1 && tc + 1 < lineText.length) {
+if (lineText.charCodeAt(tc + 1) === 0xFE0F) {
+step = 2;
+}
+}
+tc += step;
 }
 else if (tr < l.length - 1) {
 tr++; tc = 0;
