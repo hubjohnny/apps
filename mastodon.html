@@ -814,6 +814,7 @@ this.ticking = false;
 this.init();
 }
 init() {
+this.setupDragAndDrop();
 const measureLine = document.createElement('div');
 measureLine.id = 'measure-line';
 document.body.appendChild(measureLine);
@@ -1981,6 +1982,45 @@ this.setStatus("Save failed");
 } finally {
 this.dom.editor.focus();
 }
+}
+setupDragAndDrop() {
+const dropZone = document.body;
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+dropZone.addEventListener(eventName, (e) => {
+e.preventDefault();
+e.stopPropagation();
+});
+});
+dropZone.addEventListener('dragover', () => dropZone.style.opacity = '0.7');
+dropZone.addEventListener('dragleave', () => dropZone.style.opacity = '1');
+dropZone.addEventListener('drop', () => dropZone.style.opacity = '1');
+dropZone.addEventListener('drop', (e) => {
+const files = e.dataTransfer.files;
+if (files && files.length > 0) {
+this.handleDroppedFile(files[0]);
+}
+});
+}
+handleDroppedFile(file) {
+if (this.state.lines.length > 1 || this.state.lines[0].length > 0) {
+if (!confirm(`Vil du åpne "${file.name}"?\n\nEventuelle ulagrede endringer i nåværende fil vil bli overskrevet.`)) {
+return;
+}
+}
+const reader = new FileReader();
+reader.onload = (e) => {
+const content = e.target.result;
+this.state.lines = content.replace(/\r\n/g, '\n').split('\n');
+this.state.cursor = { row: 0, col: 0 };
+this.state.selectionAnchor = null;
+this.state.scrollOffset = { x: 0, y: 0 };
+this.highlighter.analyze(this.state.lines);
+this.finalizeUpdate();
+this.setStatus(`Opened ${file.name}`);
+const statusEl = document.getElementById('file-status');
+if (statusEl) statusEl.textContent = file.name;
+};
+reader.readAsText(file);
 }
 saveSession() {
 const data = {
