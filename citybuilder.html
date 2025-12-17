@@ -593,6 +593,9 @@ transform-origin: center;
 <button id="city-log-btn" class="action-btn" title="City Log">📖 Log</button>
 <button id="economy-btn" class="action-btn" title="Economy">📊 Economy</button>
 <button id="how-to-play-btn" class="action-btn" title="Help">❓ Help</button>
+<button id="export-btn" class="action-btn" style="background-color: #009688; border-color: #00796b;" title="Export Save File">📤 Export</button>
+<button id="import-btn" class="action-btn" style="background-color: #009688; border-color: #00796b;" title="Import Save File">📥 Import</button>
+<input type="file" id="import-input" accept=".json" style="display: none;">
 <button id="new-game-btn" class="action-btn" title="Start a New City">✨ New Game</button>
 </div>
 </div>
@@ -1848,6 +1851,78 @@ function initGameManagerElements() {
 saveBtn = document.getElementById('save-btn');
 newGameBtn = document.getElementById('new-game-btn');
 }
+function exportGame() {
+try {
+const pollutionData = Array.from(pollutionGrid);
+const dataToSave = {
+world: world,
+pollutionGrid: pollutionData,
+budget: gameState.budget,
+population: gameState.population,
+year: gameState.year,
+isGameOver: gameState.isGameOver,
+gameLog: gameState.gameLog,
+taxRate: gameState.taxRate,
+};
+const json = JSON.stringify(dataToSave);
+const blob = new Blob([json], { type: "application/json" });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `City_Year${gameState.year}_Pop${gameState.population}.json`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+showTickerMessage("📤 City exported successfully!");
+} catch (e) {
+console.error(e);
+alert("Failed to export game.");
+}
+}
+function importGame() {
+document.getElementById('import-input').click();
+}
+function handleFileSelect(e) {
+const file = e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = function(event) {
+try {
+const data = JSON.parse(event.target.result);
+if (!data.world || !data.budget) {
+alert("Invalid save file!");
+return;
+}
+if (confirm("Warning: Importing a city will overwrite your current city. Continue?")) {
+world = data.world;
+if (data.pollutionGrid) pollutionGrid = new Uint8Array(data.pollutionGrid);
+gameState.budget = data.budget;
+gameState.population = data.population;
+gameState.year = data.year;
+gameState.isGameOver = data.isGameOver;
+gameState.gameLog = data.gameLog || [];
+gameState.taxRate = data.taxRate || 0.7;
+industrialZones = [];
+world.forEach((cell, index) => {
+if (cell.building?.type === 'industry') {
+industrialZones.push(index);
+}
+});
+distributePower();
+updateStatsPanel(gameState);
+updateMinimap();
+updateIncomeExpense(0, 0);
+showTickerMessage("📥 City imported successfully!");
+}
+} catch (err) {
+console.error(err);
+alert("Error reading save file.");
+}
+e.target.value = '';
+};
+reader.readAsText(file);
+}
 function init() {
 initCanvas();
 initUIElements();
@@ -2136,6 +2211,12 @@ modal.style.display = 'none';
 }
 });
 });
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const importInput = document.getElementById('import-input');
+if (exportBtn) exportBtn.addEventListener('click', exportGame);
+if (importBtn) importBtn.addEventListener('click', importGame);
+if (importInput) importInput.addEventListener('change', handleFileSelect);
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
