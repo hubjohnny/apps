@@ -715,6 +715,7 @@ messageArea: document.getElementById('message-area')
 this.history = new HistoryManager(this);
 this.search = new SearchManager(this);
 this.highlighter = new SyntaxHighlighter();
+this.ticking = false;
 this.init();
 }
 init() {
@@ -1260,15 +1261,19 @@ needsUpdate = true;
 if (needsUpdate) this.finalizeUpdate();
 }
 onScroll() {
-const currentLeft = this.dom.editor.scrollLeft;
-if (currentLeft > 0 && currentLeft < 6) {
-this.dom.editor.scrollLeft = 0;
-return;
-}
-this.state.scrollTop = this.dom.editor.scrollTop;
-clearTimeout(this.scrollTimeout);
-this.scrollTimeout = setTimeout(() => this.render(), 16);
-this.render();
+    const currentLeft = this.dom.editor.scrollLeft;
+    if (currentLeft > 0 && currentLeft < 6) {
+        this.dom.editor.scrollLeft = 0;
+        return;
+    }
+    this.state.scrollTop = this.dom.editor.scrollTop;
+    if (!this.ticking) {
+        window.requestAnimationFrame(() => {
+            this.render();
+            this.ticking = false;
+        });
+        this.ticking = true;
+    }
 }
 applyChange(txt) {
 const { cursor, selectionAnchor } = this.state;
