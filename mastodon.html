@@ -350,17 +350,24 @@ transform: translateY(0);
 .token.function { color: #dcdcaa; }
 .token.trailing-space { background-color: rgba(255, 0, 0, 0.3); border-radius: 2px; }
 .token.emoji {
-display: inline-block;
+display: inline-flex;
+justify-content: center;
+align-items: center;
+vertical-align: middle;
 width: calc(var(--char-width) * 2) !important;
-text-align: center;
-vertical-align: baseline;
-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif !important;
-font-variant-ligatures: none;
-line-height: var(--line-height);
+max-width: calc(var(--char-width) * 2) !important;
 height: var(--line-height);
+font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif !important;
+font-size: 0.85em;
+letter-spacing: 0;
+overflow: hidden;
 margin: 0;
 padding: 0;
-overflow: visible;
+box-sizing: border-box;
+line-height: 1;
+text-decoration: none;
+border: none;
+outline: none;
 }
 #measure-line {
 position: absolute;
@@ -444,7 +451,7 @@ development (HTML/JS/CSS).
 <button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
 <button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
 <button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
-<button onclick="editor.smartIndent()" title="Flatten Code (Alt+I)" style="margin-left: 10px;">⮜BOOM</button>
+<button onclick="editor.smartIndent()" title="Flatten Code (Alt+I)" style="margin-left: 10px;">BOOM</button>
 <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comment</button>
 <button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Whitespace</button>
 <button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty Line</button>
