@@ -350,21 +350,26 @@ transform: translateY(0);
 .token.function { color: #dcdcaa; }
 .token.trailing-space { background-color: rgba(255, 0, 0, 0.3); border-radius: 2px; }
 .token.emoji {
-display: inline-flex;
+display: inline-block;
 width: calc(var(--char-width) * 2) !important;
 height: var(--line-height);
+vertical-align: top;
+color: transparent;
 overflow: hidden;
-justify-content: center;
-align-items: center;
-vertical-align: middle;
-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
-font-size: 0.8em;
-line-height: 1;
-margin-top: -2px;
 position: relative;
-border: none;
-outline: none;
-background: transparent;
+}
+.token.emoji::after {
+content: attr(data-emoji);
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translate(-50%, -42%);
+color: var(--text-color);
+font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+font-size: 0.85em;
+line-height: 1;
+white-space: nowrap;
+pointer-events: none;
 }
 #measure-line {
 position: absolute;
@@ -402,7 +407,7 @@ background: transparent;
 <div id="intro-modal" class="modal-overlay">
 <div class="modal-box">
 <div class="modal-header">
-<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.3
+<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.4
 </div>
 <div class="modal-body">
 <p>You are now using a specialized code editor tailored for building and optimizing
@@ -528,7 +533,8 @@ result = this.highlightCSS(escaped);
 } else {
 result = this.highlightHTMLLine(escaped);
 }
-return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g, '<span class="token emoji">$1</span>');
+return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g,
+'<span class="token emoji" data-emoji="$1">$1</span>');
 }
 escapeHTML(str) {
 return str.replace(/&/g, '&amp;')
