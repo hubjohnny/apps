@@ -9,7 +9,7 @@ I build high-performance, lightweight web applications using vanilla HTML, CSS, 
 ### Access Games & Tools
 Visit my personal "App Store" to browse all 50+ applications, including the **Mastodon Engine** code editor:
 
-## 👉 [hubjohnny.github.io](https://hubjohnny.github.io/)
+## [hubjohnny.github.io](https://hubjohnny.github.io/)
 
 ---
 
