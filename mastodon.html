@@ -350,24 +350,18 @@ transform: translateY(0);
 .token.function { color: #dcdcaa; }
 .token.trailing-space { background-color: rgba(255, 0, 0, 0.3); border-radius: 2px; }
 .token.emoji {
-display: inline-flex;
-justify-content: center;
-align-items: center;
-vertical-align: middle;
-width: calc(var(--char-width) * 2) !important;
-max-width: calc(var(--char-width) * 2) !important;
-height: var(--line-height);
-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif !important;
-font-size: 0.85em;
-letter-spacing: 0;
-overflow: hidden;
-margin: 0;
-padding: 0;
-box-sizing: border-box;
+display: inline-block;
+width: calc(var(--char-width) * 2);
+text-align: center;
+vertical-align: baseline;
+font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif !important;
+font-size: 0.9em;
 line-height: 1;
+font-style: normal;
+font-weight: normal;
 text-decoration: none;
-border: none;
-outline: none;
+position: relative;
+top: 0.05em;
 }
 #measure-line {
 position: absolute;
@@ -531,7 +525,10 @@ result = this.highlightCSS(escaped);
 } else {
 result = this.highlightHTMLLine(escaped);
 }
-return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g, '<span class="token emoji">$1</span>');
+const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\u200D(?:\p{Emoji_Presentation}|\p{Extended_Pictographic})|\uFE0F)*/gu;
+return result.replace(emojiRegex, (match) => {
+return `<span class="token emoji">${match}</span>`;
+});
 }
 escapeHTML(str) {
 return str.replace(/&/g, '&amp;')
