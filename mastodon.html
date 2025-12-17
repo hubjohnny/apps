@@ -407,7 +407,7 @@ background: transparent;
 <div id="intro-modal" class="modal-overlay">
 <div class="modal-box">
 <div class="modal-header">
-<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.4
+<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.5
 </div>
 <div class="modal-body">
 <p>You are now using a specialized code editor tailored for building and optimizing
@@ -422,7 +422,7 @@ Capable of processing <strong>650,000+ lines</strong> on entry-level hardware.
 <strong>Syntax Highlighting:</strong> Custom-built highlighting specifically tuned for mixed-mode
 development (HTML/JS/CSS).
 </li>
-<p>&copy; 2025 Johnny Heggelund</p>
+<p>&copy; 2025 <a href="https://hubjohnny.github.io/" style="color: cornflowerblue; text-decoration: none;">Johnny Heggelund</a></p>
 </ul>
 </div>
 <div class="modal-footer">
@@ -1263,8 +1263,14 @@ const { row, col } = this.state.cursor;
 const { lineHeight, xOffset } = this.config;
 const top = row * lineHeight;
 const currentLine = this.state.lines[row] || "";
-const textUpToCursor = currentLine.substring(0, col);
-this.dom.measureLine.textContent = textUpToCursor;
+let textUpToCursor = currentLine.substring(0, col);
+textUpToCursor = textUpToCursor
+.replace(/&/g, '&amp;')
+.replace(/</g, '&lt;')
+.replace(/>/g, '&gt;');
+textUpToCursor = textUpToCursor.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g,
+'<span class="token emoji">$1</span>');
+this.dom.measureLine.innerHTML = textUpToCursor;
 const measuredWidth = this.dom.measureLine.getBoundingClientRect().width;
 const left = xOffset + measuredWidth;
 this.dom.cursor.style.top = `${top}px`;
