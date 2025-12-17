@@ -351,17 +351,14 @@ transform: translateY(0);
 .token.trailing-space { background-color: rgba(255, 0, 0, 0.3); border-radius: 2px; }
 .token.emoji {
 display: inline-block;
-width: calc(var(--char-width) * 2);
+vertical-align: text-bottom;
+width: calc(var(--char-width) * 2) !important;
+height: var(--line-height);
+overflow: hidden;
 text-align: center;
-vertical-align: baseline;
-font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif !important;
-font-size: 0.9em;
-line-height: 1;
-font-style: normal;
-font-weight: normal;
-text-decoration: none;
-position: relative;
-top: 0.05em;
+font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+font-size: 0.85em;
+line-height: 1.3;
 }
 #measure-line {
 position: absolute;
@@ -525,10 +522,7 @@ result = this.highlightCSS(escaped);
 } else {
 result = this.highlightHTMLLine(escaped);
 }
-const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\u200D(?:\p{Emoji_Presentation}|\p{Extended_Pictographic})|\uFE0F)*/gu;
-return result.replace(emojiRegex, (match) => {
-return `<span class="token emoji">${match}</span>`;
-});
+return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g, '<span class="token emoji">$1</span>');
 }
 escapeHTML(str) {
 return str.replace(/&/g, '&amp;')
