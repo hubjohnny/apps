@@ -487,6 +487,7 @@ development (HTML/JS/CSS).
 </div>
 <div id="toolbar-right">
 <button id="color-btn" onclick="toggleColorPicker()" title="Color Picker">🎨</button>
+<button onclick="editor.previewFile()" title="Preview (Alt+P)">👁️</button>
 </div>
 <div id="color-picker" class="color-popup" style="display: none;">
 <div id="color-grid"></div>
@@ -501,10 +502,9 @@ development (HTML/JS/CSS).
 <div id="statusbar">
 <span id="file-status">Untitled.txt</span>
 <div id="shortcuts">
-<button onclick="editor.openFile()" title="Open File (Alt+O)">Open</button>
-<button onclick="editor.saveFile()" title="Save File (Alt+S)">Save</button>
-<button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">New</button>
-<button onclick="editor.previewFile()" title="Preview in new tab (Alt+P)">Preview</button>
+<button onclick="editor.openFile()" title="Open File (Alt+O)">📂</button>
+<button onclick="editor.saveFile()" title="Save File (Alt+S)">💾</button>
+<button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">📄</button>
 <button onclick="editor.smartIndent()" title="Flatten Code (Alt+I)" style="margin-left: 10px;">BOOM</button>
 <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comment</button>
 <button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Whitespace</button>
