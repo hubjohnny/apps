@@ -596,15 +596,17 @@ this.lastQuery = "";
 }
 find(query) {
 if (!query) return;
-if (query === this.lastQuery && this.matches.length > 0) return;
+if (query.toLowerCase() === this.lastQuery.toLowerCase() && this.matches.length > 0) return;
 this.matches = [];
 const lines = this.editor.state.lines;
+const lowerQuery = query.toLowerCase();
 for (let r = 0; r < lines.length; r++) {
 const line = lines[r];
-let pos = line.indexOf(query);
+const lowerLine = line.toLowerCase();
+let pos = lowerLine.indexOf(lowerQuery);
 while (pos !== -1) {
 this.matches.push({ row: r, col: pos, len: query.length });
-pos = line.indexOf(query, pos + 1);
+pos = lowerLine.indexOf(lowerQuery, pos + 1);
 }
 }
 this.lastQuery = query;
@@ -722,6 +724,17 @@ document.body.appendChild(measureLine);
 this.dom.measureLine = measureLine;
 document.getElementById('find-input').addEventListener('keydown', (e) => {
 if (e.key === 'Enter') this.search.findNext();
+if (e.key === 'Escape') {
+e.preventDefault();
+this.dom.editor.focus();
+}
+});
+document.getElementById('replace-input').addEventListener('keydown', (e) => {
+if (e.key === 'Enter') this.search.replace();
+if (e.key === 'Escape') {
+e.preventDefault();
+this.dom.editor.focus();
+}
 });
 this.state.viewportHeight = this.dom.editor.clientHeight;
 document.fonts.ready.then(() => {
