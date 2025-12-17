@@ -24,5 +24,3 @@ While the source code is publicly viewable for educational and portfolio purpose
 * Host these files on other servers or platforms without explicit written consent.
 
 The tools and games are provided free for personal use via the website only.
-
----
