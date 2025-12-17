@@ -195,14 +195,20 @@ const duration = parseFloat(document.getElementById('duration').value) || 3;
 const offset = parseFloat(document.getElementById('offset').value) || 0;
 const fps = parseInt(document.getElementById('fps').value) || 10;
 const quality = parseInt(document.getElementById('quality').value) || 10;
-statusDiv.innerText = "Processing... Please wait.";
+statusDiv.innerText = "Analyzing video dimensions...";
 convertBtn.disabled = true;
+const tempVideo = document.createElement('video');
+tempVideo.src = videoUrl;
+tempVideo.onloadedmetadata = function() {
+const aspectRatio = tempVideo.videoHeight / tempVideo.videoWidth;
+const calculatedHeight = Math.round(width * aspectRatio);
+statusDiv.innerText = "Processing... Please wait.";
 convertBtn.innerText = "Working...";
 resultArea.innerHTML = '';
 gifshot.createGIF({
 'video': [videoUrl],
 'gifWidth': width,
-'gifHeight': (width * 0.5625),
+'gifHeight': calculatedHeight,
 'interval': 1 / fps,
 'numFrames': duration * fps,
 'offset': offset,
@@ -215,7 +221,7 @@ const animatedImage = document.createElement('img');
 animatedImage.src = image;
 const link = document.createElement('a');
 link.href = image;
-link.download = `animation_${width}px.gif`;
+link.download = `animation_${width}x${calculatedHeight}.gif`;
 link.innerText = "Download GIF";
 link.className = "download-link";
 resultArea.appendChild(animatedImage);
@@ -228,6 +234,7 @@ statusDiv.innerText = "Error: " + obj.errorCode;
 convertBtn.disabled = false;
 convertBtn.innerText = "Create GIF";
 });
+};
 });
 </script>
 </body>
