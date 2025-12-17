@@ -11,8 +11,8 @@ Visit my personal "App Store" to browse all 50+ applications, including the **Ma
 
 ## [hubjohnny.github.io](https://hubjohnny.github.io/)
 
----
 
+---
 ### Legal Notice & Copyright
 **© 2025 Johnny Heggelund. All Rights Reserved.**
 
