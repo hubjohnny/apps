@@ -450,7 +450,7 @@ border-radius: 4px;
 <div id="intro-modal" class="modal-overlay">
 <div class="modal-box">
 <div class="modal-header">
-<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.6
+<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.7.5
 </div>
 <div class="modal-body">
 <p>You are now using a specialized code editor tailored for building and optimizing
@@ -853,6 +853,7 @@ this.recalculateLayout();
 });
 document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
 this.dom.editor.focus();
+this.restoreSession();
 this.highlighter.analyze(this.state.lines);
 this.finalizeUpdate();
 }
@@ -1348,6 +1349,7 @@ this.validateCursorPosition();
 this.updateDimensions();
 this.ensureCursorVisible();
 this.render();
+this.saveSession();
 }
 recalculateLayout() {
 const t = document.createElement('div');
@@ -1979,6 +1981,41 @@ this.setStatus("Save failed");
 } finally {
 this.dom.editor.focus();
 }
+}
+saveSession() {
+const data = {
+content: this.state.lines.join('\n'),
+timestamp: new Date().toLocaleString()
+};
+localStorage.setItem('mastodon_autosave', JSON.stringify(data));
+}
+restoreSession() {
+const raw = localStorage.getItem('mastodon_autosave');
+if (raw) {
+try {
+const data = JSON.parse(raw);
+const savedContent = data.content;
+const savedTime = data.timestamp;
+if (savedContent && savedContent.length > 20) {
+const msg = "🛡️ UNSAVED DRAFT FOUND\n" +
+"We found an unsaved session stored locally on THIS device from:\n" +
+"🕒 " + savedTime + "\n\n" +
+"WARNING: If you have worked on this file on another computer recently, this local draft might be outdated.\n\n" +
+"• Click OK to restore this draft.\n" +
+"• Click Cancel to delete it and start fresh.";
+if (confirm(msg)) {
+this.state.lines = savedContent.split('\n');
+this.highlighter.analyze(this.state.lines);
+this.finalizeUpdate();
+this.setStatus("Session restored from " + savedTime);
+return;
+}
+}
+} catch (e) {
+console.error("Autosave error", e);
+}
+}
+localStorage.removeItem('mastodon_autosave');
 }
 }
 const colorPalette = [
