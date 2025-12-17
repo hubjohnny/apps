@@ -25,6 +25,7 @@
 --c-attr: #9cdcfe;
 --c-selector: #d7ba7d;
 --c-property: #9cdcfe;
+--char-width: 9px;
 }
 body {
 margin: 0;
@@ -343,7 +344,7 @@ transform: translateY(0);
 .token.trailing-space { background-color: rgba(255, 0, 0, 0.3); border-radius: 2px; }
 .token.emoji {
 display: inline-block;
-width: 2ch !important;
+width: calc(var(--char-width) * 2) !important;
 text-align: center;
 vertical-align: middle;
 box-sizing: content-box;
