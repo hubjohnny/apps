@@ -487,6 +487,7 @@ development (HTML/JS/CSS).
 </div>
 <div id="toolbar-right">
 <button onclick="window.open(window.location.href, '_blank')" title="Open new editor instance">➕</button>
+<button onclick="editor.insertSkeleton()" title="Insert HTML5 Template">🧩</button>
 <button id="color-btn" onclick="toggleColorPicker()" title="Color Picker">🎨</button>
 <button onclick="editor.previewFile()" title="Preview (Alt+P)">👁️</button>
 </div>
@@ -1928,6 +1929,48 @@ this.dom.editor.focus();
 previewFile() {
 const win = window.open();
 if (win) { win.document.write(this.state.lines.join('\n')); win.document.close(); }
+this.dom.editor.focus();
+}
+insertSkeleton() {
+if (this.state.lines.length > 1 || (this.state.lines.length === 1 && this.state.lines[0].trim() !== "")) {
+if (!confirm("This will insert a template at your cursor position. Continue?")) return;
+}
+const template = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Built with Mastodon Engine">
+  <title>New App</title>
+  <style>
+    :root {
+      --bg: #1e1e1e;
+      --text: #d4d4d4;
+      --accent: #007acc;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      box-sizing: border-box;
+    }
+    h1 { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>Hello World 🧩</h1>
+  <p>Start building your single-file app here.</p>
+
+  <script>
+    "use strict";
+    console.log("App loaded successfully!");
+  <\/script>
+</body>
+</html>`;
+this.applyChange(template);
+this.setStatus("Template inserted");
 this.dom.editor.focus();
 }
 setDirty(dirty) {
