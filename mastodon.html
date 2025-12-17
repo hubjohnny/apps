@@ -778,6 +778,19 @@ this.dom.editor.focus();
 this.highlighter.analyze(this.state.lines);
 this.finalizeUpdate();
 }
+validateCursorPosition() {
+const { row, col } = this.state.cursor;
+const line = this.state.lines[row];
+if (!line) return;
+if (col > 0 && col < line.length) {
+const high = line.charCodeAt(col - 1);
+const low = line.charCodeAt(col);
+if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+this.state.cursor.col += 1;
+this.state.desiredCol = this.state.cursor.col;
+}
+}
+}
 removeEmptyLines() {
 const lines = this.state.lines;
 const newLines = [];
@@ -1247,6 +1260,7 @@ this.dom.phantom.style.width = `${width}px`;
 this.dom.viewport.style.width = `${width}px`;
 }
 finalizeUpdate() {
+this.validateCursorPosition();
 this.updateDimensions();
 this.ensureCursorVisible();
 this.render();
