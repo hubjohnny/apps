@@ -361,6 +361,23 @@ letter-spacing: 0px;
 padding-left: 0;
 z-index: -100;
 }
+::-webkit-scrollbar {
+width: 8px;
+height: 8px;
+}
+::-webkit-scrollbar-track {
+background: transparent;
+}
+::-webkit-scrollbar-thumb {
+background-color: #424242;
+border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+background-color: #5a5a5a;
+}
+::-webkit-scrollbar-corner {
+background: transparent;
+}
 </style>
 </head>
 <body>
@@ -1220,13 +1237,13 @@ clearTimeout(this.blinkTimeout);
 this.blinkTimeout = setTimeout(() => this.dom.cursor.classList.add('blink'), 500);
 }
 updateDimensions() {
-const { lines, viewportHeight } = this.state;
+const { lines } = this.state;
 const { lineHeight, charWidth, xOffset } = this.config;
 const height = (lines.length + 5) * lineHeight;
 const maxLen = lines.reduce((max, line) => Math.max(max, line.length), 0);
 const width = xOffset + ((maxLen + 5) * charWidth);
-this.dom.phantom.style.height = `${Math.max(height, viewportHeight)}px`;
-this.dom.phantom.style.width = `${Math.max(width, window.innerWidth)}px`;
+this.dom.phantom.style.height = `${height}px`;
+this.dom.phantom.style.width = `${width}px`;
 this.dom.viewport.style.width = `${width}px`;
 }
 finalizeUpdate() {
@@ -1261,19 +1278,19 @@ needsUpdate = true;
 if (needsUpdate) this.finalizeUpdate();
 }
 onScroll() {
-    const currentLeft = this.dom.editor.scrollLeft;
-    if (currentLeft > 0 && currentLeft < 6) {
-        this.dom.editor.scrollLeft = 0;
-        return;
-    }
-    this.state.scrollTop = this.dom.editor.scrollTop;
-    if (!this.ticking) {
-        window.requestAnimationFrame(() => {
-            this.render();
-            this.ticking = false;
-        });
-        this.ticking = true;
-    }
+const currentLeft = this.dom.editor.scrollLeft;
+if (currentLeft > 0 && currentLeft < 6) {
+this.dom.editor.scrollLeft = 0;
+return;
+}
+this.state.scrollTop = this.dom.editor.scrollTop;
+if (!this.ticking) {
+window.requestAnimationFrame(() => {
+this.render();
+this.ticking = false;
+});
+this.ticking = true;
+}
 }
 applyChange(txt) {
 const { cursor, selectionAnchor } = this.state;
@@ -1689,7 +1706,7 @@ const r = this.dom.editor.getBoundingClientRect();
 const x = e.clientX - r.left + this.dom.editor.scrollLeft;
 const y = e.clientY - r.top + this.dom.editor.scrollTop;
 let row = Math.floor(y / this.config.lineHeight);
-let col = Math.round((x - this.config.xOffset) / this.config.charWidth);
+let col = Math.floor(((x - this.config.xOffset) / this.config.charWidth) + 0.25);
 row = Math.max(0, Math.min(row, this.state.lines.length - 1));
 const line = this.state.lines[row];
 col = Math.max(0, Math.min(col, line.length));
