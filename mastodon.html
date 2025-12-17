@@ -350,26 +350,21 @@ transform: translateY(0);
 .token.function { color: #dcdcaa; }
 .token.trailing-space { background-color: rgba(255, 0, 0, 0.3); border-radius: 2px; }
 .token.emoji {
-display: inline-block;
+display: inline-flex;
 width: calc(var(--char-width) * 2) !important;
 height: var(--line-height);
-vertical-align: top;
-color: transparent;
 overflow: hidden;
-position: relative;
-}
-.token.emoji::after {
-content: attr(data-emoji);
-position: absolute;
-left: 50%;
-top: 50%;
-transform: translate(-50%, -42%);
-color: var(--text-color);
+justify-content: center;
+align-items: center;
+vertical-align: middle;
 font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
 font-size: 0.85em;
 line-height: 1;
-white-space: nowrap;
-pointer-events: none;
+margin-top: -2px;
+color: var(--text-color);
+border: none;
+outline: none;
+cursor: default;
 }
 #measure-line {
 position: absolute;
@@ -407,7 +402,7 @@ background: transparent;
 <div id="intro-modal" class="modal-overlay">
 <div class="modal-box">
 <div class="modal-header">
-<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.5
+<big>🦣</big>&nbsp;&nbsp;Mastodon Engine 0.6
 </div>
 <div class="modal-body">
 <p>You are now using a specialized code editor tailored for building and optimizing
@@ -422,7 +417,7 @@ Capable of processing <strong>650,000+ lines</strong> on entry-level hardware.
 <strong>Syntax Highlighting:</strong> Custom-built highlighting specifically tuned for mixed-mode
 development (HTML/JS/CSS).
 </li>
-<p>&copy; 2025 <a href="https://hubjohnny.github.io/" style="color: cornflowerblue; text-decoration: none;">Johnny Heggelund</a></p>
+<p>&copy; 2025 <a href="https://hubjohnny.github.io/" style="color: #4fc1ff; text-decoration: none;">Johnny Heggelund</a></p>
 </ul>
 </div>
 <div class="modal-footer">
