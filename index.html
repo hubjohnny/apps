@@ -10,118 +10,175 @@ body {
 background-color: #0d1117;
 color: #c9d1d9;
 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-max-width: 800px;
-margin: 0 auto;
-padding: 10px 20px 40px 20px;
-line-height: 1.6;
+margin: 0;
+padding: 20px;
+line-height: 1.5;
+display: flex;
+justify-content: center;
+}
+.container {
+width: 100%;
+max-width: 1200px;
+}
+header {
+margin-bottom: 20px;
+border-bottom: 1px solid #30363d;
+padding-bottom: 10px;
 }
 h1 {
-border-bottom: none;
-margin-top: 0;
-margin-bottom: 5px;
-font-size: 2.5em;
+margin: 0;
+font-size: 2em;
 color: #ffffff;
-letter-spacing: -1px;
+letter-spacing: -0.5px;
 }
 .subtitle {
-font-size: 1.2em;
+font-size: 1.1em;
 color: #8b949e;
-margin-top: 0;
-margin-bottom: 30px;
-border-bottom: 1px solid #30363d;
-padding-bottom: 15px;
+margin: 5px 0 0 0;
 }
-h2 {
-border-bottom: 1px solid #30363d;
-padding-bottom: 0.3em;
-margin-top: 1.5em;
-color: #fff;
-font-size: 1.5em;
-}
-a { color: #58a6ff; text-decoration: none; }
-a:hover { text-decoration: underline; }
-.list { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.item { white-space: nowrap; font-size: 1.05em; }
-.bullet { color: #8b949e; margin-right: 5px; font-size: 0.8em; }
 .highlight-box {
 background: #161b22;
 border: 1px solid #30363d;
 border-left: 4px solid #238636;
 border-radius: 6px;
-padding: 20px;
-margin-top: 40px;
+padding: 15px 20px;
+margin-bottom: 30px;
 }
 .highlight-title {
 font-weight: bold;
-font-size: 1.3em;
+font-size: 1.2em;
 color: #fff;
-margin-bottom: 10px;
 display: block;
+margin-bottom: 5px;
+}
+.highlight-box p {
+margin: 0;
+font-size: 0.95em;
+}
+.highlight-box a {
+color: #58a6ff;
+text-decoration: none;
+font-weight: bold;
+}
+.content-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 30px;
+}
+@media (max-width: 768px) {
+.content-grid {
+grid-template-columns: 1fr;
+}
+}
+h2 {
+border-bottom: 1px solid #30363d;
+padding-bottom: 0.3em;
+margin-top: 0;
+margin-bottom: 15px;
+color: #fff;
+font-size: 1.4em;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.link-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+gap: 8px;
+}
+.link-item {
+background-color: #21262d;
+border: 1px solid #30363d;
+border-radius: 6px;
+padding: 10px 12px;
+color: #c9d1d9;
+text-decoration: none;
+font-size: 0.95em;
+font-weight: 500;
+transition: all 0.2s ease;
+display: block;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.link-item:hover {
+background-color: #30363d;
+color: #58a6ff;
+border-color: #8b949e;
+text-decoration: none;
 }
 footer {
-margin-top: 60px;
+margin-top: 40px;
 border-top: 1px solid #30363d;
 padding-top: 20px;
-font-size: 0.9em;
+font-size: 0.85em;
 color: #8b949e;
 text-align: center;
 }
 </style>
 </head>
 <body>
+<div class="container">
+<header>
 <h1>Johnny Heggelund</h1>
 <p class="subtitle">Specializing in fast, single-file browser games & tools for PC users.</p>
-<h2>🕹️ Games</h2>
-<div class="list">
-<div class="item"><span class="bullet">●</span><a href="100laps.html">100 Laps</a></div>
-<div class="item"><span class="bullet">●</span><a href="adventure.html">Adventure</a></div>
-<div class="item"><span class="bullet">●</span><a href="ameliax.html">AmeliaX</a></div>
-<div class="item"><span class="bullet">●</span><a href="billiards.html">Billiards</a></div>
-<div class="item"><span class="bullet">●</span><a href="blackjack.html">Blackjack</a></div>
-<div class="item"><span class="bullet">●</span><a href="championship.html">Championship</a></div>
-<div class="item"><span class="bullet">●</span><a href="citybuilder.html">CityBuilder</a></div>
-<div class="item"><span class="bullet">●</span><a href="ludo.html">Ludo</a></div>
-<div class="item"><span class="bullet">●</span><a href="lunarlander.html">LunarLander</a></div>
-<div class="item"><span class="bullet">●</span><a href="minigolf.html">MiniGolf</a></div>
-<div class="item"><span class="bullet">●</span><a href="shithead.html">Shithead</a></div>
-<div class="item"><span class="bullet">●</span><a href="snakemono.html">SnakeMono</a></div>
-<div class="item"><span class="bullet">●</span><a href="snakeneon.html">SnakeNeon</a></div>
-<div class="item"><span class="bullet">●</span><a href="sokoban.html">Sokoban</a></div>
-<div class="item"><span class="bullet">●</span><a href="sokoban2.html">Sokoban2</a></div>
-<div class="item"><span class="bullet">●</span><a href="sokobaned.html">SokobanED</a></div>
-<div class="item"><span class="bullet">●</span><a href="tetrismono.html">TetrisMono</a></div>
-<div class="item"><span class="bullet">●</span><a href="tetrisneon.html">TetrisNeon</a></div>
-<div class="item"><span class="bullet">●</span><a href="uno.html">Uno</a></div>
-<div class="item"><span class="bullet">●</span><a href="yatzy.html">Yatzy</a></div>
-</div>
-<h2>🛠️ Tools</h2>
-<div class="list">
-<div class="item"><span class="bullet">●</span><a href="babelinux.html">BabeLinux</a></div>
-<div class="item"><span class="bullet">●</span><a href="base64.html">Base64</a></div>
-<div class="item"><span class="bullet">●</span><a href="emojis.html">Emoji2Sprite</a></div>
-<div class="item"><span class="bullet">●</span><a href="image2ascii.html">image2ASCII</a></div>
-<div class="item"><span class="bullet">●</span><a href="image2pixel.html">image2Pixel</a></div>
-<div class="item"><span class="bullet">●</span><a href="imagecomp.html">imageComp</a></div>
-<div class="item"><span class="bullet">●</span><a href="imaged.html">imagED</a></div>
-<div class="item"><span class="bullet">●</span><a href="imageupscale.html">imageUP</a></div>
-<div class="item"><span class="bullet">●</span><a href="secretnote.html">SecretNote</a></div>
-<div class="item"><span class="bullet">●</span><a href="soundtracker.html">SoundTracker</a></div>
-<div class="item"><span class="bullet">●</span><a href="sprited.html">SpritED</a></div>
-<div class="item"><span class="bullet">●</span><a href="video2gif.html">Video2GIF</a></div>
-<div class="item"><span class="bullet">●</span><a href="videoplayer.html">VideoPlayer</a></div>
-</div>
+</header>
 <div class="highlight-box">
 <span class="highlight-title">Looking for my Code Editor?</span>
 <p>
 It is now called <strong><a href="mastodon.html">Mastodon Engine</a></strong>.
-The new code editor is a powerhouse, combining simplicity with strength and speed.
-It's been put through its paces with a 600,000 line code stress test, and it flies through tasks that would slow down other editors.
-<br><br>
-<em>Perfect for single-file projects in HTML, CSS, and JavaScript.</em>
+A powerhouse combining simplicity with strength. Tested with 600,000 lines of code.
+<em>Perfect for single-file HTML, CSS, and JS projects.</em>
 </p>
+</div>
+<div class="content-grid">
+<section>
+<h2>🕹️ Games</h2>
+<div class="link-grid">
+<a href="100laps.html" class="link-item">100 Laps</a>
+<a href="adventure.html" class="link-item">Adventure RPG</a>
+<a href="ameliax.html" class="link-item">Amelia X</a>
+<a href="billiards.html" class="link-item">Billiards</a>
+<a href="blackjack.html" class="link-item">Blackjack</a>
+<a href="championship.html" class="link-item">Championship</a>
+<a href="citybuilder.html" class="link-item">City Builder</a>
+<a href="ludo.html" class="link-item">Ludo</a>
+<a href="lunarlander.html" class="link-item">Lander Rescue</a>
+<a href="minigolf.html" class="link-item">Mini Golf</a>
+<a href="shithead.html" class="link-item">Shithead</a>
+<a href="snakemono.html" class="link-item">Snake Mono</a>
+<a href="snakeneon.html" class="link-item">Snake Neon</a>
+<a href="sokoban.html" class="link-item">Sokoban Retro</a>
+<a href="sokoban2.html" class="link-item">Sokoban DX</a>
+<a href="sokobaned.html" class="link-item">Sokoban Edit</a>
+<a href="tetrismono.html" class="link-item">Tetris Mono</a>
+<a href="tetrisneon.html" class="link-item">Tetris Neon</a>
+<a href="uno.html" class="link-item">Uno</a>
+<a href="yatzy.html" class="link-item">Yatzy</a>
+</div>
+</section>
+<section>
+<h2>🛠️ Tools</h2>
+<div class="link-grid">
+<a href="babelinux.html" class="link-item">BabeLinux</a>
+<a href="base64.html" class="link-item">Base64</a>
+<a href="emojis.html" class="link-item">Emoji 2 Sprite</a>
+<a href="image2ascii.html" class="link-item">Image 2 ASCII</a>
+<a href="image2pixel.html" class="link-item">Image 2 Pixel</a>
+<a href="imagecomp.html" class="link-item">Image Comp.</a>
+<a href="imaged.html" class="link-item">Image Editor</a>
+<a href="imageupscale.html" class="link-item">Image Upscale</a>
+<a href="secretnote.html" class="link-item">Secret Note</a>
+<a href="soundtracker.html" class="link-item">Soundtracker</a>
+<a href="sprited.html" class="link-item">Sprite Editor</a>
+<a href="video2gif.html" class="link-item">Video 2 GIF</a>
+<a href="videoplayer.html" class="link-item">Video Player</a>
+</div>
+</section>
 </div>
 <footer>
 ©️ 2025 Johnny Heggelund
 </footer>
+</div>
 </body>
 </html>
