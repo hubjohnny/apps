@@ -1054,6 +1054,15 @@ handleImageUpload(file);
 } else if (file.type.startsWith('audio/')) {
 if (!audioTabButton.classList.contains('active')) switchTab('audio');
 handleAudioUpload(file);
+} else {
+const reader = new FileReader();
+reader.onload = (e) => {
+const result = e.target.result;
+navigator.clipboard.writeText(result).then(() => {
+alert("File converted and ready in your Clipboard.");
+});
+};
+reader.readAsDataURL(file);
 }
 }
 });
