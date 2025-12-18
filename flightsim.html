@@ -125,14 +125,15 @@ z-index: 10; color: white; text-align: center;
 </div>
 <script>
 const CONFIG = {
-GRAVITY: 18,
-LIFT_POWER: 0.01,
-BASE_LIFT: 0.05,
-ROTATION_SPEED: 10,
-AUTO_LEVEL_SPEED: 10,
-MAX_LANDING_SPEED: 90,
-CRASH_ANGLE: 35,
-RUNWAY_BUFFER: 2500,
+GRAVITY: 10,
+LIFT_POWER: 1.0,
+ROT_ACCEL: 180,
+ROT_FRICTION: 0.88,
+MAX_ROT_VEL: 90,
+AUTO_LEVEL_STR: 5.0,
+MAX_LANDING_SPEED: 180,
+CRASH_ANGLE: 60,
+RUNWAY_BUFFER: 3000,
 FUEL_MAX: 8000,
 STORM_START_PCT: 0.40,
 STORM_END_PCT: 0.70,
@@ -315,7 +316,13 @@ function resetToHangar() {
 GAME.running = false; GAME.gameOver = false; GAME.levelComplete = false; GAME.hasStarted = false;
 GAME.dist = 0; GAME.groundScroll = 0; GAME.score = CONFIG.FUEL_MAX * 10; GAME.birdStrikes = 0;
 const groundY = canvas.height - 50;
-PLANE = { x: 100, y: groundY - 17.5 - 11, width: 120, height: 35, wheelDepth: 11, speed: 0, verticalSpeed: 0, angle: 0, throttle: 0, fuel: CONFIG.FUEL_MAX };
+PLANE = {
+x: 100, y: groundY - 17.5 - 11,
+width: 120, height: 35, wheelDepth: 11,
+speed: 0, verticalSpeed: 0,
+angle: 0, rotVel: 0,
+throttle: 0, fuel: CONFIG.FUEL_MAX
+};
 clouds = []; for(let i=0; i<5; i++) clouds.push(createCloud(false));
 stormClouds = []; for(let i=0; i<8; i++) stormClouds.push(createCloud(true));
 birdFlocks = [];
@@ -394,42 +401,93 @@ let zone = map[0];
 for (let i = 0; i < map.length; i++) { if (pct >= map[i].at) zone = map[i]; }
 return zone;
 }
+function takeDamage(source) {
+GAME.birdStrikes++;
+GAME.strikeFlash = 10;
+const label = document.getElementById('route-label');
+if (GAME.birdStrikes === 1) {
+AudioEngine.playNoise('crash');
+label.innerText = `⚠ ${source}! ENGINE 1 FAILURE! ⚠`;
+label.style.color = "orange";
+PLANE.throttle = 100;
+}
+else if (GAME.birdStrikes >= 2) {
+AudioEngine.playNoise('crash');
+label.innerText = `⚠ ${source}! ALL ENGINES LOST! ⚠`;
+label.style.color = "red";
+PLANE.throttle = 0;
+}
+label.style.animation = "blink 0.2s infinite";
+}
 function updatePlane(dt) {
-if (INPUT.w && PLANE.throttle < 100) { PLANE.throttle += 40 * dt; GAME.hasStarted = true; }
-if (INPUT.s && PLANE.throttle > 0) PLANE.throttle -= 40 * dt;
+if (GAME.birdStrikes >= 2) PLANE.throttle = 0;
+if (INPUT.w && PLANE.throttle < 100 && GAME.birdStrikes < 2) { PLANE.throttle += 60 * dt; GAME.hasStarted = true; }
+if (INPUT.s && PLANE.throttle > 0 && GAME.birdStrikes < 2) PLANE.throttle -= 60 * dt;
 let engineEfficiency = 1.0;
-if (GAME.birdStrikes === 1) engineEfficiency = 0.5;
+if (GAME.birdStrikes === 1) engineEfficiency = 0.6;
 if (GAME.birdStrikes >= 2) engineEfficiency = 0.0;
 if (GAME.hasStarted && PLANE.fuel > 0) {
-let burn = 6 + (PLANE.throttle * 0.2); if (PLANE.throttle > 85) burn *= 2;
-PLANE.fuel -= burn * dt; if (PLANE.fuel < 0) PLANE.fuel = 0;
+let burn = 6 + (PLANE.throttle * 0.2);
+if (PLANE.throttle > 85) burn *= 2;
+PLANE.fuel -= burn * dt;
+if (PLANE.fuel < 0) PLANE.fuel = 0;
 } else if (PLANE.fuel <= 0) { PLANE.throttle = 0; }
 let availableThrust = (PLANE.throttle / 100) * engineEfficiency;
-let targetSpeed = availableThrust * 350;
-const groundY = canvas.height - 50; const onGround = (PLANE.y + (PLANE.height/2) + PLANE.wheelDepth) > groundY - 1;
-if (onGround && INPUT[" "]) { PLANE.speed -= 150 * dt; targetSpeed = 0; PLANE.throttle = 0; }
-if (PLANE.speed < targetSpeed) PLANE.speed += 30 * dt; else if (PLANE.speed > targetSpeed) PLANE.speed -= 20 * dt;
+let targetSpeed = availableThrust * 500;
+const groundY = canvas.height - 50;
+const onGround = (PLANE.y + (PLANE.height/2) + PLANE.wheelDepth) > groundY - 1;
+if (onGround && INPUT[" "]) {
+PLANE.speed -= 400 * dt;
+targetSpeed = 0;
+PLANE.throttle = 0;
+}
+if (PLANE.speed < targetSpeed) {
+PLANE.speed += (80 + (availableThrust * 80)) * dt;
+} else if (PLANE.speed > targetSpeed) {
+let drag = 15;
+if (onGround) drag = 100;
+PLANE.speed -= drag * dt;
+}
 if (PLANE.speed < 0) PLANE.speed = 0;
-PLANE.verticalSpeed += CONFIG.GRAVITY * dt;
-if (PLANE.speed > 50) {
-let baseLift = PLANE.speed * CONFIG.BASE_LIFT;
-let aoaLift = 0;
-if (PLANE.angle < 0) {
-aoaLift = Math.abs(PLANE.angle) * PLANE.speed * CONFIG.LIFT_POWER;
-}
-let totalLift = baseLift + aoaLift;
-PLANE.verticalSpeed -= totalLift * dt;
-}
-if (INPUT.ArrowDown) PLANE.angle -= CONFIG.ROTATION_SPEED * dt;
-if (INPUT.ArrowUp) PLANE.angle += CONFIG.ROTATION_SPEED * dt;
+if (INPUT.ArrowDown) PLANE.rotVel -= CONFIG.ROT_ACCEL * dt;
+if (INPUT.ArrowUp)   PLANE.rotVel += CONFIG.ROT_ACCEL * dt;
+PLANE.rotVel *= CONFIG.ROT_FRICTION;
 if (!INPUT.ArrowUp && !INPUT.ArrowDown) {
-if (PLANE.angle < -0.5) PLANE.angle += CONFIG.AUTO_LEVEL_SPEED * dt;
-else if (PLANE.angle > 0.5) PLANE.angle -= CONFIG.AUTO_LEVEL_SPEED * dt;
-else PLANE.angle = 0;
+if (PLANE.angle < -0.5) PLANE.rotVel += CONFIG.AUTO_LEVEL_STR;
+else if (PLANE.angle > 0.5) PLANE.rotVel -= CONFIG.AUTO_LEVEL_STR;
+else { PLANE.angle = 0; PLANE.rotVel = 0; }
 }
-if (PLANE.angle < -90) PLANE.angle = -90; if (PLANE.angle > 90) PLANE.angle = 90;
+PLANE.angle += PLANE.rotVel * dt;
+if (PLANE.angle < -80) { PLANE.angle = -80; PLANE.rotVel = 0; }
+if (PLANE.angle > 80)  { PLANE.angle = 80;  PLANE.rotVel = 0; }
+PLANE.verticalSpeed += CONFIG.GRAVITY * dt;
+if (PLANE.speed > 30) {
+let liftDir = Math.sin(PLANE.angle * Math.PI / 180);
+let liftForce = liftDir * PLANE.speed * CONFIG.LIFT_POWER;
+PLANE.verticalSpeed += liftForce * dt;
+let cruiseRatio = PLANE.speed / 350;
+let naturalLift = cruiseRatio * CONFIG.GRAVITY;
+PLANE.verticalSpeed -= naturalLift * dt;
+if (GAME.birdStrikes === 0 && !INPUT.ArrowUp && !INPUT.ArrowDown) {
+if (PLANE.throttle > 60 && PLANE.throttle < 85) {
+PLANE.verticalSpeed = PLANE.verticalSpeed * 0.95;
+if (Math.abs(PLANE.verticalSpeed) < 1.0) PLANE.verticalSpeed = 0;
+}
+}
+}
+if (onGround && INPUT.ArrowDown && PLANE.speed > 80) {
+PLANE.verticalSpeed = -40; PLANE.y -= 2;
+}
 PLANE.y += PLANE.verticalSpeed * dt;
-GAME.dist += PLANE.speed * dt; GAME.groundScroll += PLANE.speed * 0.016;
+if (PLANE.y < -200) { PLANE.y = -200; PLANE.verticalSpeed = 50; }
+if (onGround && PLANE.verticalSpeed > 0) {
+PLANE.verticalSpeed = 0;
+PLANE.y = groundY - (PLANE.height/2) - PLANE.wheelDepth;
+PLANE.rotVel = 0;
+if(PLANE.angle < 0) PLANE.angle += 30 * dt;
+}
+GAME.dist += PLANE.speed * dt;
+GAME.groundScroll += PLANE.speed * 0.016;
 }
 function updateStorm(dt) {
 const stormStartDist = CURRENT_ROUTE.gameDist * CONFIG.STORM_START_PCT;
@@ -438,33 +496,55 @@ const inWarning = (GAME.dist > stormStartDist - CONFIG.STORM_WARN_DIST) && (GAME
 const isUnsafeHeight = PLANE.y > CONFIG.STORM_SAFE_ALT;
 const label = document.getElementById('route-label');
 if (GAME.birdStrikes === 0) {
-if (inWarning && isUnsafeHeight) { label.innerText = "⚠ STORM AHEAD - CLIMB NOW! ⚠"; label.style.color = "#ffeb3b"; label.style.animation = "blink 0.5s infinite"; }
-else { label.innerText = CURRENT_ROUTE.name; label.style.color = "#aaa"; label.style.animation = "none"; }
+if (inWarning && isUnsafeHeight) {
+label.innerText = "⚠ STORM AHEAD - CLIMB NOW! ⚠";
+label.style.color = "#ffeb3b";
+label.style.animation = "blink 0.5s infinite";
+} else {
+label.innerText = CURRENT_ROUTE.name;
+label.style.color = "#aaa";
+label.style.animation = "none";
+}
 }
 if (GAME.dist > stormStartDist && GAME.dist < stormEndDist) {
 GAME.stormActive = true;
 if (isUnsafeHeight) {
 GAME.stormTimer += dt;
-if (Math.random() < 0.005) { GAME.flashFrame = 5; AudioEngine.playNoise('thunder'); if (GAME.stormTimer > CONFIG.STORM_GRACE_TIME) gameOver("STRUCK BY LIGHTNING"); }
-} else { GAME.stormTimer = 0; if (Math.random() < 0.005) { GAME.flashFrame = 5; AudioEngine.playNoise('thunder'); } }
-} else { GAME.stormActive = false; GAME.stormTimer = 0; }
+if (Math.random() < 0.003) {
+GAME.flashFrame = 5;
+AudioEngine.playNoise('thunder');
+if (GAME.stormTimer > CONFIG.STORM_GRACE_TIME) takeDamage("LIGHTNING STRIKE");
+}
+} else {
+GAME.stormTimer = 0;
+if (Math.random() < 0.005) {
+GAME.flashFrame = 5;
+AudioEngine.playNoise('thunder');
+}
+}
+} else {
+GAME.stormActive = false;
+GAME.stormTimer = 0;
+}
 if (GAME.flashFrame > 0) GAME.flashFrame--;
 }
 function updateBirds(dt) {
 if (!GAME.stormActive && !GAME.running && !GAME.gameOver) return;
-if (PLANE.y < canvas.height - 100 && Math.random() < CONFIG.BIRD_SPAWN_RATE) { birdFlocks.push(createBirdFlock()); }
-const label = document.getElementById('route-label');
+if (PLANE.y < canvas.height - 150 && Math.random() < CONFIG.BIRD_SPAWN_RATE) {
+birdFlocks.push(createBirdFlock());
+}
 for (let i = birdFlocks.length - 1; i >= 0; i--) {
-let flock = birdFlocks[i]; flock.x -= (CONFIG.BIRD_SPEED + PLANE.speed) * dt;
+let flock = birdFlocks[i];
+flock.x -= (CONFIG.BIRD_SPEED + PLANE.speed) * dt;
 const yOffset = 20; const padX = 5; const padY = 5;
-const pLeft = PLANE.x + padX; const pRight = PLANE.x + PLANE.width - padX; const pTop = PLANE.y + padY; const pBottom = PLANE.y + PLANE.height - padY;
-const fLeft = flock.x; const fRight = flock.x + flock.width; const fTop = flock.y - yOffset; const fBottom = (flock.y + flock.height) - yOffset;
+const pLeft = PLANE.x + padX; const pRight = PLANE.x + PLANE.width - padX;
+const pTop = PLANE.y + padY; const pBottom = PLANE.y + PLANE.height - padY;
+const fLeft = flock.x; const fRight = flock.x + flock.width;
+const fTop = flock.y - yOffset; const fBottom = (flock.y + flock.height) - yOffset;
 if (pLeft < fRight && pRight > fLeft && pTop < fBottom && pBottom > fTop) {
-GAME.birdStrikes++; GAME.strikeFlash = 10; AudioEngine.playNoise('crash');
-if (GAME.birdStrikes === 1) { label.innerText = "⚠ BIRD STRIKE! ENGINE 1 LOST! ⚠"; label.style.color = "orange"; }
-else { label.innerText = "⚠ BIRD STRIKE! ALL ENGINES LOST! ⚠"; label.style.color = "red"; }
-label.style.animation = "blink 0.2s infinite";
-birdFlocks.splice(i, 1); continue;
+takeDamage("BIRD STRIKE");
+birdFlocks.splice(i, 1);
+continue;
 }
 if (flock.x < -100) birdFlocks.splice(i, 1);
 }
@@ -489,27 +569,31 @@ if (PLANE.angle < -CONFIG.CRASH_ANGLE || PLANE.angle > CONFIG.CRASH_ANGLE) {
 gameOver("CRASH LANDING! (Keep level)");
 return;
 }
-const zone = getZoneAt(GAME.dist);
+const planeWorldPos = GAME.dist + PLANE.x + (PLANE.width/2);
+const zone = getZoneAt(planeWorldPos);
 const biomeInfo = BIOME_DATA[zone.type] || BIOME_DATA['RUNWAY'];
-if (GAME.birdStrikes >= 2) { gameOver("TOTAL ENGINE FAILURE - CRASHED"); return; }
 if (biomeInfo.isWater) { gameOver("SPLASHDOWN FAILED"); return; }
-const takeoffLimit = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[1].at;
-const lastZoneIdx = CURRENT_ROUTE.map.length - 1;
-const landingStart = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[lastZoneIdx].at;
-const inStart = GAME.dist < takeoffLimit;
-const inEnd = GAME.dist > landingStart;
-if (!inStart && !inEnd) {
+if (zone.type !== 'RUNWAY') {
 gameOver(biomeInfo.msg);
 return;
 }
-if (inEnd && PLANE.speed < 2) { if (!GAME.levelComplete) victory(); }
+const lastZone = CURRENT_ROUTE.map[CURRENT_ROUTE.map.length - 1];
+const isOnDestRunway = (planeWorldPos >= CURRENT_ROUTE.gameDist * lastZone.at);
+if (isOnDestRunway && PLANE.speed < 5) {
+if (!GAME.levelComplete) victory();
+}
 PLANE.y = groundY - (PLANE.height/2) - PLANE.wheelDepth;
 PLANE.verticalSpeed = 0;
 PLANE.angle *= 0.9;
 }
 const takeoffLimit = CURRENT_ROUTE.gameDist * CURRENT_ROUTE.map[1].at;
-if (wheelY > groundY - 1 && GAME.dist > takeoffLimit && GAME.dist < 5000) gameOver("OVERSHOT RUNWAY (Did not takeoff)");
-if (GAME.dist > CURRENT_ROUTE.gameDist + CONFIG.RUNWAY_BUFFER) { if (PLANE.speed > 5) gameOver("OVERSHOT RUNWAY (Brake harder!)"); }
+const planeWorldPos = GAME.dist + PLANE.x;
+if (wheelY > groundY - 1 && planeWorldPos > takeoffLimit && planeWorldPos < 5000) {
+gameOver("OVERSHOT RUNWAY (Did not takeoff)");
+}
+if (GAME.dist > CURRENT_ROUTE.gameDist + CONFIG.RUNWAY_BUFFER) {
+if (PLANE.speed > 5) gameOver("OVERSHOT RUNWAY (Brake harder!)");
+}
 }
 function updateUI() {
 let throtPct = Math.round(PLANE.throttle);
@@ -523,6 +607,11 @@ locInd.innerText = currentZone.name;
 locInd.style.color = biomeInfo.isWater ? '#29B6F6' : '#4caf50';
 let pctLeft = 1 - (GAME.dist / CURRENT_ROUTE.gameDist);
 let remKm = Math.max(0, Math.round(CURRENT_ROUTE.realKm * pctLeft));
+if (remKm === 0 && GAME.dist > CURRENT_ROUTE.gameDist) {
+document.getElementById('distance-text').innerHTML = `<span style="color:#4caf50">🛬 ON RUNWAY - BRAKE!</span>`;
+} else {
+document.getElementById('distance-text').innerHTML = `DISTANCE: ${remKm} KM`;
+}
 document.getElementById('distance-text').innerHTML = `DISTANCE: ${remKm} KM`;
 let throtColor = throtPct > 75 ? '#ff9800' : '#4caf50';
 if (GAME.birdStrikes > 0) throtColor = 'red';
