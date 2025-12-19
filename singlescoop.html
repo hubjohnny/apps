@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Single Scoop</title>
+<style>
+
+:root {
+--bg-color: #1e1e1e;
+--text-color: #d4d4d4;
+--line-height: 24px;
+--font-size: 15px;
+--font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+--selection-bg: #264f78;
+--cursor-color: #aeafad;
+--line-num-bg: #1e1e1e;
+--line-num-text: #858585;
+--border-color: #333;
+--c-comment: #6a9955;
+--c-string: #ce9178;
+--c-number: #b5cea8;
+--c-keyword: #c586c0;
+--c-function: #dcdcaa;
+--c-tag: #569cd6;
+--c-attr: #9cdcfe;
+--c-selector: #d7ba7d;
+--c-property: #9cdcfe;
+--char-width: 9.6px;
+}
+body {
+margin: 0;
+overflow: hidden;
+background: var(--bg-color);
+color: var(--text-color);
+font-family: var(--font-family);
+}
+#editor {
+position: relative;
+top: 40px;
+width: 100vw;
+height: calc(100vh - 80px);
+overflow: auto;
+outline: none;
+cursor: text;
+}
+#scroll-phantom {
+position: absolute;
+top: 0;
+left: 0;
+z-index: -1;
+width: 1px;
+height: 1px;
+}
+#view-port {
+position: absolute;
+top: 0;
+left: 0;
+min-width: 100%;
+pointer-events: none;
+will-change: transform;
+z-index: 5;
+}
+.line {
+height: var(--line-height);
+line-height: var(--line-height);
+font-size: var(--font-size);
+font-family: var(--font-family) !important;
+white-space: pre;
+padding-left: 0;
+width: 100%;
+box-sizing: border-box;
+display: flex;
+position: relative;
+font-variant-ligatures: none;
+letter-spacing: 0px;
+}
+:not(pre) > code[class*="language-"], pre[class*="language-"] {
+background: transparent !important;
+text-shadow: none !important;
+padding: 0 !important;
+margin: 0 !important;
+}
+.line-number {
+position: sticky;
+left: 0;
+top: 0;
+bottom: 0;
+width: 60px;
+min-width: 60px;
+text-align: right;
+color: var(--line-num-text);
+background: var(--line-num-bg);
+padding-right: 10px;
+border-right: 1px solid var(--border-color);
+box-sizing: border-box;
+user-select: none;
+z-index: 20;
+}
+.selection-layer {
+position: absolute;
+left: 65px;
+top: 0;
+bottom: 0;
+background-color: transparent;
+z-index: 1;
+pointer-events: none;
+}
+.is-selected {
+background-color: var(--selection-bg);
+}
+.line-content {
+padding-left: 5px;
+position: relative;
+z-index: 2;
+pointer-events: none;
+}
+#cursor {
+position: absolute;
+width: 1ch;
+height: var(--line-height);
+background-color: #6a9955;
+border-radius: 3px;
+opacity: 0.5;
+z-index: 4;
+pointer-events: none;
+}
+.blink {
+animation: blink 1s step-end infinite;
+}
+#toolbar {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 40px;
+background: #0a0807;
+border-bottom: 1px solid #1a1614;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 0 10px;
+box-sizing: border-box;
+z-index: 100;
+font-size: 13px;
+gap: 10px;
+}
+#toolbar-right {
+position: absolute;
+right: 10px;
+top: 0;
+height: 100%;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.stats-anchor {
+width: 0;
+overflow: visible;
+white-space: nowrap;
+display: flex;
+align-items: center;
+position: relative;
+}
+#search-stats {
+color: #858585;
+font-size: 12px;
+margin-left: 10px;
+pointer-events: none;
+}
+#toolbar input {
+background: #1e1e1e;
+border: 1px solid #333;
+color: #d4d4d4;
+padding: 4px 8px;
+border-radius: 3px;
+outline: none;
+font-family: sans-serif;
+}
+#toolbar input:focus {
+border-color: #007acc;
+}
+#toolbar button {
+background: #2d2d2d;
+border: 1px solid #333;
+color: #d4d4d4;
+padding: 4px 10px;
+border-radius: 3px;
+cursor: pointer;
+font-size: 12px;
+}
+#toolbar button:hover {
+background: #3d3d3d;
+}
+#toolbar button:active {
+background: #007acc;
+color: white;
+}
+#statusbar {
+position: fixed;
+bottom: 0;
+left: 0;
+width: 100%;
+height: 40px;
+background: #0a0807;
+color: #524b48;
+font-size: 14px;
+padding: 0 10px;
+font-family: sans-serif;
+z-index: 100;
+display: flex;
+justify-content: space-between;
+align-items: center;
+box-sizing: border-box;
+border-top: 1px solid #1a1614;
+}
+#file-status {
+flex: 1;
+text-align: left;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+#message-area {
+flex: 1;
+text-align: right;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+#shortcuts {
+flex: 0 0 auto;
+display: flex;
+gap: 5px;
+}
+#shortcuts button {
+background: #2d2d2d;
+border: 1px solid #333;
+color: #d4d4d4;
+padding: 4px 10px;
+border-radius: 3px;
+cursor: pointer;
+font-size: 12px;
+}
+#shortcuts button:hover {
+background: #3d3d3d;
+}
+#shortcuts button:active {
+background: #007acc;
+color: white;
+}
+@keyframes blink {
+0%,
+100% {
+opacity: 1;
+}
+50% {
+opacity: 0;
+}
+}
+.token.comment { color: #6a9955; }
+.token.string { color: #ce9178; }
+.token.number { color: #b5cea8; }
+.token.html-tag { color: #569cd6; }
+.token.attr-name { color: #9cdcfe; }
+.token.selector { color: #d7ba7d; }
+.token.property { color: #9cdcfe; }
+.token.keyword { color: #c586c0; }
+.token.function { color: #dcdcaa; }
+.token.trailing-space { background-color: rgba(255, 0, 0, 0.3); border-radius: 2px; }
+.token.emoji {
+display: inline-flex;
+width: calc(var(--char-width) * 2) !important;
+height: var(--line-height);
+overflow: hidden;
+justify-content: center;
+align-items: center;
+vertical-align: middle;
+font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+font-size: 0.85em;
+line-height: 1;
+margin-top: -2px;
+color: var(--text-color);
+border: none;
+outline: none;
+cursor: default;
+}
+#measure-line {
+position: absolute;
+visibility: hidden;
+height: auto;
+width: auto;
+white-space: pre;
+font-family: var(--font-family) !important;
+font-size: var(--font-size);
+font-variant-ligatures: none;
+letter-spacing: 0px;
+padding-left: 0;
+z-index: -100;
+}
+::-webkit-scrollbar {
+width: 8px;
+height: 8px;
+}
+::-webkit-scrollbar-track {
+background: transparent;
+}
+::-webkit-scrollbar-thumb {
+background-color: #424242;
+border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+background-color: #5a5a5a;
+}
+::-webkit-scrollbar-corner {
+background: transparent;
+}
+.color-popup {
+position: absolute;
+top: 45px;
+right: 10px;
+width: 550px;
+background: #252526;
+border: 1px solid #454545;
+border-radius: 6px;
+padding: 12px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+z-index: 200;
+}
+#color-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
+gap: 4px;
+}
+.color-swatch {
+width: 20px;
+height: 20px;
+border-radius: 3px;
+cursor: pointer;
+border: 1px solid rgba(255,255,255,0.05);
+transition: transform 0.1s, border-color 0.1s, box-shadow 0.1s;
+}
+.color-swatch:hover {
+transform: scale(1.4);
+border-color: #fff;
+z-index: 10;
+box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+border-radius: 4px;
+}
+.modal-overlay {
+position: fixed;
+top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0, 0, 0, 0.85);
+display: none;
+justify-content: center;
+align-items: center;
+z-index: 1000;
+backdrop-filter: blur(5px);
+}
+.modal-box {
+width: 730px;
+max-width: 95%;
+max-height: 90vh;
+background: #1e1e1e;
+border: 1px solid #333;
+border-radius: 8px;
+box-shadow: 0 25px 80px rgba(0,0,0,0.7);
+display: flex;
+flex-direction: column;
+overflow-y: auto;
+}
+.modal-header {
+background: #252526;
+padding: 15px 25px;
+border-bottom: 1px solid #333;
+}
+.modal-header h1 {
+margin: 0;
+font-size: 1.6rem;
+color: #4fc1ff;
+display: inline-flex;
+align-items: center;
+gap: 10px;
+text-shadow: 0 0 15px rgba(79, 193, 255, 0.2);
+}
+.version-badge {
+background: #333;
+color: #888;
+font-size: 11px;
+padding: 2px 6px;
+border-radius: 3px;
+margin-left: 10px;
+vertical-align: middle;
+font-family: monospace;
+}
+.modal-body {
+padding: 25px;
+color: #ccc;
+font-size: 1rem;
+line-height: 1.6;
+}
+.intro-text {
+border-left: 3px solid #4fc1ff;
+padding-left: 15px;
+margin-bottom: 25px;
+color: #ddd;
+font-style: italic;
+}
+.feature-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 15px;
+margin-bottom: 10px;
+}
+@media (max-width: 600px) {
+.feature-grid { grid-template-columns: 1fr; }
+}
+.feature-card {
+background: #252526;
+padding: 15px;
+border-radius: 6px;
+border: 1px solid #333;
+}
+.feature-card .icon { font-size: 1.4rem; margin-bottom: 8px; display: block; }
+.feature-card strong { color: #fff; display: block; margin-bottom: 5px; font-size: 0.95rem; }
+.feature-card p { font-size: 0.85rem; color: #888; margin: 0; line-height: 1.4; }
+.modal-footer {
+padding: 15px 25px;
+background: #252526;
+border-top: 1px solid #333;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.modal-checkbox-label {
+font-size: 0.9rem;
+color: #888;
+cursor: pointer;
+user-select: none;
+}
+.modal-btn {
+background: #4fc1ff;
+color: #1e1e1e;
+border: none;
+padding: 8px 24px;
+font-size: 1rem;
+font-weight: bold;
+border-radius: 4px;
+cursor: pointer;
+transition: background 0.2s;
+}
+.modal-btn:hover { background: #7cd1ff; }
+.dev-note {
+margin-top: 20px;
+text-align: center;
+font-size: 12px;
+color: #555;
+}
+.line-background {
+position: absolute;
+left: 0;
+right: 0;
+top: 0;
+bottom: 0;
+background-color: rgba(255, 255, 255, 0.03);
+pointer-events: none;
+z-index: 0;
+}
+.line-number.active-line {
+color: var(--text-color);
+font-weight: bold;
+border-right: 1px solid var(--c-comment);
+}
+#input-trap {
+position: absolute;
+z-index: -1;
+opacity: 0;
+top: 0;
+left: 0;
+width: 1px;
+height: 1em;
+border: none;
+outline: none;
+resize: none;
+overflow: hidden;
+font-size: 16px;
+transform: scale(0);
+}
+a {
+color: #4fc1ff;
+text-decoration: none;
+}
+a:hover {
+color: #fff;
+text-decoration: none;
+}
+.token.trailing-space-mark {
+color: #FFB300;
+opacity: 0.8;
+font-family: var(--font-family);
+font-size: var(--font-size);
+letter-spacing: 0;
+pointer-events: none;
+user-select: none;
+}
+</style>
+</head>
+<body>
+<div id="intro-modal" class="modal-overlay">
+<div class="modal-box">
+<div class="modal-header">
+<h1><span style="font-size: 1.2em;">🍧</span> Single Scoop</h1>
+<span class="version-badge">v1.0</span>
+</div>
+<div class="modal-body">
+<div class="intro-text">
+A free web code editor where you can build web apps with HTML, CSS, and JavaScript, all in one place, all in one file.
+</div>
+<div class="feature-grid">
+<div class="feature-card">
+<span class="icon">⚡</span>
+<strong>0.1s Load Time</strong>
+<p>Handles 500k+ lines. No lag. No indexing. Just raw speed.</p>
+</div>
+<div class="feature-card">
+<span class="icon">🛡️</span>
+<strong>Safe Cleanup</strong>
+<p>Cleans code without breaking your Regex, Base64, or ASCII art.</p>
+</div>
+<div class="feature-card">
+<span class="icon">🔒</span>
+<strong>Offline First</strong>
+<p>Your code never leaves your browser. No servers. No tracking.</p>
+</div>
+</div>
+<div class="dev-note">
+Handcrafted by one dev.
+singlescoop.net &copy; 2025 Johnny Heggelund
+<hr style="border: 0; border-top: 1px solid #303030;">
+<p style="color: #fff"><strong>Some Fun Single-File Games made with the Single Scoop Code Editor</strong></p>
+<p>
+<a href="/apps/adventure.html" target="_blank" rel="noopener noreferrer">Adventure RPG</a> |
+<a href="/apps/citybuilder.html" target="_blank" rel="noopener noreferrer">City Builder</a> |
+<a href="/apps/lunarlander.html" target="_blank" rel="noopener noreferrer">Lander Rescue</a> |
+<a href="/apps/ludo.html" target="_blank" rel="noopener noreferrer">Ludo Board Game</a> |
+<a href="/apps/sokoban2.html" target="_blank" rel="noopener noreferrer">Sokoban Puzzle</a>
+</p>
+</div>
+</div>
+<div class="modal-footer">
+<label class="modal-checkbox-label">
+<input type="checkbox" id="dont-show-again"> Don't show again
+</label>
+<button class="modal-btn" onclick="closeIntroModal()">Let's Code</button>
+</div>
+</div>
+</div>
+<div id="toolbar">
+<input type="text" id="find-input" placeholder="Find..." style="width: 150px;">
+<input type="text" id="replace-input" placeholder="Replace..." style="width: 150px;">
+<button onclick="editor.search.findNext()">Next</button>
+<button onclick="editor.search.replace()">Replace</button>
+<button onclick="editor.search.replaceAll()">All</button>
+<div class="stats-anchor">
+<span id="search-stats"></span>
+</div>
+<div id="toolbar-right">
+<button onclick="editor.insertSkeleton()" title="Insert HTML5 Template">🧩</button>
+<button id="color-btn" onclick="toggleColorPicker()" title="Color Picker">🎨</button>
+<button onclick="editor.previewFile()" title="Preview (Alt+P)">👁️</button>
+<button onclick="document.getElementById('intro-modal').style.display = 'flex'" title="About & Help">❔</button>
+</div>
+<div id="color-picker" class="color-popup" style="display: none;">
+<div id="color-grid"></div>
+<div class="color-footer">Click to insert & copy</div>
+</div>
+</div>
+<div id="editor" tabindex="0">
+<div id="scroll-phantom"></div>
+<div id="view-port"></div>
+<div id="cursor" class="blink"></div>
+</div>
+<div id="statusbar">
+<span id="cursor-pos" style="flex: 1; font-size: 12px; color: #858585; font-variant-numeric: tabular-nums; padding-left: 5px;">Ln 1, Col 1</span>
+<div id="shortcuts" style="display: flex; align-items: center;">
+<button onclick="editor.openFile()" title="Open File (Alt+O)">📂</button>
+<button onclick="editor.saveFile()" title="Save File (Alt+S)">💾</button>
+<button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">📄</button>
+<button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comm</button>
+<!--
+<button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty</button>
+<button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Trail</button>
+-->
+<button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Func</button>
+<button onclick="editor.removeComments()" title="Remove Comments (Alt+R)" style="margin-left: 10px;">🗑️ Comm</button>
+<button onclick="editor.removeEmptyLines()" title="Remove Empty Lines (Alt+E)">🗑️ Empty</button>
+<button onclick="editor.removeTrailingWhitespace()" title="Remove Trailing Whitespace (Alt+T)">🗑️ Trail</button>
+</div>
+<span id="message-area" style="flex: 1; text-align: right; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Single Scoop</span>
+</div>
+<script>
+"use strict";
+function checkIntroModal() {
+const hide = localStorage.getItem('singlescoop_hide_intro');
+if (!hide) {
+document.getElementById('intro-modal').style.display = 'flex';
+}
+}
+function closeIntroModal() {
+const checkbox = document.getElementById('dont-show-again');
+if (checkbox.checked) {
+localStorage.setItem('singlescoop_hide_intro', 'true');
+}
+document.getElementById('intro-modal').style.display = 'none';
+if (window.editor && window.editor.dom) {
+window.editor.dom.trap.focus();
+}
+}
+class SyntaxHighlighter {
+constructor() {
+this.lineModes = [];
+}
+analyze(lines) {
+let mode = 'html';
+this.lineModes = new Array(lines.length);
+for (let i = 0; i < lines.length; i++) {
+const line = lines[i];
+let thisLineMode = mode;
+if (mode === 'html') {
+if (line.match(/^\s*<script/i)) {
+thisLineMode = 'html';
+if (!line.match(/<\/script/i)) mode = 'javascript';
+}
+else if (line.match(/^\s*<style/i)) {
+thisLineMode = 'html';
+if (!line.match(/<\/style/i)) mode = 'css';
+}
+}
+else if (mode === 'javascript') {
+if (line.match(/<\/script/i)) {
+thisLineMode = 'html';
+mode = 'html';
+} else {
+thisLineMode = 'javascript';
+}
+}
+else if (mode === 'css') {
+if (line.match(/<\/style/i)) {
+thisLineMode = 'html';
+mode = 'html';
+} else {
+thisLineMode = 'css';
+}
+}
+this.lineModes[i] = thisLineMode;
+}
+}
+highlight(text, rowIndex) {
+if (!text) return '&nbsp;';
+const mode = (this.lineModes && this.lineModes[rowIndex]) ? this.lineModes[rowIndex] : 'html';
+let escaped = this.escapeHTML(text);
+let result = '';
+if (mode === 'javascript') {
+result = this.highlightJS(escaped);
+} else if (mode === 'css') {
+result = this.highlightCSS(escaped);
+} else {
+result = this.highlightHTMLLine(escaped);
+}
+result = result.replace(/([ \t]+)$/, (match) => {
+const dots = match.replace(/ /g, '·').replace(/\t/g, '→   ');
+return `<span class="token trailing-space-mark">${dots}</span>`;
+});
+return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g,
+'<span class="token emoji" data-emoji="$1">$1</span>');
+}
+escapeHTML(str) {
+return str.replace(/&/g, '&amp;')
+.replace(/</g, '&lt;')
+.replace(/>/g, '&gt;');
+}
+highlightJS(code) {
+const pattern = /(".*?"|'.*?'|`[\s\S]*?`|\/\/.*)|(\b(?:const|let|var|function|return|if|else|for|while|class|new|this|async|await|import|export|from|try|catch)\b)|(\b\d+\.?\d*\b)|(\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\())/g;
+return code.replace(pattern, (match, string, keyword, number, func) => {
+if (string) {
+return string.startsWith('//')
+? `<span class="token comment">${string}</span>`
+: `<span class="token string">${string}</span>`;
+}
+if (keyword) return `<span class="token keyword">${keyword}</span>`;
+if (number) return `<span class="token number">${number}</span>`;
+if (func) return `<span class="token function">${func}</span>`;
+return match;
+});
+}
+highlightCSS(code) {
+try {
+const p = /(\/\*[\s\S]*?\*\/)|(".*?"|'.*?')|((-?\d+\.?\d*|\.\d+)[a-zA-Z%]*)|([\.#][\w-]+|(?<=[\}\s]|^)[a-zA-Z][\w-]*(?=\s*[\{\,\.#]))|([a-zA-Z-]+)(?=:)|(@[\w-]+)/g;
+return code.replace(p, (m, c, s, n, d, sel, prop, at) => {
+if (c) return `<span class="token comment">${c}</span>`;
+if (s) return `<span class="token string">${s}</span>`;
+if (n) return `<span class="token number">${n}</span>`;
+if (sel) return `<span class="token selector">${sel}</span>`;
+if (prop) return `<span class="token property">${prop}</span>`;
+if (at) return `<span class="token keyword">${at}</span>`;
+return m;
+});
+} catch (e) {
+return code;
+}
+}
+highlightHTMLLine(code) {
+let output = code;
+output = output.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="token comment">$1</span>');
+output = output.replace(/(&lt;\/?)(\w+)([^&]*?)(&gt;)/g, (m, bracket, tag, attrs, close) => {
+const styledAttrs = attrs.replace(/([a-zA-Z-]+)(=)(".*?"|'.*?')/g,
+'<span class="token attr-name">$1</span>=$3'
+);
+return `${bracket}<span class="token html-tag">${tag}</span>${styledAttrs}${close}`;
+});
+return output;
+}
+}
+class HistoryManager {
+constructor(editor) {
+this.editor = editor;
+this.undoStack = [];
+this.redoStack = [];
+this.lastEditTime = 0;
+}
+record(op) {
+const now = Date.now();
+const isTyping = op.text.length === 1 && op.oldText.length === 0;
+const isDel = op.oldText.length === 1 && op.text.length === 0;
+if (this.undoStack.length > 0 && (now - this.lastEditTime) < 500) {
+const last = this.undoStack[this.undoStack.length - 1];
+if (isTyping && last.type === 'ins' && last.endRow === op.startRow && last.endCol === op.startCol) {
+last.text += op.text; last.endCol += op.text.length; last.cursorAfter = op.cursorAfter;
+this.lastEditTime = now; return;
+}
+if (isDel && last.type === 'del' && op.endRow === last.startRow && op.endCol === last.startCol) {
+last.oldText = op.oldText + last.oldText; last.startCol = op.startCol; last.cursorAfter = op.cursorAfter;
+this.lastEditTime = now; return;
+}
+}
+op.type = isTyping ? 'ins' : (isDel ? 'del' : 'blk');
+this.undoStack.push(op);
+this.redoStack = [];
+this.lastEditTime = now;
+if (this.undoStack.length > 300) this.undoStack.shift();
+}
+undo() {
+if (this.undoStack.length === 0) return;
+const op = this.undoStack.pop();
+this.redoStack.push(op);
+this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.cursorAfter.col, op.oldText, false);
+this.editor.state.cursor = { ...op.cursorBefore };
+this.editor.finalizeUpdate();
+}
+redo() {
+if (this.redoStack.length === 0) return;
+const op = this.redoStack.pop();
+this.undoStack.push(op);
+this.editor.applyEditInternal(op.startRow, op.startCol, op.endRow, op.endCol, op.text, false);
+this.editor.state.cursor = { ...op.cursorAfter };
+this.editor.finalizeUpdate();
+}
+}
+class SearchManager {
+constructor(editor) {
+this.editor = editor;
+this.matches = [];
+this.currentIndex = -1;
+this.lastQuery = "";
+}
+find(query) {
+if (!query) return;
+if (query.toLowerCase() === this.lastQuery.toLowerCase() && this.matches.length > 0) return;
+this.matches = [];
+const lines = this.editor.state.lines;
+const lowerQuery = query.toLowerCase();
+for (let r = 0; r < lines.length; r++) {
+const line = lines[r];
+const lowerLine = line.toLowerCase();
+let pos = lowerLine.indexOf(lowerQuery);
+while (pos !== -1) {
+this.matches.push({ row: r, col: pos, len: query.length });
+pos = lowerLine.indexOf(lowerQuery, pos + 1);
+}
+}
+this.lastQuery = query;
+this.currentIndex = -1;
+const statEl = document.getElementById('search-stats');
+if (this.matches.length === 0) {
+statEl.textContent = "No matches";
+} else {
+statEl.textContent = `Found ${this.matches.length}`;
+this.findNext();
+}
+}
+findNext() {
+const inputVal = document.getElementById('find-input').value;
+if (inputVal !== this.lastQuery) this.find(inputVal);
+if (this.matches.length === 0) return;
+this.currentIndex = (this.currentIndex + 1) % this.matches.length;
+const m = this.matches[this.currentIndex];
+document.getElementById('search-stats').textContent = `${this.currentIndex + 1} of ${this.matches.length}`;
+this.editor.state.selectionAnchor = { row: m.row, col: m.col };
+this.editor.state.cursor = { row: m.row, col: m.col + m.len };
+this.editor.state.desiredCol = m.col + m.len;
+const lh = this.editor.config.lineHeight;
+const targetRow = m.row;
+const paddingLines = 8;
+const desiredBottomPixel = (targetRow + paddingLines) * lh;
+let newScrollTop = desiredBottomPixel - this.editor.state.viewportHeight;
+newScrollTop = Math.max(0, newScrollTop);
+if (newScrollTop > targetRow * lh) {
+newScrollTop = targetRow * lh;
+}
+this.editor.dom.editor.scrollTop = newScrollTop;
+this.editor.finalizeUpdate();
+}
+replace() {
+if (this.matches.length === 0) return;
+const replacement = document.getElementById('replace-input').value;
+const m = this.matches[this.currentIndex];
+const cursor = this.editor.state.cursor;
+const anchor = this.editor.state.selectionAnchor;
+if (anchor && cursor.row === m.row && Math.abs(cursor.col - anchor.col) === m.len) {
+this.editor.applyChange(replacement);
+this.lastQuery = "";
+this.findNext();
+} else {
+this.findNext();
+}
+}
+replaceAll() {
+const query = document.getElementById('find-input').value;
+const replacement = document.getElementById('replace-input').value;
+if (!query) return;
+if (query.length === 0) return;
+if (!confirm(`Replace all occurrences of "${query}"?`)) return;
+const lines = this.editor.state.lines;
+let count = 0;
+const newLines = lines.map(line => {
+if (line.includes(query)) {
+const matchCount = line.split(query).length - 1;
+count += matchCount;
+return line.replaceAll(query, replacement);
+}
+return line;
+});
+if (count > 0) {
+const newText = newLines.join('\n');
+this.editor.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+this.editor.setStatus(`Replaced ${count} occurrences`);
+this.matches = [];
+this.lastQuery = "";
+document.getElementById('search-stats').textContent = "";
+} else {
+this.editor.setStatus("Nothing found");
+}
+}
+}
+class EditorEngine {
+constructor() {
+this.config = {
+lineHeight: 24,
+charWidth: 9,
+xOffset: 65,
+viewBuffer: 15
+};
+this.state = {
+lines: [""],
+cursor: { row: 0, col: 0 },
+selectionAnchor: null,
+isDragging: false,
+clickCount: 0,
+lastClickTime: 0,
+scrollTop: 0,
+viewportHeight: 0,
+fileName: 'Untitled.txt',
+fileHandle: null,
+isDirty: false,
+desiredCol: 0
+};
+this.dom = {
+editor: document.getElementById('editor'),
+phantom: document.getElementById('scroll-phantom'),
+viewport: document.getElementById('view-port'),
+cursor: document.getElementById('cursor'),
+fileStatus: document.getElementById('file-status'),
+messageArea: document.getElementById('message-area')
+};
+this.history = new HistoryManager(this);
+this.search = new SearchManager(this);
+this.highlighter = new SyntaxHighlighter();
+this.ticking = false;
+this.init();
+}
+init() {
+this.setupDragAndDrop();
+this.dom.trap = document.createElement('textarea');
+this.dom.trap.id = 'input-trap';
+this.dom.trap.value = ' ';
+document.body.appendChild(this.dom.trap);
+const measureLine = document.createElement('div');
+measureLine.id = 'measure-line';
+document.body.appendChild(measureLine);
+this.dom.measureLine = measureLine;
+document.getElementById('find-input').addEventListener('keydown', (e) => {
+if (e.key === 'Enter') this.search.findNext();
+if (e.key === 'Escape') { e.preventDefault(); this.dom.trap.focus(); }
+});
+document.getElementById('replace-input').addEventListener('keydown', (e) => {
+if (e.key === 'Enter') this.search.replace();
+if (e.key === 'Escape') { e.preventDefault(); this.dom.trap.focus(); }
+});
+this.state.viewportHeight = this.dom.editor.clientHeight;
+document.fonts.ready.then(() => this.recalculateLayout());
+window.addEventListener('beforeunload', (e) => {
+if (this.state.isDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+this.dom.editor.addEventListener('scroll', () => this.onScroll());
+this.dom.editor.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+this.dom.trap.addEventListener('keydown', (e) => this.handleKeyDown(e));
+this.dom.trap.addEventListener('input', (e) => this.handleTrapInput(e));
+this.dom.trap.addEventListener('paste', (e) => this.handlePaste(e));
+this.dom.trap.addEventListener('copy', (e) => this.handleCopyCut(e, false));
+this.dom.trap.addEventListener('cut', (e) => this.handleCopyCut(e, true));
+window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+window.addEventListener('resize', () => {
+this.state.viewportHeight = this.dom.editor.clientHeight;
+this.recalculateLayout();
+});
+document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
+this.restoreSession();
+this.highlighter.analyze(this.state.lines);
+this.finalizeUpdate();
+this.dom.trap.focus();
+}
+handleBackspace(wordMode = false) {
+const { cursor: c, lines, selectionAnchor } = this.state;
+if (selectionAnchor) {
+this.applyChange("");
+return;
+}
+if (c.col > 0) {
+if (!wordMode) {
+this.state.selectionAnchor = { row: c.row, col: c.col - 1 };
+this.applyChange("");
+}
+else {
+const boundary = this.findWordBoundary(c.row, c.col, -1);
+this.state.selectionAnchor = { row: c.row, col: boundary };
+this.applyChange("");
+}
+} else if (c.row > 0) {
+const prevLineLen = lines[c.row - 1].length;
+this.applyEditInternal(c.row - 1, prevLineLen, c.row, 0, "", true);
+this.state.cursor = { row: c.row - 1, col: prevLineLen };
+this.finalizeUpdate();
+}
+}
+handleDelete() {
+const { cursor: c, lines, selectionAnchor } = this.state;
+if (selectionAnchor) {
+this.applyChange("");
+} else if (c.col < lines[c.row].length) {
+this.state.selectionAnchor = { row: c.row, col: c.col + 1 };
+const oldC = { ...c };
+this.applyChange("");
+this.state.cursor = oldC;
+this.finalizeUpdate();
+} else if (c.row < lines.length - 1) {
+this.state.selectionAnchor = { row: c.row + 1, col: 0 };
+const oldC = { ...c };
+this.applyChange("");
+this.state.cursor = oldC;
+this.finalizeUpdate();
+}
+}
+handleTrapInput(e) {
+const val = this.dom.trap.value;
+if (val.length > 1) {
+const char = val.slice(1);
+this.applyChange(char);
+}
+else if (val.length === 0) {
+this.handleBackspace();
+}
+this.dom.trap.value = ' ';
+}
+validateCursorPosition() {
+const { row, col } = this.state.cursor;
+const line = this.state.lines[row];
+if (!line) return;
+if (col > 0 && col < line.length) {
+const high = line.charCodeAt(col - 1);
+const low = line.charCodeAt(col);
+if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+this.state.cursor.col += 1;
+this.state.desiredCol = this.state.cursor.col;
+}
+}
+}
+removeEmptyLines() {
+const lines = this.state.lines;
+const newLines = [];
+let inBackticks = false;
+for (let i = 0; i < lines.length; i++) {
+let line = lines[i];
+let content = line.trim();
+if (inBackticks) {
+newLines.push(line);
+let escaped = false;
+for (let char of line) {
+if (escaped) { escaped = false; continue; }
+if (char === '\\') { escaped = true; continue; }
+if (char === '`') inBackticks = !inBackticks;
+}
+continue;
+}
+let localInBackticks = false;
+let inSingleQuote = false;
+let inDoubleQuote = false;
+let charEscaped = false;
+for (let j = 0; j < line.length; j++) {
+const char = line[j];
+if (charEscaped) { charEscaped = false; continue; }
+if (char === '\\') { charEscaped = true; continue; }
+if (!inSingleQuote && !inDoubleQuote) {
+if (char === '/' && line[j+1] === '/') {
+break;
+}
+}
+if (!localInBackticks) {
+if (char === "'" && !inDoubleQuote) { inSingleQuote = !inSingleQuote; continue; }
+if (char === '"' && !inSingleQuote) { inDoubleQuote = !inDoubleQuote; continue; }
+}
+if (inSingleQuote || inDoubleQuote) continue;
+if (char === '`') {
+localInBackticks = !localInBackticks;
+}
+}
+if (content.length > 0) {
+newLines.push(line);
+}
+if (localInBackticks) inBackticks = true;
+}
+const newText = newLines.join('\n');
+if (newText !== lines.join('\n')) {
+this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+this.setStatus("Empty lines removed");
+} else {
+this.setStatus("No empty lines found");
+}
+}
+removeTrailingWhitespace() {
+const lines = this.state.lines;
+const newLines = [];
+let inBackticks = false;
+for (let i = 0; i < lines.length; i++) {
+let line = lines[i];
+let endOfLineBackticks = inBackticks;
+let inSingleQuote = false;
+let inDoubleQuote = false;
+let inRegex = false;
+let inRegexClass = false;
+let charEscaped = false;
+let lastRealChar = '';
+for (let j = 0; j < line.length; j++) {
+const char = line[j];
+const nextChar = line[j + 1];
+if (charEscaped) {
+charEscaped = false;
+if (/\S/.test(char)) lastRealChar = char;
+continue;
+}
+if (char === '\\') { charEscaped = true; continue; }
+if (endOfLineBackticks) {
+if (char === '`') endOfLineBackticks = false;
+continue;
+}
+if (inRegex) {
+if (inRegexClass) {
+if (char === ']') inRegexClass = false;
+} else {
+if (char === '[') inRegexClass = true;
+else if (char === '/') inRegex = false;
+}
+if (/\S/.test(char)) lastRealChar = char;
+continue;
+}
+if (!inSingleQuote && !inDoubleQuote) {
+if (char === "'") { inSingleQuote = true; continue; }
+if (char === '"') { inDoubleQuote = true; continue; }
+if (char === '`') { endOfLineBackticks = true; continue; }
+if (char === '/' && nextChar === '/') break;
+if (char === '/') {
+const regexStarters = ['(', '=', ',', ':', '?', '[', '{', '!', '&', '|', 'return', 'case', 'throw'];
+if (regexStarters.includes(lastRealChar) || lastRealChar === '') {
+inRegex = true;
+}
+}
+if (/\S/.test(char)) lastRealChar = char;
+} else {
+if (inSingleQuote && char === "'") inSingleQuote = false;
+if (inDoubleQuote && char === '"') inDoubleQuote = false;
+}
+}
+if (endOfLineBackticks) {
+newLines.push(line);
+} else {
+newLines.push(line.trimEnd());
+}
+inBackticks = endOfLineBackticks;
+}
+const newText = newLines.join('\n');
+if (newText !== lines.join('\n')) {
+this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+this.setStatus("Trailing whitespace removed");
+} else {
+this.setStatus("No trailing whitespace");
+}
+}
+removeComments() {
+const lines = this.state.lines;
+const newLines = [];
+let inBackticks = false;
+let inBlockComment = false;
+for (let i = 0; i < lines.length; i++) {
+let line = lines[i];
+let builtLine = "";
+let inSingleQuote = false;
+let inDoubleQuote = false;
+let inRegex = false;
+let inRegexClass = false;
+let charEscaped = false;
+let lastRealChar = '';
+for (let j = 0; j < line.length; j++) {
+const char = line[j];
+const nextChar = line[j + 1];
+if (charEscaped) {
+charEscaped = false;
+if (!inBlockComment) builtLine += char;
+if (/\S/.test(char)) lastRealChar = char;
+continue;
+}
+if (char === '\\') {
+charEscaped = true;
+if (!inBlockComment) builtLine += char;
+continue;
+}
+if (inBackticks) {
+builtLine += char;
+if (char === '`') inBackticks = false;
+continue;
+}
+if (inBlockComment) {
+if (char === '*' && nextChar === '/') {
+inBlockComment = false;
+j++;
+}
+continue;
+}
+if (inRegex) {
+builtLine += char;
+if (inRegexClass) {
+if (char === ']') inRegexClass = false;
+} else {
+if (char === '[') inRegexClass = true;
+else if (char === '/') {
+inRegex = false;
+}
+}
+if (/\S/.test(char)) lastRealChar = char;
+continue;
+}
+if (!inSingleQuote && !inDoubleQuote) {
+if (char === "'") { inSingleQuote = true; builtLine += char; continue; }
+if (char === '"') { inDoubleQuote = true; builtLine += char; continue; }
+if (char === '`') { inBackticks = true; builtLine += char; continue; }
+if (char === '/') {
+if (nextChar === '*') {
+inBlockComment = true;
+j++;
+continue;
+}
+if (nextChar === '/') {
+break;
+}
+const regexStarters = ['(', '=', ',', ':', '?', '[', '{', '!', '&', '|', 'return', 'case', 'throw'];
+if (regexStarters.includes(lastRealChar) || builtLine.trim().length === 0) {
+inRegex = true;
+builtLine += char;
+continue;
+}
+}
+}
+else {
+if (inSingleQuote && char === "'") inSingleQuote = false;
+if (inDoubleQuote && char === '"') inDoubleQuote = false;
+}
+builtLine += char;
+if (/\S/.test(char)) lastRealChar = char;
+}
+newLines.push(builtLine);
+}
+const newText = newLines.join('\n');
+if (newText !== lines.join('\n')) {
+this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+this.setStatus("Comments removed");
+} else {
+this.setStatus("No comments found");
+}
+}
+cycleNext(type) {
+const lines = this.state.lines;
+const currentLineIdx = this.state.cursor.row;
+let found = null;
+const check = (r) => {
+const line = lines[r];
+const mode = (this.highlighter.lineModes && this.highlighter.lineModes[r]) ? this.highlighter.lineModes[r] : 'html';
+if (type === 'comment') {
+let lineComMatch = null;
+let inString = false;
+let stringChar = '';
+for (let i = 0; i < line.length - 1; i++) {
+const char = line[i];
+if (inString) {
+if (char === stringChar && line[i - 1] !== '\\') {
+inString = false;
+}
+} else {
+if (char === '"' || char === "'" || char === '`') {
+inString = true;
+stringChar = char;
+}
+else if (char === '/' && line[i + 1] === '/') {
+lineComMatch = { index: i, 0: line.substring(i) };
+break;
+}
+}
+}
+const blockComMatch = line.match(/\/\*/);
+if (lineComMatch && (!blockComMatch || lineComMatch.index < blockComMatch.index)) {
+return {
+start: { r, c: lineComMatch.index },
+end: { r, c: lineComMatch.index + lineComMatch[0].length },
+select: true
+};
+}
+if (blockComMatch) {
+const startCol = blockComMatch.index;
+for (let k = r; k < lines.length; k++) {
+const offset = (k === r) ? startCol + 2 : 0;
+const closeIdx = lines[k].indexOf('*/', offset);
+if (closeIdx !== -1) {
+return {
+start: { r, c: startCol },
+end: { r: k, c: closeIdx + 2 },
+select: true
+};
+}
+}
+return { start: { r, c: startCol }, end: { r, c: line.length }, select: true };
+}
+}
+else if (type === 'function') {
+if (mode !== 'javascript') return null;
+const functionRegex = /(?:^|\s)(?:export\s+)?(?:async\s+)?(?:function|class)\s+\w+|^\s*(?:static\s+|async\s+|get\s+|set\s+)?(?!if|for|while|switch|catch|return|await)\w+\s*\(.*?\)\s*\{/;
+const m = line.match(functionRegex);
+if (m) {
+return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
+}
+}
+return null;
+};
+for (let i = currentLineIdx + 1; i < lines.length; i++) {
+found = check(i);
+if (found) break;
+}
+if (!found) {
+for (let i = 0; i <= currentLineIdx; i++) {
+found = check(i);
+if (found) break;
+}
+}
+if (found) {
+if (found.select) {
+this.state.selectionAnchor = { row: found.start.r, col: found.start.c };
+this.state.cursor = { row: found.end.r, col: found.end.c };
+} else {
+this.state.selectionAnchor = null;
+this.state.cursor = { row: found.start.r, col: found.start.c };
+}
+this.state.desiredCol = this.state.cursor.col;
+const lh = this.config.lineHeight;
+const targetRow = this.state.cursor.row;
+const desiredBottomPixel = (targetRow + 9) * lh;
+let newScrollTop = desiredBottomPixel - this.state.viewportHeight;
+newScrollTop = Math.max(0, newScrollTop);
+if (newScrollTop > targetRow * lh) {
+newScrollTop = targetRow * lh;
+}
+this.dom.editor.scrollTop = newScrollTop;
+this.finalizeUpdate();
+this.setStatus(`Found ${type}`);
+} else {
+this.setStatus(`No ${type} found`);
+}
+this.dom.trap.focus({ preventScroll: true });
+}
+render() {
+const { lines, scrollTop, viewportHeight, cursor, selectionAnchor } = this.state;
+const { lineHeight, charWidth, xOffset, viewBuffer } = this.config;
+const firstVisibleLine = Math.floor(scrollTop / lineHeight);
+const startIndex = Math.max(0, firstVisibleLine - viewBuffer);
+const visibleLinesCount = Math.ceil(viewportHeight / lineHeight);
+const endIndex = Math.min(lines.length, firstVisibleLine + visibleLinesCount + viewBuffer);
+this.dom.viewport.innerHTML = '';
+const topOffset = startIndex * lineHeight;
+this.dom.viewport.style.transform = `translateY(${topOffset}px)`;
+let selStart = null, selEnd = null;
+if (selectionAnchor) {
+const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
+(selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+selStart = anchorIsBefore ? selectionAnchor : cursor;
+selEnd = anchorIsBefore ? cursor : selectionAnchor;
+if (selStart.row === selEnd.row && selStart.col === selEnd.col) selStart = null;
+}
+const fragment = document.createDocumentFragment();
+for (let i = startIndex; i < endIndex; i++) {
+const lineDiv = document.createElement('div');
+lineDiv.className = 'line';
+if (i === this.state.cursor.row) {
+const bg = document.createElement('div');
+bg.className = 'line-background';
+lineDiv.appendChild(bg);
+}
+const numSpan = document.createElement('div');
+numSpan.className = 'line-number';
+numSpan.textContent = i + 1;
+if (i === this.state.cursor.row) {
+numSpan.classList.add('active-line');
+}
+const contentSpan = document.createElement('div');
+contentSpan.className = 'line-content';
+contentSpan.innerHTML = this.highlighter.highlight(lines[i], i);
+const selectionDiv = document.createElement('div');
+selectionDiv.className = 'selection-layer';
+if (selStart && i >= selStart.row && i <= selEnd.row) {
+let colStart = 0;
+let colEnd = lines[i].length;
+if (i === selStart.row) colStart = selStart.col;
+if (i === selEnd.row) colEnd = selEnd.col;
+let width = (colEnd - colStart) * charWidth;
+if (i < selEnd.row) width += charWidth * 0.5;
+selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
+selectionDiv.style.width = `${Math.max(0, width)}px`;
+selectionDiv.classList.add('is-selected');
+}
+lineDiv.appendChild(numSpan);
+lineDiv.appendChild(selectionDiv);
+lineDiv.appendChild(contentSpan);
+fragment.appendChild(lineDiv);
+}
+this.dom.viewport.appendChild(fragment);
+this.updateCursor();
+}
+updateCursor() {
+const { row, col } = this.state.cursor;
+const { lineHeight, xOffset } = this.config;
+const top = row * lineHeight;
+const currentLine = this.state.lines[row] || "";
+let textUpToCursor = currentLine.substring(0, col);
+textUpToCursor = textUpToCursor
+.replace(/&/g, '&amp;')
+.replace(/</g, '&lt;')
+.replace(/>/g, '&gt;');
+textUpToCursor = textUpToCursor.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g,
+'<span class="token emoji">$1</span>');
+this.dom.measureLine.innerHTML = textUpToCursor;
+const measuredWidth = this.dom.measureLine.getBoundingClientRect().width;
+const left = xOffset + measuredWidth;
+this.dom.cursor.style.top = `${top}px`;
+this.dom.cursor.style.left = `${left}px`;
+this.dom.cursor.classList.remove('blink');
+clearTimeout(this.blinkTimeout);
+this.blinkTimeout = setTimeout(() => this.dom.cursor.classList.add('blink'), 500);
+this.dom.trap.style.top = `${top}px`;
+this.dom.trap.style.left = `${left}px`;
+if (document.activeElement !== document.getElementById('find-input') &&
+document.activeElement !== document.getElementById('replace-input')) {
+this.dom.trap.focus({ preventScroll: true });
+}
+const posDisplay = document.getElementById('cursor-pos');
+if (posDisplay) {
+posDisplay.textContent = `Ln ${row + 1}, Col ${col + 1}`;
+}
+}
+updateDimensions() {
+const { lines } = this.state;
+const { lineHeight, charWidth, xOffset } = this.config;
+const height = (lines.length + 5) * lineHeight;
+const maxLen = lines.reduce((max, line) => Math.max(max, line.length), 0);
+const width = xOffset + ((maxLen + 5) * charWidth);
+this.dom.phantom.style.height = `${height}px`;
+this.dom.phantom.style.width = `${width}px`;
+this.dom.viewport.style.width = `${width}px`;
+}
+finalizeUpdate() {
+this.validateCursorPosition();
+this.updateDimensions();
+this.ensureCursorVisible();
+this.render();
+this.saveSession();
+}
+recalculateLayout() {
+const t = document.createElement('div');
+t.className = 'line';
+t.style.position = 'absolute';
+t.style.visibility = 'hidden';
+t.style.width = 'auto';
+t.style.padding = '0';
+t.textContent = 'M'.repeat(1000);
+this.dom.viewport.appendChild(t);
+const rect = t.getBoundingClientRect();
+const w = rect.width / 1000;
+const h = rect.height;
+this.dom.viewport.removeChild(t);
+let needsUpdate = false;
+if (w > 0 && Math.abs(this.config.charWidth - w) > 0.0001) {
+this.config.charWidth = w;
+document.documentElement.style.setProperty('--char-width', `${w}px`);
+needsUpdate = true;
+}
+if (h > 0 && Math.abs(this.config.lineHeight - h) > 0.0001) {
+this.config.lineHeight = h;
+document.documentElement.style.setProperty('--line-height', `${h}px`);
+needsUpdate = true;
+}
+if (needsUpdate) this.finalizeUpdate();
+}
+onScroll() {
+const currentLeft = this.dom.editor.scrollLeft;
+if (currentLeft > 0 && currentLeft < 6) {
+this.dom.editor.scrollLeft = 0;
+return;
+}
+this.state.scrollTop = this.dom.editor.scrollTop;
+if (!this.ticking) {
+window.requestAnimationFrame(() => {
+this.render();
+this.ticking = false;
+});
+this.ticking = true;
+}
+}
+applyChange(txt) {
+const { cursor, selectionAnchor } = this.state;
+let sr = cursor.row, sc = cursor.col;
+let er = cursor.row, ec = cursor.col;
+if (selectionAnchor) {
+const anchorIsBefore = (selectionAnchor.row < cursor.row) ||
+(selectionAnchor.row === cursor.row && selectionAnchor.col < cursor.col);
+sr = anchorIsBefore ? selectionAnchor.row : cursor.row;
+sc = anchorIsBefore ? selectionAnchor.col : cursor.col;
+er = anchorIsBefore ? cursor.row : selectionAnchor.row;
+ec = anchorIsBefore ? cursor.col : selectionAnchor.col;
+}
+this.state.selectionAnchor = null;
+this.applyEditInternal(sr, sc, er, ec, txt, true);
+this.state.desiredCol = this.state.cursor.col;
+this.ensureCursorVisible();
+}
+applyEditInternal(sr, sc, er, ec, txt, hist) {
+let l = this.state.lines;
+let old = "";
+const isFullReplace = (sr === 0 && er === l.length - 1 && sc === 0 && ec === l[er].length);
+if (isFullReplace) {
+old = l.join('\n');
+} else {
+if (sr === er) {
+old = l[sr].slice(sc, ec);
+} else {
+old = [l[sr].slice(sc), ...l.slice(sr + 1, er), l[er].slice(0, ec)].join('\n');
+}
+}
+const prefix = l[sr].slice(0, sc);
+const suffix = l[er].slice(ec);
+const newSegs = txt.split('\n');
+newSegs[0] = prefix + newSegs[0];
+newSegs[newSegs.length - 1] += suffix;
+if (newSegs.length > 5000 || isFullReplace) {
+const pre = l.slice(0, sr);
+const post = l.slice(er + 1);
+this.state.lines = pre.concat(newSegs).concat(post);
+} else {
+if (sr === er && newSegs.length === 1) {
+l[sr] = newSegs[0];
+} else {
+l.splice(sr, er - sr + 1, ...newSegs);
+}
+}
+const nr = sr + newSegs.length - 1;
+const nc = (newSegs.length === 1 ? sc : 0) + txt.split('\n').pop().length;
+if (hist) {
+this.setDirty(true);
+this.history.record({
+startRow: sr, startCol: sc, endRow: er, endCol: ec,
+text: txt, oldText: old,
+cursorBefore: { row: sr, col: sc },
+cursorAfter: { row: nr, col: nc }
+});
+}
+this.search.lastQuery = "";
+this.search.matches = [];
+document.getElementById('search-stats').textContent = "";
+this.state.cursor = { row: nr, col: nc };
+this.highlighter.analyze(this.state.lines);
+this.finalizeUpdate();
+}
+handleKeyDown(e) {
+const k = e.key;
+const ctrl = e.ctrlKey || e.metaKey;
+const alt = e.altKey;
+const nav = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'];
+if (nav.includes(k)) {
+e.preventDefault();
+if (e.shiftKey) {
+if (!this.state.selectionAnchor) this.state.selectionAnchor = { ...this.state.cursor };
+} else {
+this.state.selectionAnchor = null;
+}
+this.handleNavigation(k, ctrl);
+this.render();
+return;
+}
+if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
+if (k === 'Enter') {
+e.preventDefault();
+const { cursor: c, lines } = this.state;
+const currentLine = lines[c.row];
+if (c.col > 0) {
+const indent = (currentLine.match(/^\s*/) || [''])[0];
+let extra = currentLine.trim().endsWith('{') ? "  " : "";
+this.applyChange("\n" + indent + extra);
+} else {
+this.applyChange("\n");
+}
+return;
+}
+if (k === 'Tab') {
+e.preventDefault();
+const indent = "  ";
+const { selectionAnchor, cursor } = this.state;
+if (selectionAnchor && (selectionAnchor.row !== cursor.row || selectionAnchor.col !== cursor.col)) {
+if (e.shiftKey) {
+this.blockEdit(l => l.replace(/^(\t| {1,2})/, ""));
+} else {
+this.blockEdit(l => indent + l);
+}
+} else {
+if (e.shiftKey) {
+this.blockEdit(l => l.replace(/^(\t| {1,2})/, ""), this.state.cursor.row, this.state.cursor.row);
+} else {
+this.applyChange(indent);
+}
+}
+return;
+}
+if (k === 'Backspace') {
+if (ctrl) {
+e.preventDefault();
+this.handleBackspace(true);
+}
+else {
+e.preventDefault();
+this.handleBackspace();
+}
+return;
+}
+if (k === 'Delete') {
+e.preventDefault();
+this.handleDelete();
+return;
+}
+const pairs = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'", '`': '`' };
+if (pairs[k] && !ctrl && !alt && k.length === 1) {
+e.preventDefault();
+this.applyChange(k + pairs[k]);
+this.state.cursor.col -= 1;
+this.state.desiredCol = this.state.cursor.col;
+this.finalizeUpdate();
+}
+}
+handleNavigation(k, wordJump) {
+const { cursor: c, lines: l } = this.state;
+let tr = c.row, tc = c.col;
+const lineText = l[tr];
+if (k === 'ArrowUp') {
+if (tr > 0) tr--;
+tc = Math.min(this.state.desiredCol, l[tr].length);
+}
+else if (k === 'ArrowDown') {
+if (tr < l.length - 1) tr++;
+tc = Math.min(this.state.desiredCol, l[tr].length);
+}
+else if (k === 'ArrowLeft') {
+if (wordJump) {
+tc = this.findWordBoundary(tr, tc, -1);
+}
+else if (tc > 0) {
+tc--;
+if (tc > 0) {
+const high = lineText.charCodeAt(tc - 1);
+const low = lineText.charCodeAt(tc);
+if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+tc--;
+}
+}
+}
+else if (tr > 0) {
+tr--; tc = l[tr].length;
+}
+this.state.desiredCol = tc;
+}
+else if (k === 'ArrowRight') {
+if (wordJump) {
+tc = this.findWordBoundary(tr, tc, 1);
+}
+else if (tc < lineText.length) {
+tc++;
+if (tc < lineText.length) {
+const high = lineText.charCodeAt(tc - 1);
+const low = lineText.charCodeAt(tc);
+if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+tc++;
+}
+}
+}
+else if (tr < l.length - 1) {
+tr++; tc = 0;
+}
+this.state.desiredCol = tc;
+}
+else if (k === 'Home') {
+const fc = (l[tr].match(/^\s*/) || [''])[0].length;
+tc = (tc === fc) ? 0 : fc;
+this.state.desiredCol = tc;
+} else if (k === 'End') {
+tc = l[tr].length;
+this.state.desiredCol = tc;
+} else if (k === 'PageUp') {
+tr = Math.max(0, tr - Math.floor(this.state.viewportHeight / this.config.lineHeight));
+tc = Math.min(tc, l[tr].length);
+} else if (k === 'PageDown') {
+tr = Math.min(l.length - 1, tr + Math.floor(this.state.viewportHeight / this.config.lineHeight));
+tc = Math.min(tc, l[tr].length);
+}
+c.row = tr; c.col = tc;
+this.ensureCursorVisible();
+}
+findWordBoundary(r, c, direction) {
+const line = this.state.lines[r];
+const len = line.length;
+let i = c;
+const isWordPart = (char) => /[\w\d_$æøåÆØÅ]/.test(char);
+if (direction === 1) {
+if (i >= len) return len;
+if (isWordPart(line[i])) {
+while (i < len && isWordPart(line[i])) i++;
+}
+else if (!/\s/.test(line[i])) {
+while (i < len && !isWordPart(line[i]) && !/\s/.test(line[i])) i++;
+}
+while (i < len && /\s/.test(line[i])) i++;
+return i;
+} else {
+if (i <= 0) return 0;
+i--;
+while (i > 0 && /\s/.test(line[i])) i--;
+const hitWord = isWordPart(line[i]);
+if (hitWord) {
+while (i > 0 && isWordPart(line[i - 1])) i--;
+} else {
+while (i > 0 && !isWordPart(line[i - 1]) && !/\s/.test(line[i - 1])) i--;
+}
+return i;
+}
+}
+handlePaste(e) {
+e.preventDefault();
+const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+this.applyChange(text);
+}
+handleCopyCut(e, cut) {
+const t = this.getSelectionText();
+if (t) {
+e.preventDefault();
+e.clipboardData.setData('text/plain', t);
+if (cut) { this.applyChange(""); this.setStatus("Cut"); }
+else this.setStatus("Copied");
+}
+}
+handleMouseDown(e) {
+if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
+if (e.button === 2) return;
+e.preventDefault();
+e.preventDefault();
+const now = Date.now();
+this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
+this.state.lastClickTime = now;
+const p = this.getPosFromMouse(e);
+const lineText = this.state.lines[p.row];
+let startCol, endCol, startRow, endRow;
+if (this.state.clickCount === 2) {
+let foundString = false;
+const stringMatch = lineText.match(/("|')(.*?)("|')/g);
+if (stringMatch) {
+let offset = 0;
+for (const match of stringMatch) {
+const startIdx = lineText.indexOf(match, offset);
+const endIdx = startIdx + match.length;
+if (p.col > startIdx && p.col < endIdx) {
+startCol = startIdx + 1;
+endCol = endIdx - 1;
+foundString = true;
+break;
+}
+offset = endIdx;
+}
+}
+if (!foundString) {
+startCol = this.findWordBoundary(p.row, p.col, -1);
+endCol = this.findWordBoundary(p.row, p.col, 1);
+}
+startRow = p.row;
+endRow = p.row;
+} else if (this.state.clickCount === 3) {
+startRow = p.row;
+endRow = p.row;
+startCol = (lineText.match(/^\s*/) || [''])[0].length;
+endCol = lineText.length;
+} else {
+this.state.selectionAnchor = null;
+this.state.cursor = { ...p };
+startRow = p.row; startCol = p.col;
+endRow = p.row; endCol = p.col;
+this.state.isDragging = true;
+this.state.selectionAnchor = { ...p };
+}
+if (this.state.clickCount > 1) {
+this.state.isDragging = false;
+this.state.selectionAnchor = null;
+this.state.selectionAnchor = { row: startRow, col: startCol };
+this.state.cursor = { row: endRow, col: endCol };
+} else {
+this.state.cursor = { row: startRow, col: startCol };
+}
+this.state.desiredCol = this.state.cursor.col;
+this.dom.trap.focus({ preventScroll: true });
+this.render();
+}
+handleContextMenu(e) {
+const text = this.getSelectionText();
+if (!text) return;
+if (this.contextMenuListener) {
+window.removeEventListener('mousedown', this.contextMenuListener);
+this.contextMenuListener = null;
+}
+const existingTrap = document.getElementById('context-trap');
+if (existingTrap) document.body.removeChild(existingTrap);
+const trap = document.createElement('textarea');
+trap.id = 'context-trap';
+trap.style.position = 'fixed';
+trap.style.width = '300px';
+trap.style.height = '150px';
+trap.style.left = (e.clientX - 150) + 'px';
+trap.style.top = (e.clientY - 75) + 'px';
+trap.style.opacity = '0.01';
+trap.style.zIndex = '99999';
+trap.value = text;
+document.body.appendChild(trap);
+trap.focus();
+trap.select();
+const cleanup = () => {
+if (trap.parentNode) trap.parentNode.removeChild(trap);
+if (this.contextMenuListener) {
+window.removeEventListener('mousedown', this.contextMenuListener);
+this.contextMenuListener = null;
+}
+this.dom.trap.focus({ preventScroll: true });
+};
+this.contextMenuListener = (event) => {
+if (event.target === trap) return;
+cleanup();
+};
+setTimeout(() => {
+window.addEventListener('mousedown', this.contextMenuListener);
+}, 100);
+trap.addEventListener('input', () => {
+const newText = trap.value;
+if (newText === '') {
+this.applyChange('');
+this.setStatus("Cut");
+} else if (newText !== text) {
+this.applyChange(newText);
+}
+});
+}
+handleMouseMove(e) {
+if (!this.state.isDragging) return;
+const p = this.getPosFromMouse(e);
+this.state.cursor = { ...p };
+this.state.desiredCol = p.col;
+const rect = this.dom.editor.getBoundingClientRect();
+const mouseX = e.clientX - rect.left;
+const edgeMargin = 50;
+const isNearEdge = mouseX < edgeMargin || mouseX > rect.width - edgeMargin;
+if (isNearEdge) {
+this.ensureCursorVisible();
+} else {
+const { row } = this.state.cursor;
+const { lineHeight } = this.config;
+const top = row * lineHeight;
+const bottom = top + lineHeight;
+const vH = this.state.viewportHeight;
+const sT = this.dom.editor.scrollTop;
+if (top < sT) this.dom.editor.scrollTop = top;
+else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
+}
+this.render();
+}
+handleMouseUp() {
+this.state.isDragging = false;
+const { cursor, selectionAnchor } = this.state;
+if (selectionAnchor && cursor.row === selectionAnchor.row && cursor.col === selectionAnchor.col) {
+this.state.selectionAnchor = null;
+}
+this.render();
+}
+getPosFromMouse(e) {
+const r = this.dom.editor.getBoundingClientRect();
+const x = e.clientX - r.left + this.dom.editor.scrollLeft;
+const y = e.clientY - r.top + this.dom.editor.scrollTop;
+let row = Math.floor(y / this.config.lineHeight);
+let col = Math.floor(((x - this.config.xOffset) / this.config.charWidth) + 0.25);
+row = Math.max(0, Math.min(row, this.state.lines.length - 1));
+const line = this.state.lines[row];
+col = Math.max(0, Math.min(col, line.length));
+if (col > 0 && col < line.length) {
+const high = line.charCodeAt(col - 1);
+const low = line.charCodeAt(col);
+if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+col++;
+}
+}
+return { row, col };
+}
+ensureCursorVisible() {
+const { row, col } = this.state.cursor;
+const { lineHeight, charWidth, xOffset } = this.config;
+const top = row * lineHeight;
+const bottom = top + lineHeight;
+const vH = this.state.viewportHeight;
+const sT = this.dom.editor.scrollTop;
+if (top < sT) this.dom.editor.scrollTop = top;
+else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
+const left = xOffset + (col * charWidth);
+const sL = this.dom.editor.scrollLeft;
+const cW = this.dom.editor.clientWidth;
+if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
+else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
+}
+blockEdit(mod, sr = null, er = null) {
+const { cursor: c, selectionAnchor: s, lines: l } = this.state;
+sr = sr ?? Math.min(c.row, s ? s.row : c.row);
+er = er ?? Math.max(c.row, s ? s.row : c.row);
+const orig = l.slice(sr, er + 1).join('\n');
+const modded = l.slice(sr, er + 1).map(mod).join('\n');
+if (orig !== modded) {
+this.applyEditInternal(sr, 0, er, l[er].length, modded, true);
+this.state.selectionAnchor = { row: sr, col: 0 };
+this.state.cursor = { row: er, col: l[er].length };
+this.finalizeUpdate();
+}
+}
+async handleGlobalShortcuts(e) {
+const k = e.key.toLowerCase();
+const ctrl = e.ctrlKey || e.metaKey;
+const alt = e.altKey;
+if (ctrl) {
+if (k === 'o') {
+e.preventDefault();
+await this.openFile();
+return;
+}
+if (k === 's') {
+e.preventDefault();
+await this.saveFile();
+return;
+}
+if (k === 'n') {
+e.preventDefault();
+this.newFile();
+return;
+}
+if (k === 'f') {
+e.preventDefault();
+document.getElementById('find-input').focus();
+document.getElementById('find-input').select();
+return;
+}
+if (k === 'z') {
+e.preventDefault();
+e.shiftKey ? this.history.redo() : this.history.undo();
+this.setStatus(e.shiftKey ? "Redo" : "Undo");
+}
+if (k === 'y') {
+e.preventDefault();
+this.history.redo();
+this.setStatus("Redo");
+}
+if (k === 'a') {
+e.preventDefault();
+this.state.selectionAnchor = { row: 0, col: 0 };
+this.state.cursor = {
+row: this.state.lines.length - 1,
+col: this.state.lines[this.state.lines.length - 1].length
+};
+this.render();
+}
+}
+if (alt) {
+if (k === 's') { e.preventDefault(); await this.saveFile(); }
+if (k === 'o') { e.preventDefault(); await this.openFile(); }
+if (k === 'n') { e.preventDefault(); this.newFile(); }
+if (k === 'p') { e.preventDefault(); this.previewFile(); }
+if (k === 'r') { e.preventDefault(); this.removeComments(); }
+if (k === 'e') { e.preventDefault(); this.removeEmptyLines(); }
+}
+}
+getSelectionText() {
+const { cursor: c, selectionAnchor: s, lines: l } = this.state;
+if (!s || (s.row === c.row && s.col === c.col)) return null;
+const start = (s.row < c.row || (s.row === c.row && s.col < c.col)) ? s : c;
+const end = (start === s) ? c : s;
+if (start.row === end.row) return l[start.row].slice(start.col, end.col);
+const r = [l[start.row].slice(start.col)];
+for (let i = start.row + 1; i < end.row; i++) r.push(l[i]);
+r.push(l[end.row].slice(0, end.col));
+return r.join('\n');
+}
+newFile() {
+if (this.state.isDirty && !confirm("Discard changes?")) {
+this.dom.trap.focus({ preventScroll: true });
+return;
+}
+this.state.lines = [""];
+this.state.cursor = { row: 0, col: 0 };
+this.state.selectionAnchor = null;
+this.state.fileName = 'Untitled.txt';
+this.state.fileHandle = null;
+this.highlighter.analyze(this.state.lines);
+this.setDirty(false);
+this.history.undoStack = [];
+this.finalizeUpdate();
+this.setStatus("New File");
+this.dom.trap.focus({ preventScroll: true });
+}
+previewFile() {
+const win = window.open('', '_blank');
+if (win) {
+const content = this.state.lines.join('\n');
+win.document.open();
+win.document.write(content);
+win.document.close();
+win.focus();
+} else {
+this.setStatus("Popup blocked! Allow popups to preview.");
+}
+this.dom.trap.focus({ preventScroll: true });
+}
+insertSkeleton() {
+if (this.state.lines.length > 1 || (this.state.lines.length === 1 && this.state.lines[0].trim() !== "")) {
+if (!confirm("This will insert a template at your cursor position. Continue?")) return;
+}
+const template = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Built with Single Scoop">
+<title>New App</title>
+<style>
+:root {
+  --bg: #1e1e1e;
+  --text: #d4d4d4;
+  --accent: #007acc;
+}
+body {
+  margin: 0;
+  padding: 20px;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+}
+h1 { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>Hello World 🧩</h1>
+<p>Start building your single-file app here.</p>
+
+<script>
+  "use strict";
+  console.log("App loaded successfully!");
+<\/script>
+
+</body>
+</html>`;
+this.applyChange(template);
+this.setStatus("Template inserted");
+this.dom.trap.focus({ preventScroll: true });
+}
+setDirty(dirty) {
+this.state.isDirty = dirty;
+document.title = (dirty ? "* " : "") + this.state.fileName + " - Single Scoop";
+}
+setStatus(msg) {
+this.dom.messageArea.textContent = msg;
+clearTimeout(this.statusTimeout);
+this.statusTimeout = setTimeout(() => this.dom.messageArea.textContent = 'Single Scoop', 3000);
+}
+async openFile() {
+if (this.state.isDirty && !confirm("Discard changes?")) {
+this.dom.trap.focus({ preventScroll: true });
+return;
+}
+if ('showOpenFilePicker' in window) {
+try {
+const [h] = await window.showOpenFilePicker();
+const f = await h.getFile();
+this.state.fileHandle = h;
+this.loadFileContent(await f.text(), f.name);
+} catch (e) {
+this.dom.trap.focus({ preventScroll: true });
+}
+return;
+}
+const input = document.createElement('input');
+input.type = 'file';
+input.style.display = 'none';
+input.onchange = (e) => {
+const file = e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = (evt) => {
+this.loadFileContent(evt.target.result, file.name);
+};
+reader.readAsText(file);
+};
+document.body.appendChild(input);
+input.click();
+document.body.removeChild(input);
+}
+loadFileContent(text, name) {
+this.state.lines = text.replace(/\r\n/g, '\n').split('\n');
+this.state.fileName = name;
+this.state.cursor = { row: 0, col: 0 };
+this.state.selectionAnchor = null;
+this.highlighter.analyze(this.state.lines);
+this.setDirty(false);
+this.history.undoStack = [];
+this.finalizeUpdate();
+this.setStatus("Opened: " + name);
+const statusEl = document.getElementById('file-status');
+if (statusEl) statusEl.textContent = name;
+this.dom.trap.focus({ preventScroll: true });
+}
+async saveFile() {
+const content = this.state.lines.join('\n');
+if ('showSaveFilePicker' in window) {
+if (!this.state.fileHandle) {
+try {
+this.state.fileHandle = await window.showSaveFilePicker({
+suggestedName: this.state.fileName
+});
+this.state.fileName = this.state.fileHandle.name;
+} catch (e) {
+this.dom.trap.focus({ preventScroll: true });
+return;
+}
+}
+try {
+const w = await this.state.fileHandle.createWritable();
+await w.write(content);
+await w.close();
+this.setDirty(false);
+localStorage.removeItem('singlescoop_autosave');
+this.setStatus("Saved!");
+} catch (e) {
+this.setStatus("Save failed");
+}
+this.dom.trap.focus({ preventScroll: true });
+return;
+}
+const blob = new Blob([content], { type: 'text/plain' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = this.state.fileName;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+this.setDirty(false);
+this.setStatus("Saved (Download)");
+this.dom.trap.focus({ preventScroll: true });
+}
+setupDragAndDrop() {
+const dropZone = document.body;
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+dropZone.addEventListener(eventName, (e) => {
+e.preventDefault();
+e.stopPropagation();
+});
+});
+dropZone.addEventListener('dragover', () => dropZone.style.opacity = '0.7');
+dropZone.addEventListener('dragleave', () => dropZone.style.opacity = '1');
+dropZone.addEventListener('drop', () => dropZone.style.opacity = '1');
+dropZone.addEventListener('drop', (e) => {
+const files = e.dataTransfer.files;
+if (files && files.length > 0) {
+this.handleDroppedFile(files[0]);
+}
+});
+}
+handleDroppedFile(file) {
+if (this.state.lines.length > 1 || this.state.lines[0].length > 0) {
+if (!confirm(`Vil du åpne "${file.name}"?\n\nEventuelle ulagrede endringer i nåværende fil vil bli overskrevet.`)) {
+return;
+}
+}
+const reader = new FileReader();
+reader.onload = (e) => {
+let content = e.target.result;
+content = content.replace(/\t/g, '  ');
+this.state.lines = content.replace(/\r\n/g, '\n').split('\n');
+this.state.cursor = { row: 0, col: 0 };
+this.state.selectionAnchor = null;
+this.state.scrollOffset = { x: 0, y: 0 };
+this.highlighter.analyze(this.state.lines);
+this.finalizeUpdate();
+this.setStatus(`Opened ${file.name}`);
+const statusEl = document.getElementById('file-status');
+if (statusEl) statusEl.textContent = file.name;
+};
+reader.readAsText(file);
+}
+saveSession() {
+if (this._saveTimeout) clearTimeout(this._saveTimeout);
+this._saveTimeout = setTimeout(() => {
+try {
+const content = this.state.lines.join('\n');
+if (content.length > 2000000) {
+console.warn("File too large for local autosave");
+return;
+}
+const data = {
+content: content,
+timestamp: new Date().toLocaleString()
+};
+localStorage.setItem('singlescoop_autosave', JSON.stringify(data));
+} catch (e) {
+console.warn("Autosave failed (Storage full or quota exceeded)");
+}
+}, 1000);
+}
+restoreSession() {
+const raw = localStorage.getItem('singlescoop_autosave');
+if (raw) {
+try {
+const data = JSON.parse(raw);
+const savedContent = data.content;
+const savedTime = data.timestamp;
+if (savedContent && savedContent.length > 20) {
+const msg = "🛡️ UNSAVED DRAFT FOUND\n" +
+"We found an unsaved session stored locally on THIS device from:\n" +
+"🕒 " + savedTime + "\n\n" +
+"WARNING: If you have worked on this file on another computer recently, this local draft might be outdated.\n\n" +
+"• Click OK to restore this draft.\n" +
+"• Click Cancel to delete it and start fresh.";
+if (confirm(msg)) {
+this.state.lines = savedContent.split('\n');
+this.highlighter.analyze(this.state.lines);
+this.finalizeUpdate();
+this.setStatus("Session restored from " + savedTime);
+return;
+}
+}
+} catch (e) {
+console.error("Autosave error", e);
+}
+}
+localStorage.removeItem('singlescoop_autosave');
+}
+}
+const colorPalette = [
+'#ffffff', '#fafafa', '#f5f5f5', '#eeeeee', '#e0e0e0', '#bdbdbd', '#9e9e9e', '#757575', '#616161', '#424242', '#212121', '#000000',
+'#ffebee', '#ffcdd2', '#ef9a9a', '#e57373', '#ef5350', '#f44336', '#e53935', '#d32f2f', '#c62828', '#b71c1c',
+'#fce4ec', '#f8bbd0', '#f48fb1', '#f06292', '#ec407a', '#e91e63', '#d81b60', '#c2185b', '#ad1457', '#880e4f',
+'#f3e5f5', '#e1bee7', '#ce93d8', '#ba68c8', '#ab47bc', '#9c27b0', '#8e24aa', '#7b1fa2', '#6a1b9a', '#4a148c',
+'#ede7f6', '#d1c4e9', '#b39ddb', '#9575cd', '#7e57c2', '#673ab7', '#5e35b1', '#512da8', '#4527a0', '#311b92',
+'#e8eaf6', '#c5cae9', '#9fa8da', '#7986cb', '#5c6bc0', '#3f51b5', '#3949ab', '#303f9f', '#283593', '#1a237e',
+'#e3f2fd', '#bbdefb', '#90caf9', '#64b5f6', '#42a5f5', '#2196f3', '#1e88e5', '#1976d2', '#1565c0', '#0d47a1',
+'#e1f5fe', '#b3e5fc', '#81d4fa', '#4fc3f7', '#29b6f6', '#03a9f4', '#039be5', '#0288d1', '#0277bd', '#01579b',
+'#e0f7fa', '#b2ebf2', '#80deea', '#4dd0e1', '#26c6da', '#00bcd4', '#00acc1', '#0097a7', '#00838f', '#006064',
+'#e0f2f1', '#b2dfdb', '#80cbc4', '#4db6ac', '#26a69a', '#009688', '#00897b', '#00796b', '#00695c', '#004d40',
+'#e8f5e9', '#c8e6c9', '#a5d6a7', '#81c784', '#66bb6a', '#4caf50', '#43a047', '#388e3c', '#2e7d32', '#1b5e20',
+'#f1f8e9', '#dcedc8', '#c5e1a5', '#aed581', '#9ccc65', '#8bc34a', '#7cb342', '#689f38', '#558b2f', '#33691e',
+'#f9fbe7', '#f0f4c3', '#e6ee9c', '#dce775', '#d4e157', '#cddc39', '#c0ca33', '#afb42b', '#9e9d24', '#827717',
+'#fffde7', '#fff9c4', '#fff59d', '#fff176', '#ffee58', '#ffeb3b', '#fdd835', '#fbc02d', '#f9a825', '#f57f17',
+'#fff8e1', '#ffecb3', '#ffe0b2', '#ffd54f', '#ffca28', '#ffc107', '#ffb300', '#ffa000', '#ff8f00', '#ff6f00',
+'#fff3e0', '#ffe0b2', '#ffcc80', '#ffb74d', '#ff9800', '#fb8c00', '#f57c00', '#ef6c00', '#e65100', '#bf360c',
+'#fbe9e7', '#ffccbc', '#ffab91', '#ff8a65', '#ff7043', '#ff5722', '#f4511e', '#e64a19', '#d84315', '#bf360c',
+'#efebe9', '#d7ccc8', '#bcaaa4', '#a1887f', '#8d6e63', '#795548', '#6d4c41', '#5d4037', '#4e342e', '#3e2723',
+'#eceff1', '#cfd8dc', '#b0bec5', '#90a4ae', '#78909c', '#607d8b', '#546e7a', '#455a64', '#37474f', '#263238'
+];
+function initColorPicker() {
+const grid = document.getElementById('color-grid');
+grid.innerHTML = '';
+colorPalette.forEach(color => {
+const swatch = document.createElement('div');
+swatch.className = 'color-swatch';
+swatch.style.backgroundColor = color;
+swatch.title = color;
+if (color === '#000000' || color === '#212121') {
+swatch.style.border = '1px solid #555';
+}
+swatch.onclick = () => {
+insertColor(color);
+};
+grid.appendChild(swatch);
+});
+document.addEventListener('click', (e) => {
+const picker = document.getElementById('color-picker');
+const btn = document.getElementById('color-btn');
+if (picker && !picker.contains(e.target) && e.target !== btn) {
+picker.style.display = 'none';
+}
+});
+}
+function toggleColorPicker() {
+const picker = document.getElementById('color-picker');
+const isHidden = picker.style.display === 'none';
+picker.style.display = isHidden ? 'block' : 'none';
+if (isHidden && document.getElementById('color-grid').children.length === 0) {
+initColorPicker();
+}
+}
+function insertColor(hex) {
+navigator.clipboard.writeText(hex).then(() => {
+if (window.editor) {
+window.editor.applyChange(hex);
+window.editor.setStatus(`Inserted ${hex}`);
+window.editor.dom.editor.focus();
+}
+});
+document.getElementById('color-picker').style.display = 'none';
+}
+window.onload = () => {
+window.editor = new EditorEngine();
+checkIntroModal();
+document.getElementById('intro-modal').addEventListener('click', function(e) {
+if (e.target === this) {
+closeIntroModal();
+}
+});
+};
+</script>
+</body>
+</html>
