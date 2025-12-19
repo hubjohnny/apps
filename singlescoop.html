@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Single Scoop</title>
 <style>
-
 :root {
 --bg-color: #1e1e1e;
 --text-color: #d4d4d4;
@@ -756,6 +755,7 @@ this.redoStack.push(op);
 this.editor.applyEditInternal(op.startRow, op.startCol, op.cursorAfter.row, op.cursorAfter.col, op.oldText, false);
 this.editor.state.cursor = { ...op.cursorBefore };
 this.editor.finalizeUpdate();
+this.lastEditTime = 0;
 }
 redo() {
 if (this.redoStack.length === 0) return;
@@ -764,6 +764,7 @@ this.undoStack.push(op);
 this.editor.applyEditInternal(op.startRow, op.startCol, op.endRow, op.endCol, op.text, false);
 this.editor.state.cursor = { ...op.cursorAfter };
 this.editor.finalizeUpdate();
+this.lastEditTime = 0;
 }
 }
 class SearchManager {
@@ -900,9 +901,20 @@ this.init();
 }
 init() {
 this.setupDragAndDrop();
+this.isComposing = false;
 this.dom.trap = document.createElement('textarea');
 this.dom.trap.id = 'input-trap';
 this.dom.trap.value = ' ';
+this.dom.trap.addEventListener('compositionstart', () => {
+this.isComposing = true;
+});
+this.dom.trap.addEventListener('compositionend', (e) => {
+this.isComposing = false;
+if (e.data) {
+this.applyChange(e.data);
+this.dom.trap.value = ' ';
+}
+});
 document.body.appendChild(this.dom.trap);
 const measureLine = document.createElement('div');
 measureLine.id = 'measure-line';
@@ -948,7 +960,16 @@ return;
 }
 if (c.col > 0) {
 if (!wordMode) {
-this.state.selectionAnchor = { row: c.row, col: c.col - 1 };
+let deleteCount = 1;
+const line = lines[c.row];
+if (c.col >= 2) {
+const high = line.charCodeAt(c.col - 2);
+const low = line.charCodeAt(c.col - 1);
+if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+deleteCount = 2;
+}
+}
+this.state.selectionAnchor = { row: c.row, col: c.col - deleteCount };
 this.applyChange("");
 }
 else {
@@ -956,7 +977,8 @@ const boundary = this.findWordBoundary(c.row, c.col, -1);
 this.state.selectionAnchor = { row: c.row, col: boundary };
 this.applyChange("");
 }
-} else if (c.row > 0) {
+}
+else if (c.row > 0) {
 const prevLineLen = lines[c.row - 1].length;
 this.applyEditInternal(c.row - 1, prevLineLen, c.row, 0, "", true);
 this.state.cursor = { row: c.row - 1, col: prevLineLen };
@@ -982,6 +1004,7 @@ this.finalizeUpdate();
 }
 }
 handleTrapInput(e) {
+if (this.isComposing) return;
 const val = this.dom.trap.value;
 if (val.length > 1) {
 const char = val.slice(1);
@@ -1546,7 +1569,8 @@ const { cursor: c, lines } = this.state;
 const currentLine = lines[c.row];
 if (c.col > 0) {
 const indent = (currentLine.match(/^\s*/) || [''])[0];
-let extra = currentLine.trim().endsWith('{') ? "  " : "";
+const textBeforeCursor = currentLine.substring(0, c.col);
+let extra = textBeforeCursor.trim().endsWith('{') ? "  " : "";
 this.applyChange("\n" + indent + extra);
 } else {
 this.applyChange("\n");
@@ -1591,6 +1615,15 @@ return;
 const pairs = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'", '`': '`' };
 if (pairs[k] && !ctrl && !alt && k.length === 1) {
 e.preventDefault();
+const { cursor, lines } = this.state;
+const line = lines[cursor.row];
+const nextChar = line[cursor.col];
+if (nextChar === k && (k === '"' || k === "'" || k === '`' || k === ')' || k === '}' || k === ']')) {
+this.state.cursor.col++;
+this.state.desiredCol = this.state.cursor.col;
+this.finalizeUpdate();
+return;
+}
 this.applyChange(k + pairs[k]);
 this.state.cursor.col -= 1;
 this.state.desiredCol = this.state.cursor.col;
@@ -1864,17 +1897,27 @@ return { row, col };
 ensureCursorVisible() {
 const { row, col } = this.state.cursor;
 const { lineHeight, charWidth, xOffset } = this.config;
+const bufferLines = 3;
+const bufferPixels = bufferLines * lineHeight;
 const top = row * lineHeight;
 const bottom = top + lineHeight;
 const vH = this.state.viewportHeight;
 const sT = this.dom.editor.scrollTop;
-if (top < sT) this.dom.editor.scrollTop = top;
-else if (bottom > sT + vH) this.dom.editor.scrollTop = bottom - vH;
+if (top < sT + bufferPixels) {
+this.dom.editor.scrollTop = Math.max(0, top - bufferPixels);
+}
+else if (bottom > sT + vH - bufferPixels) {
+this.dom.editor.scrollTop = bottom - vH + bufferPixels;
+}
 const left = xOffset + (col * charWidth);
 const sL = this.dom.editor.scrollLeft;
 const cW = this.dom.editor.clientWidth;
-if (left < sL + xOffset) this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
-else if (left > sL + cW) this.dom.editor.scrollLeft = left - cW + 20;
+if (left < sL + xOffset) {
+this.dom.editor.scrollLeft = Math.max(0, left - xOffset - 20);
+}
+else if (left > sL + cW) {
+this.dom.editor.scrollLeft = left - cW + 20;
+}
 }
 blockEdit(mod, sr = null, er = null) {
 const { cursor: c, selectionAnchor: s, lines: l } = this.state;
@@ -1992,23 +2035,23 @@ if (!confirm("This will insert a template at your cursor position. Continue?")) 
 const template = `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Built with Single Scoop">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Built with Single Scoop">
 <title>New App</title>
 <style>
 :root {
-  --bg: #1e1e1e;
-  --text: #d4d4d4;
-  --accent: #007acc;
+--bg: #1e1e1e;
+--text: #d4d4d4;
+--accent: #007acc;
 }
 body {
-  margin: 0;
-  padding: 20px;
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
-  box-sizing: border-box;
+margin: 0;
+padding: 20px;
+background-color: var(--bg);
+color: var(--text);
+font-family: system-ui, -apple-system, sans-serif;
+box-sizing: border-box;
 }
 h1 { color: var(--accent); }
 </style>
@@ -2019,8 +2062,8 @@ h1 { color: var(--accent); }
 <p>Start building your single-file app here.</p>
 
 <script>
-  "use strict";
-  console.log("App loaded successfully!");
+"use strict";
+console.log("App loaded successfully!");
 <\/script>
 
 </body>
