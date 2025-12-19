@@ -621,7 +621,9 @@ this.lineModes = [];
 }
 analyze(lines) {
 let mode = 'html';
+let inBlockComment = false;
 this.lineModes = new Array(lines.length);
+this.lineState = new Array(lines.length);
 for (let i = 0; i < lines.length; i++) {
 const line = lines[i];
 let thisLineMode = mode;
@@ -629,27 +631,39 @@ if (mode === 'html') {
 if (line.match(/^\s*<script/i)) {
 thisLineMode = 'html';
 if (!line.match(/<\/script/i)) mode = 'javascript';
-}
-else if (line.match(/^\s*<style/i)) {
+} else if (line.match(/^\s*<style/i)) {
 thisLineMode = 'html';
 if (!line.match(/<\/style/i)) mode = 'css';
 }
+} else if (mode === 'javascript') {
+if (line.match(/<\/script/i)) { thisLineMode = 'html'; mode = 'html'; }
+else { thisLineMode = 'javascript'; }
+} else if (mode === 'css') {
+if (line.match(/<\/style/i)) { thisLineMode = 'html'; mode = 'html'; }
+else { thisLineMode = 'css'; }
 }
-else if (mode === 'javascript') {
-if (line.match(/<\/script/i)) {
-thisLineMode = 'html';
-mode = 'html';
+this.lineState[i] = inBlockComment ? 'comment' : null;
+if (thisLineMode === 'javascript' || thisLineMode === 'css') {
+if (!inBlockComment) {
+const start = line.lastIndexOf('/*');
+const end = line.lastIndexOf('*/');
+if (start > -1 && start > end) {
+inBlockComment = true;
+}
+}
+else {
+const end = line.indexOf('*/');
+if (end > -1) {
+const startAfter = line.lastIndexOf('/*', end);
+if (line.lastIndexOf('/*') > end) {
+inBlockComment = true;
 } else {
-thisLineMode = 'javascript';
+inBlockComment = false;
 }
 }
-else if (mode === 'css') {
-if (line.match(/<\/style/i)) {
-thisLineMode = 'html';
-mode = 'html';
+}
 } else {
-thisLineMode = 'css';
-}
+inBlockComment = false;
 }
 this.lineModes[i] = thisLineMode;
 }
@@ -657,7 +671,22 @@ this.lineModes[i] = thisLineMode;
 highlight(text, rowIndex) {
 if (!text) return '&nbsp;';
 const mode = (this.lineModes && this.lineModes[rowIndex]) ? this.lineModes[rowIndex] : 'html';
+const state = (this.lineState && this.lineState[rowIndex]) ? this.lineState[rowIndex] : null;
 let escaped = this.escapeHTML(text);
+if (state === 'comment') {
+const endIdx = escaped.indexOf('*/');
+if (endIdx === -1) {
+return `<span class="token comment">${escaped}</span>`;
+} else {
+const commentPart = escaped.substring(0, endIdx + 2);
+const codePart = escaped.substring(endIdx + 2);
+let restHighlighted = '';
+if (mode === 'javascript') restHighlighted = this.highlightJS(codePart);
+else if (mode === 'css') restHighlighted = this.highlightCSS(codePart);
+else restHighlighted = codePart;
+return `<span class="token comment">${commentPart}</span>${restHighlighted}`;
+}
+}
 let result = '';
 if (mode === 'javascript') {
 result = this.highlightJS(escaped);
@@ -728,6 +757,12 @@ this.redoStack = [];
 this.lastEditTime = 0;
 }
 record(op) {
+if (op.oldText.length > 1000000 || op.text.length > 1000000) {
+this.undoStack = [];
+this.redoStack = [];
+this.editor.setStatus("History cleared (Low Mem)");
+return;
+}
 const now = Date.now();
 const isTyping = op.text.length === 1 && op.oldText.length === 0;
 const isDel = op.oldText.length === 1 && op.text.length === 0;
@@ -2213,7 +2248,7 @@ this._saveTimeout = setTimeout(() => {
 try {
 const content = this.state.lines.join('\n');
 if (content.length > 2000000) {
-console.warn("File too large for local autosave");
+this.setStatus("⚠️ File too large for autosave");
 return;
 }
 const data = {
