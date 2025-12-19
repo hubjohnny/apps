@@ -120,13 +120,11 @@ this.e.oninput = () => { if (!this.d) this.dirty(true) };
 this.e.onkeydown = this.tab.bind(this);
 document.onkeydown = this.key.bind(this);
 window.onbeforeunload = e => { if (this.d) { e.preventDefault(); e.returnValue = '' } };
-
 document.addEventListener('click', (e) => {
-    if (e.target === document.body) {
-      this.e.focus();
-    }
-  });
-
+if (e.target === document.body) {
+this.e.focus();
+}
+});
 this.applyTheme(0);
 this.e.focus();
 this.toggleHelp();
@@ -220,15 +218,12 @@ behavior: behavior
 });
 },
 toggleHelp() {
-  const h = document.getElementById('h');
-  const isOpening = h.style.display !== 'block';
-  
-  h.style.display = isOpening ? 'block' : 'none';
-  
-  // If we just closed the help modal, refocus the editor
-  if (!isOpening) {
-    this.e.focus();
-  }
+const h = document.getElementById('h');
+const isOpening = h.style.display !== 'block';
+h.style.display = isOpening ? 'block' : 'none';
+if (!isOpening) {
+this.e.focus();
+}
 },
 toast(m) {
 const el = document.getElementById('t');
