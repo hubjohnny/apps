@@ -270,17 +270,33 @@ this.toggleHelp();
 tab(e) {
 if (e.key !== 'Tab') return;
 e.preventDefault();
-const el = this.e, val = el.value, s = el.selectionStart, end = el.selectionEnd;
-const startLine = val.lastIndexOf('\n', s - 1) + 1, endLine = val.indexOf('\n', end - 1);
+const el = this.e,
+val = el.value,
+start = el.selectionStart,
+end = el.selectionEnd;
+const startLine = val.lastIndexOf('\n', start - 1) + 1;
+const endLine = val.indexOf('\n', end);
 const final = endLine === -1 ? val.length : endLine;
+if (start === end && !e.shiftKey) {
+el.setRangeText('  ', start, end, 'end');
+if (!this.d) this.dirty(true);
+return;
+}
 const lines = val.substring(startLine, final).split('\n');
-let ch = false;
-const newVal = lines.map(r => {
-if (e.shiftKey) return (r.startsWith('  ') || r.startsWith(' ')) ? (ch = true, r.replace(/^ {1,2}/, '')) : r;
-return ch = true, '  ' + r
-}).join('\n');
-if (ch) {
-el.setRangeText(newVal, startLine, final, 'select');
+let changed = false;
+const newLines = lines.map(line => {
+if (e.shiftKey) {
+if (line.startsWith('  ')) { changed = true; return line.substring(2); }
+if (line.startsWith(' ')) { changed = true; return line.substring(1); }
+return line;
+} else {
+changed = true;
+return '  ' + line;
+}
+});
+if (changed) {
+const replacement = newLines.join('\n');
+el.setRangeText(replacement, startLine, final, 'select');
 if (!this.d) this.dirty(true);
 }
 }
