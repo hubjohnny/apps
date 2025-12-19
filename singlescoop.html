@@ -987,6 +987,15 @@ this.highlighter.analyze(this.state.lines);
 this.finalizeUpdate();
 this.dom.trap.focus();
 }
+measureTextWidth(text) {
+let content = text
+.replace(/&/g, '&amp;')
+.replace(/</g, '&lt;')
+.replace(/>/g, '&gt;')
+.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g, '<span class="token emoji">$1</span>');
+this.dom.measureLine.innerHTML = content;
+return this.dom.measureLine.getBoundingClientRect().width;
+}
 handleBackspace(wordMode = false) {
 const { cursor: c, lines, selectionAnchor } = this.state;
 if (selectionAnchor) {
@@ -1927,18 +1936,46 @@ const r = this.dom.editor.getBoundingClientRect();
 const x = e.clientX - r.left + this.dom.editor.scrollLeft;
 const y = e.clientY - r.top + this.dom.editor.scrollTop;
 let row = Math.floor(y / this.config.lineHeight);
-let col = Math.floor(((x - this.config.xOffset) / this.config.charWidth) + 0.25);
 row = Math.max(0, Math.min(row, this.state.lines.length - 1));
 const line = this.state.lines[row];
-col = Math.max(0, Math.min(col, line.length));
-if (col > 0 && col < line.length) {
-const high = line.charCodeAt(col - 1);
-const low = line.charCodeAt(col);
-if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
-col++;
+const targetPixel = x - this.config.xOffset;
+if (targetPixel <= 0) return { row, col: 0 };
+let col = Math.floor(targetPixel / this.config.charWidth);
+col = Math.min(col, line.length);
+let currentWidth = this.measureTextWidth(line.substring(0, col));
+if (currentWidth < targetPixel) {
+while (col < line.length) {
+const nextCharLen = (col + 1 < line.length && this.isSurrogatePair(line, col)) ? 2 : 1;
+const nextWidth = this.measureTextWidth(line.substring(0, col + nextCharLen));
+if (nextWidth > targetPixel) {
+const charMiddle = currentWidth + (nextWidth - currentWidth) / 2;
+if (targetPixel > charMiddle) col += nextCharLen;
+break;
+}
+col += nextCharLen;
+currentWidth = nextWidth;
+}
+}
+else if (currentWidth > targetPixel) {
+while (col > 0) {
+const prevCharLen = (col - 2 >= 0 && this.isSurrogatePair(line, col - 2)) ? 2 : 1;
+const prevWidth = this.measureTextWidth(line.substring(0, col - prevCharLen));
+if (prevWidth <= targetPixel) {
+const charMiddle = prevWidth + (currentWidth - prevWidth) / 2;
+if (targetPixel <= charMiddle) col -= prevCharLen;
+break;
+}
+col -= prevCharLen;
+currentWidth = prevWidth;
 }
 }
 return { row, col };
+}
+isSurrogatePair(text, i) {
+if (i >= text.length - 1) return false;
+const high = text.charCodeAt(i);
+const low = text.charCodeAt(i + 1);
+return (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF);
 }
 ensureCursorVisible() {
 const { row, col } = this.state.cursor;
