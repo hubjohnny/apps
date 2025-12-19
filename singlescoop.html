@@ -699,7 +699,7 @@ result = result.replace(/([ \t]+)$/, (match) => {
 const dots = match.replace(/ /g, '·').replace(/\t/g, '→   ');
 return `<span class="token trailing-space-mark">${dots}</span>`;
 });
-return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g,
+return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF](?:\u200D[\uD800-\uDBFF][\uDC00-\uDFFF])*)/g,
 '<span class="token emoji" data-emoji="$1">$1</span>');
 }
 escapeHTML(str) {
@@ -992,7 +992,7 @@ let content = text
 .replace(/&/g, '&amp;')
 .replace(/</g, '&lt;')
 .replace(/>/g, '&gt;')
-.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g, '<span class="token emoji">$1</span>');
+.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF](?:\u200D[\uD800-\uDBFF][\uDC00-\uDFFF])*)/g, '<span class="token emoji">$1</span>');
 this.dom.measureLine.innerHTML = content;
 return this.dom.measureLine.getBoundingClientRect().width;
 }
@@ -1011,6 +1011,19 @@ const high = line.charCodeAt(c.col - 2);
 const low = line.charCodeAt(c.col - 1);
 if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
 deleteCount = 2;
+let ptr = c.col - 2;
+while (ptr >= 3) {
+if (line.charCodeAt(ptr - 1) === 0x200D) {
+const h2 = line.charCodeAt(ptr - 3);
+const l2 = line.charCodeAt(ptr - 2);
+if (h2 >= 0xD800 && h2 <= 0xDBFF && l2 >= 0xDC00 && l2 <= 0xDFFF) {
+deleteCount += 3;
+ptr -= 3;
+continue;
+}
+}
+break;
+}
 }
 }
 this.state.selectionAnchor = { row: c.row, col: c.col - deleteCount };
@@ -1033,13 +1046,35 @@ handleDelete() {
 const { cursor: c, lines, selectionAnchor } = this.state;
 if (selectionAnchor) {
 this.applyChange("");
-} else if (c.col < lines[c.row].length) {
-this.state.selectionAnchor = { row: c.row, col: c.col + 1 };
+}
+else if (c.col < lines[c.row].length) {
+let deleteCount = 1;
+const line = lines[c.row];
+const high = line.charCodeAt(c.col);
+const low = line.charCodeAt(c.col + 1);
+if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+deleteCount = 2;
+let ptr = c.col + 2;
+while (ptr < line.length) {
+if (line.charCodeAt(ptr) === 0x200D) {
+const h2 = line.charCodeAt(ptr + 1);
+const l2 = line.charCodeAt(ptr + 2);
+if (h2 >= 0xD800 && h2 <= 0xDBFF && l2 >= 0xDC00 && l2 <= 0xDFFF) {
+deleteCount += 3;
+ptr += 3;
+continue;
+}
+}
+break;
+}
+}
+this.state.selectionAnchor = { row: c.row, col: c.col + deleteCount };
 const oldC = { ...c };
 this.applyChange("");
 this.state.cursor = oldC;
 this.finalizeUpdate();
-} else if (c.row < lines.length - 1) {
+}
+else if (c.row < lines.length - 1) {
 this.state.selectionAnchor = { row: c.row + 1, col: 0 };
 const oldC = { ...c };
 this.applyChange("");
@@ -1458,7 +1493,7 @@ textUpToCursor = textUpToCursor
 .replace(/&/g, '&amp;')
 .replace(/</g, '&lt;')
 .replace(/>/g, '&gt;');
-textUpToCursor = textUpToCursor.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g,
+textUpToCursor = textUpToCursor.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF](?:\u200D[\uD800-\uDBFF][\uDC00-\uDFFF])*)/g,
 '<span class="token emoji">$1</span>');
 this.dom.measureLine.innerHTML = textUpToCursor;
 const measuredWidth = this.dom.measureLine.getBoundingClientRect().width;
