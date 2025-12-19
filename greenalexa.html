@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green Alexa Web Code Editor</title>
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIiBmaWxsPSIjMDAwMDAwIj7wn5al77iPPC90ZXh0Pjwvc3ZnPg==" type="image/svg+xml">
+<style>
+:root{--b:#000;--t:#39FF14;--f:'Courier New',monospace}
+body{margin:0;overflow:hidden;background:var(--b)}
+#e{
+width:100vw;height:100vh;box-sizing:border-box;background:0;color:var(--t);
+border:0;outline:0;resize:none;font:16px var(--f);padding:15px;
+white-space:pre;caret-color:#00BFFF
+}
+#t{
+position:fixed;bottom:20px;right:20px;background:#111;
+color:var(--t);border:1px solid var(--t);padding:8px 12px;
+font:13px var(--f);pointer-events:none;opacity:0;
+transition:opacity .5s;z-index:9;box-shadow:0 0 10px #39ff1433
+}
+#h{
+display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+background:#111;color:var(--t);border:1px solid var(--t);padding:20px;
+font:14px var(--f);z-index:10;box-shadow:0 0 20px #39ff1444;
+white-space:pre;line-height:1.6;
+}
+</style>
+</head>
+<body>
+<textarea id="e" spellcheck="false"></textarea>
+<div id="t"></div>
+<div id="h">
+Green Alexa (C) 2022 Johnny Heggelund
+-------------------------------------
+Web Code Editor for HTML, CSS & JS
+-------------------------------------
+SHORTCUTS (Alt + Key)
+-------------------------------------
+[Alt + O] Open File
+[Alt + S] Save File
+[Alt + P] Preview HTML
+[Alt + C] Next Comment (Selects)
+[Alt + F] Next Function (Cursor at start)
+[Alt + W] Next Trailing Space (Selects)
+[Alt + E] Next Empty Line (Cursor at start)
+[Alt + H] Toggle This Help
+</div>
+<script>
+const E={h:null,n:'Untitled',d:!1,e:null,tm:null,
+init(){
+this.e=document.getElementById('e');
+this.e.oninput=()=>{if(!this.d)this.dirty(!0)};
+this.e.onkeydown=this.tab.bind(this);
+document.onkeydown=this.key.bind(this);
+window.onbeforeunload=e=>{if(this.d){e.preventDefault();e.returnValue=''}};
+this.e.focus();
+this.toggleHelp();
+},
+dirty(s){this.d=s;document.title=`${s?'*':''}${this.n}`},
+async file(save){
+if(!window.showOpenFilePicker)return alert("No API");
+try{
+if(save){
+if(!this.h)this.h=await showSaveFilePicker({suggestedName:this.n,types:[{description:'Text',accept:{'text/plain':['.txt','.html','.js','.css','.md']}}]});
+const w=await this.h.createWritable();await w.write(this.e.value);await w.close();
+this.n=this.h.name;this.dirty(!1);this.toast(`Saved to ${this.n}`);
+}else{
+if(this.d&&!confirm("Unsaved?"))return;
+[this.h]=await showOpenFilePicker();const f=await this.h.getFile();
+this.e.value=await f.text();this.n=f.name;this.dirty(!1);
+}
+}catch(e){if(e.name!=='AbortError')this.toast(e.message)}
+},
+jump(regex, type, select = true) {
+this.e.focus();
+const val=this.e.value, cur=this.e.selectionEnd;
+let m, first=null, next=null; regex.lastIndex=0;
+while((m=regex.exec(val))!==null){
+if(m.index === regex.lastIndex) regex.lastIndex++;
+const item = {idx: m.index, len: m[0].length};
+if(!first) first = item;
+if(m.index > cur){
+next = item;
+break;
+}
+}
+const t = next || first;
+if(t){
+if(select) {
+this.e.setSelectionRange(t.idx, t.idx + t.len);
+} else {
+this.e.setSelectionRange(t.idx, t.idx);
+}
+this.scroll(t.idx);
+this.toast(`Found ${type} ${next ? '↓' : '↻'}`);
+} else {
+this.toast(`No ${type} found`);
+}
+},
+scroll(idx){
+const el=this.e, lh=parseFloat(window.getComputedStyle(el).lineHeight)||16;
+const l=el.value.substr(0,idx).split('\n').length-1;
+el.scrollTo({top:(l*lh)-(el.clientHeight/2)+(lh/2),behavior:'smooth'});
+},
+toggleHelp(){
+const h=document.getElementById('h');
+h.style.display = h.style.display==='block'?'none':'block';
+},
+toast(m){const el=document.getElementById('t');el.innerText=m;el.style.opacity=1;if(this.tm)clearTimeout(this.tm);this.tm=setTimeout(()=>el.style.opacity=0,3000)},
+key(e){
+if(e.altKey && !e.ctrlKey && !e.shiftKey){
+const k = e.key.toLowerCase();
+const map = {
+'o': () => this.file(0),
+'s': () => this.file(1),
+'p': () => { const w=window.open(); if(w){w.document.write(this.e.value);w.document.close()} },
+'c': () => this.jump(/(\/\*[\s\S]*?\*\/|(?<!:)\/\/.*)/g, 'Comment', true),
+'f': () => this.jump(/(^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{|^\s*function\s+\w+)/gm, 'Function', false),
+'w': () => this.jump(/[ \t]+$/gm, 'Trailing Space', true),
+'e': () => this.jump(/^\s*$/gm, 'Empty Line', false),
+'h': () => this.toggleHelp()
+};
+if(map[k]){
+e.preventDefault();
+const h=document.getElementById('h');
+if(h.style.display==='block' && k!=='h') this.toggleHelp();
+map[k]();
+}
+}
+if(e.key==='Escape'){
+const h=document.getElementById('h');
+if(h.style.display==='block') { e.preventDefault(); this.toggleHelp(); }
+}
+},
+tab(e){
+if(e.key!=='Tab')return;e.preventDefault();
+const el=this.e, val=el.value, s=el.selectionStart, end=el.selectionEnd;
+const startLine=val.lastIndexOf('\n',s-1)+1, endLine=val.indexOf('\n',end-1);
+const final=endLine===-1?val.length:endLine;
+const lines=val.substring(startLine,final).split('\n');
+let ch=!1, newVal=lines.map(r=>{
+if(e.shiftKey) return (r.startsWith('  ')||r.startsWith(' '))?(ch=!0,r.replace(/^ {1,2}/,'')):r;
+return ch=!0,'  '+r
+}).join('\n');
+if(ch){el.setRangeText(newVal,startLine,final,'select');if(!this.d)this.dirty(!0)}
+}};
+window.onload=()=>E.init();
+</script>
+</body>
+</html>
