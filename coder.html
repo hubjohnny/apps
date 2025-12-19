@@ -114,6 +114,7 @@ themes: [
 { n: 'Night Owl',    b: '#011627', t: '#d6deeb', c: '#82aaff', p: '#0b2942' },
 { n: 'Hacker',       b: '#000000', t: '#00ff00', c: '#00ff00', p: '#111111' }
 ],
+
 init() {
 this.e = document.getElementById('e');
 this.e.oninput = () => { if (!this.d) this.dirty(true) };
@@ -129,10 +130,12 @@ this.applyTheme(0);
 this.e.focus();
 this.toggleHelp();
 },
+
 dirty(s) {
 this.d = s;
 document.title = `${s ? '*' : ''}${this.n}`;
 },
+
 new() {
 if (this.d && !confirm("Unsaved changes. Discard?")) return;
 this.e.value = '';
@@ -143,10 +146,12 @@ this.toast('New File Created');
 this.e.focus();
 this.e.scrollTo(0, 0);
 },
+
 cycleTheme() {
 this.ti = (this.ti + 1) % this.themes.length;
 this.applyTheme(this.ti);
 },
+
 applyTheme(i) {
 this.ti = i;
 const th = this.themes[i];
@@ -184,6 +189,7 @@ this.toast(`Opened: ${this.n}`);
 if (e.name !== 'AbortError') this.toast(e.message);
 }
 },
+
 jump(regex, type, select = true) {
 this.e.focus();
 const val = this.e.value, cur = this.e.selectionEnd;
@@ -208,6 +214,7 @@ this.toast(`Found ${type} ${next ? '↓' : '↻'}`);
 this.toast(`No ${type} found`);
 }
 },
+
 scroll(idx, behavior) {
 const el = this.e;
 const lh = 26;
@@ -217,6 +224,7 @@ top: (l * lh) - (el.clientHeight / 2) + (lh / 2),
 behavior: behavior
 });
 },
+
 toggleHelp() {
 const h = document.getElementById('h');
 const isOpening = h.style.display !== 'block';
@@ -225,6 +233,7 @@ if (!isOpening) {
 this.e.focus();
 }
 },
+
 toast(m) {
 const el = document.getElementById('t');
 el.innerText = m;
@@ -234,6 +243,7 @@ this.tm = setTimeout(() => {
 el.classList.remove('show');
 }, 3000);
 },
+
 key(e) {
 if (e.altKey && !e.ctrlKey && !e.shiftKey) {
 const k = e.key.toLowerCase();
@@ -247,7 +257,7 @@ const w = window.open();
 if (w) { w.document.write(this.e.value); w.document.close(); }
 },
 'c': () => this.jump(/(\/\*[\s\S]*?\*\/|(?<!:)\/\/.*)/g, 'Comment', true),
-'f': () => this.jump(/(^\s*(?!if|for|while|switch|catch)\w+\s*\(.*?\)\s*\{|^\s*function\s+\w+)/gm, 'Function', false),
+'f': () => this.jump(/(?:async\s+)?function\s+\w+(?=(?:[^"']*["'][^"']*["'])*[^"']*$)|^\s*(?!if|for|while|switch|catch)\w+\s*(?:\(.*?\))\s*\{(?=(?:[^"']*["'][^"']*["'])*[^"']*$)/gm, 'Function', false),
 'w': () => this.jump(/[ \t]+$/gm, 'Trailing Space', true),
 'e': () => this.jump(/^\s*$/gm, 'Empty Line', false),
 'h': () => this.toggleHelp()
@@ -267,6 +277,7 @@ this.toggleHelp();
 }
 }
 },
+
 tab(e) {
 if (e.key !== 'Tab') return;
 e.preventDefault();
