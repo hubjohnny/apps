@@ -593,10 +593,8 @@ singlescoop.net &copy; 2025 Johnny Heggelund
 <button onclick="editor.saveFile()" title="Save File (Alt+S)">💾</button>
 <button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">📄</button>
 <button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comm</button>
-<!--
 <button onclick="editor.cycleNext('empty')" title="Jump to next empty line (Alt+L)">↻ Empty</button>
 <button onclick="editor.cycleNext('whitespace')" title="Jump to next trailing whitespace (Alt+W)">↻ Trail</button>
--->
 <button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Func</button>
 <button onclick="editor.removeComments()" title="Remove Comments (Alt+R)" style="margin-left: 10px;">🗑️ Comm</button>
 <button onclick="editor.removeEmptyLines()" title="Remove Empty Lines (Alt+E)">🗑️ Empty</button>
@@ -625,55 +623,108 @@ window.editor.dom.trap.focus();
 class SyntaxHighlighter {
 constructor() {
 this.lineModes = [];
+this.lineState = [];
 }
 analyze(lines) {
 let mode = 'html';
-let inBlockComment = false;
+let jsCssBlockComment = false;
+let htmlBlockComment = false;
 this.lineModes = new Array(lines.length);
 this.lineState = new Array(lines.length);
 for (let i = 0; i < lines.length; i++) {
 const line = lines[i];
 let thisLineMode = mode;
 if (mode === 'html') {
-if (line.match(/^\s*<script/i)) {
+if (!htmlBlockComment && line.match(/^\s*<script/i)) {
 thisLineMode = 'html';
 if (!line.match(/<\/script/i)) mode = 'javascript';
-} else if (line.match(/^\s*<style/i)) {
+} else if (!htmlBlockComment && line.match(/^\s*<style/i)) {
 thisLineMode = 'html';
 if (!line.match(/<\/style/i)) mode = 'css';
 }
 } else if (mode === 'javascript') {
-if (line.match(/<\/script/i)) { thisLineMode = 'html'; mode = 'html'; }
-else { thisLineMode = 'javascript'; }
+if (!jsCssBlockComment && line.match(/<\/script/i)) {
+thisLineMode = 'html';
+mode = 'html';
+} else {
+thisLineMode = 'javascript';
+}
 } else if (mode === 'css') {
-if (line.match(/<\/style/i)) { thisLineMode = 'html'; mode = 'html'; }
-else { thisLineMode = 'css'; }
-}
-this.lineState[i] = inBlockComment ? 'comment' : null;
-if (thisLineMode === 'javascript' || thisLineMode === 'css') {
-if (!inBlockComment) {
-const start = line.lastIndexOf('/*');
-const end = line.lastIndexOf('*/');
-if (start > -1 && start > end) {
-inBlockComment = true;
-}
-}
-else {
-const end = line.indexOf('*/');
-if (end > -1) {
-const startAfter = line.lastIndexOf('/*', end);
-if (line.lastIndexOf('/*') > end) {
-inBlockComment = true;
+if (!jsCssBlockComment && line.match(/<\/style/i)) {
+thisLineMode = 'html';
+mode = 'html';
 } else {
-inBlockComment = false;
+thisLineMode = 'css';
 }
 }
-}
+if (thisLineMode === 'html') {
+const state = this.checkHtmlCommentState(line, htmlBlockComment);
+this.lineState[i] = htmlBlockComment ? 'html-comment' : null;
+htmlBlockComment = state;
+if (htmlBlockComment) this.lineState[i] = 'html-comment';
 } else {
-inBlockComment = false;
+this.lineState[i] = jsCssBlockComment ? 'comment' : null;
+const state = this.checkJsCssCommentState(line, jsCssBlockComment);
+jsCssBlockComment = state;
 }
 this.lineModes[i] = thisLineMode;
 }
+}
+checkJsCssCommentState(line, inComment) {
+let state = inComment;
+let inString = false;
+let quoteChar = '';
+let escape = false;
+for (let i = 0; i < line.length; i++) {
+const char = line[i];
+const next = line[i + 1];
+if (state) {
+if (char === '*' && next === '/') {
+state = false;
+i++;
+}
+} else {
+if (inString) {
+if (escape) {
+escape = false;
+} else if (char === '\\') {
+escape = true;
+} else if (char === quoteChar) {
+inString = false;
+}
+} else {
+if (char === '"' || char === "'" || char === '`') {
+inString = true;
+quoteChar = char;
+} else if (char === '/' && next === '*') {
+state = true;
+i++;
+} else if (char === '/' && next === '/') {
+break;
+}
+}
+}
+}
+return state;
+}
+checkHtmlCommentState(line, inComment) {
+let state = inComment;
+const startMarker = '<' + '!--';
+const endMarker = '-' + '->';
+for (let i = 0; i < line.length; i++) {
+if (state) {
+if (line.substr(i, 3) === endMarker) {
+state = false;
+i += 2;
+}
+} else {
+if (line.substr(i, 4) === startMarker) {
+state = true;
+i += 3;
+}
+}
+}
+return state;
 }
 highlight(text, rowIndex) {
 if (!text) return '&nbsp;';
@@ -683,7 +734,7 @@ let escaped = this.escapeHTML(text);
 if (state === 'comment') {
 const endIdx = escaped.indexOf('*/');
 if (endIdx === -1) {
-return `<span class="token comment">${escaped}</span>`;
+return '<span class="token comment">' + escaped + '</span>';
 } else {
 const commentPart = escaped.substring(0, endIdx + 2);
 const codePart = escaped.substring(endIdx + 2);
@@ -691,7 +742,17 @@ let restHighlighted = '';
 if (mode === 'javascript') restHighlighted = this.highlightJS(codePart);
 else if (mode === 'css') restHighlighted = this.highlightCSS(codePart);
 else restHighlighted = codePart;
-return `<span class="token comment">${commentPart}</span>${restHighlighted}`;
+return '<span class="token comment">' + commentPart + '</span>' + restHighlighted;
+}
+}
+if (state === 'html-comment') {
+const endIdx = escaped.indexOf('-' + '-' + '&gt;');
+if (endIdx === -1) {
+return '<span class="token comment">' + escaped + '</span>';
+} else {
+const commentPart = escaped.substring(0, endIdx + 6);
+const codePart = escaped.substring(endIdx + 6);
+return '<span class="token comment">' + commentPart + '</span>' + this.highlightHTMLLine(codePart);
 }
 }
 let result = '';
@@ -704,7 +765,7 @@ result = this.highlightHTMLLine(escaped);
 }
 result = result.replace(/([ \t]+)$/, (match) => {
 const dots = match.replace(/ /g, '·').replace(/\t/g, '→   ');
-return `<span class="token trailing-space-mark">${dots}</span>`;
+return '<span class="token trailing-space-mark">' + dots + '</span>';
 });
 return result.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF](?:\u200D[\uD800-\uDBFF][\uDC00-\uDFFF])*)/g,
 '<span class="token emoji" data-emoji="$1">$1</span>');
@@ -715,16 +776,13 @@ return str.replace(/&/g, '&amp;')
 .replace(/>/g, '&gt;');
 }
 highlightJS(code) {
-const pattern = /(".*?"|'.*?'|`[\s\S]*?`|\/\/.*)|(\b(?:const|let|var|function|return|if|else|for|while|class|new|this|async|await|import|export|from|try|catch)\b)|(\b\d+\.?\d*\b)|(\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\())/g;
-return code.replace(pattern, (match, string, keyword, number, func) => {
-if (string) {
-return string.startsWith('//')
-? `<span class="token comment">${string}</span>`
-: `<span class="token string">${string}</span>`;
-}
-if (keyword) return `<span class="token keyword">${keyword}</span>`;
-if (number) return `<span class="token number">${number}</span>`;
-if (func) return `<span class="token function">${func}</span>`;
+const pattern = /(\/\*[\s\S]*?\*\/|\/\/.*)|(".*?"|'.*?'|`[\s\S]*?`)|(\b(?:const|let|var|function|return|if|else|for|while|class|new|this|async|await|import|export|from|try|catch|switch|case|break|default|typeof|void|delete)\b)|(\b\d+\.?\d*\b)|(\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\())/g;
+return code.replace(pattern, (match, comment, string, keyword, number, func) => {
+if (comment) return '<span class="token comment">' + comment + '</span>';
+if (string) return '<span class="token string">' + string + '</span>';
+if (keyword) return '<span class="token keyword">' + keyword + '</span>';
+if (number) return '<span class="token number">' + number + '</span>';
+if (func) return '<span class="token function">' + func + '</span>';
 return match;
 });
 }
@@ -732,12 +790,12 @@ highlightCSS(code) {
 try {
 const p = /(\/\*[\s\S]*?\*\/)|(".*?"|'.*?')|((-?\d+\.?\d*|\.\d+)[a-zA-Z%]*)|([\.#][\w-]+|(?<=[\}\s]|^)[a-zA-Z][\w-]*(?=\s*[\{\,\.#]))|([a-zA-Z-]+)(?=:)|(@[\w-]+)/g;
 return code.replace(p, (m, c, s, n, d, sel, prop, at) => {
-if (c) return `<span class="token comment">${c}</span>`;
-if (s) return `<span class="token string">${s}</span>`;
-if (n) return `<span class="token number">${n}</span>`;
-if (sel) return `<span class="token selector">${sel}</span>`;
-if (prop) return `<span class="token property">${prop}</span>`;
-if (at) return `<span class="token keyword">${at}</span>`;
+if (c) return '<span class="token comment">' + c + '</span>';
+if (s) return '<span class="token string">' + s + '</span>';
+if (n) return '<span class="token number">' + n + '</span>';
+if (sel) return '<span class="token selector">' + sel + '</span>';
+if (prop) return '<span class="token property">' + prop + '</span>';
+if (at) return '<span class="token keyword">' + at + '</span>';
 return m;
 });
 } catch (e) {
@@ -746,12 +804,13 @@ return code;
 }
 highlightHTMLLine(code) {
 let output = code;
-output = output.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="token comment">$1</span>');
+const commentRegex = /(&lt;!--[\s\S]*?--&gt;)/g;
+output = output.replace(commentRegex, '<span class="token comment">$1</span>');
 output = output.replace(/(&lt;\/?)(\w+)([^&]*?)(&gt;)/g, (m, bracket, tag, attrs, close) => {
 const styledAttrs = attrs.replace(/([a-zA-Z-]+)(=)(".*?"|'.*?')/g,
 '<span class="token attr-name">$1</span>=$3'
 );
-return `${bracket}<span class="token html-tag">${tag}</span>${styledAttrs}${close}`;
+return bracket + '<span class="token html-tag">' + tag + '</span>' + styledAttrs + close;
 });
 return output;
 }
