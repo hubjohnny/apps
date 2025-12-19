@@ -33,6 +33,7 @@ caret-color: var(--c);
 transition: caret-color 0.3s;
 padding: 20px 20px 50vh 20px;
 tab-size: 2;
+caret-shape: block;
 }
 #t {
 position: fixed;
@@ -79,6 +80,7 @@ border-radius: 8px;
 <textarea id="e" spellcheck="false"></textarea>
 <div id="t"></div>
 <div id="h">
+<span id="close-h" onclick="E.toggleHelp()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px; font-weight:bold;">&times;</span>
 Coder 4.2 (C) 2022-25 Johnny Heggelund
 -------------------------------------------
 Web Code Editor for HTML, CSS & JS
@@ -118,6 +120,13 @@ this.e.oninput = () => { if (!this.d) this.dirty(true) };
 this.e.onkeydown = this.tab.bind(this);
 document.onkeydown = this.key.bind(this);
 window.onbeforeunload = e => { if (this.d) { e.preventDefault(); e.returnValue = '' } };
+
+document.addEventListener('click', (e) => {
+    if (e.target === document.body) {
+      this.e.focus();
+    }
+  });
+
 this.applyTheme(0);
 this.e.focus();
 this.toggleHelp();
@@ -211,8 +220,15 @@ behavior: behavior
 });
 },
 toggleHelp() {
-const h = document.getElementById('h');
-h.style.display = h.style.display === 'block' ? 'none' : 'block';
+  const h = document.getElementById('h');
+  const isOpening = h.style.display !== 'block';
+  
+  h.style.display = isOpening ? 'block' : 'none';
+  
+  // If we just closed the help modal, refocus the editor
+  if (!isOpening) {
+    this.e.focus();
+  }
 },
 toast(m) {
 const el = document.getElementById('t');
