@@ -1197,9 +1197,17 @@ let inRegex = false;
 let inRegexClass = false;
 let charEscaped = false;
 let lastRealChar = '';
+let lastWord = '';
+let currentWord = '';
 for (let j = 0; j < line.length; j++) {
 const char = line[j];
 const nextChar = line[j + 1];
+if (/[a-zA-Z0-9_$]/.test(char)) {
+currentWord += char;
+} else {
+if (currentWord.length > 0) lastWord = currentWord;
+currentWord = '';
+}
 if (charEscaped) {
 charEscaped = false;
 if (!inBlockComment) builtLine += char;
@@ -1249,8 +1257,11 @@ continue;
 if (nextChar === '/') {
 break;
 }
-const regexStarters = ['(', '=', ',', ':', '?', '[', '{', '!', '&', '|', 'return', 'case', 'throw'];
-if (regexStarters.includes(lastRealChar) || builtLine.trim().length === 0) {
+const regexCharStarters = ['(', '=', ',', ':', '?', '[', '{', '!', '&', '|', ';'];
+const regexKeywordStarters = ['return', 'case', 'throw', 'await', 'typeof', 'void', 'yield', 'delete'];
+if (regexCharStarters.includes(lastRealChar) ||
+regexKeywordStarters.includes(lastWord) ||
+builtLine.trim().length === 0) {
 inRegex = true;
 builtLine += char;
 continue;
