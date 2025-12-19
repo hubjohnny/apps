@@ -36,6 +36,7 @@ Web Code Editor for HTML, CSS & JS
 ----------------------------------------
 SHORTCUTS (Alt + Key)
 ----------------------------------------
+[Alt + N] New File
 [Alt + O] Open File
 [Alt + S] Save File
 [Alt + P] Preview HTML
@@ -57,6 +58,11 @@ this.e.focus();
 this.toggleHelp();
 },
 dirty(s){this.d=s;document.title=`${s?'*':''}${this.n}`},
+new(){
+if(this.d&&!confirm("Unsaved?"))return;
+this.e.value='';this.h=null;this.n='Untitled';this.dirty(!1);
+this.toast('New File');this.e.focus();
+},
 async file(save){
 if(!window.showOpenFilePicker)return alert("No API");
 try{
@@ -111,6 +117,7 @@ key(e){
 if(e.altKey && !e.ctrlKey && !e.shiftKey){
 const k = e.key.toLowerCase();
 const map = {
+'n': () => this.new(),
 'o': () => this.file(0),
 's': () => this.file(1),
 'p': () => { const w=window.open(); if(w){w.document.write(this.e.value);w.document.close()} },
