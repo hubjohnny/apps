@@ -257,7 +257,7 @@ const w = window.open();
 if (w) { w.document.write(this.e.value); w.document.close(); }
 },
 'c': () => this.jump(/(\/\*[\s\S]*?\*\/|(?<!:)\/\/.*)/g, 'Comment', true),
-'f': () => this.jump(/(?:async\s+)?function\s+\w+(?=(?:[^"']*["'][^"']*["'])*[^"']*$)|^\s*(?!if|for|while|switch|catch)\w+\s*(?:\(.*?\))\s*\{(?=(?:[^"']*["'][^"']*["'])*[^"']*$)/gm, 'Function', false),
+'f': () => this.jump(/(?:async\x20+)?func[t]ion\x20+\w+|^\s*(?!if|for|while|switch|catch)\w+\s*(?:\(.*?\))\s*\{/gm, 'Function', false),
 'w': () => this.jump(/[ \t]+$/gm, 'Trailing Space', true),
 'e': () => this.jump(/^\s*$/gm, 'Empty Line', false),
 'h': () => this.toggleHelp()
