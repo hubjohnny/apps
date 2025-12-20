@@ -1,3 +1,5 @@
+# [![Updates](https://img.shields.io/badge/🔆-Among_other_small_app_updates_Single_Scoop_Web_Editor_got_a_refresh-brightgreen?style=for-the-badge)](https://github.com/hubjohnny/hubjohnny.github.io/releases/latest)
+
 # Johnny Heggelund
 
 **Specializing in fast, single-file browser games & tools for PC users.**
