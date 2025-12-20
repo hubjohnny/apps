@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Single Scoop</title>
 <style>
-
 :root {
 --bg-color: #1e1e1e;
 --text-color: #d4d4d4;
@@ -1053,6 +1052,70 @@ let content = text
 this.dom.measureLine.innerHTML = content;
 return this.dom.measureLine.getBoundingClientRect().width;
 }
+smartUnindent() {
+const { cursor: c, selectionAnchor: s, lines } = this.state;
+let sr = s ? Math.min(s.row, c.row) : c.row;
+let er = s ? Math.max(s.row, c.row) : c.row;
+const newLines = [];
+let changed = false;
+let inBackticks = false;
+let inBlockComment = false;
+for (let i = 0; i <= er; i++) {
+let line = lines[i];
+let processLine = (i >= sr);
+if (processLine) {
+if (!inBackticks) {
+const unindented = line.replace(/^(\t| {1,2})/, "");
+if (line !== unindented) changed = true;
+newLines.push(unindented);
+} else {
+newLines.push(line);
+}
+}
+let inSingleQuote = false;
+let inDoubleQuote = false;
+let charEscaped = false;
+for (let j = 0; j < line.length; j++) {
+const char = line[j];
+const nextChar = line[j + 1];
+if (charEscaped) { charEscaped = false; continue; }
+if (char === '\\') { charEscaped = true; continue; }
+if (inBlockComment) {
+if (char === '*' && nextChar === '/') {
+inBlockComment = false;
+j++;
+}
+continue;
+}
+if (inBackticks) {
+if (char === '`') inBackticks = false;
+continue;
+}
+if (!inSingleQuote && !inDoubleQuote) {
+if (char === '/' && nextChar === '*') {
+inBlockComment = true;
+j++;
+continue;
+}
+if (char === '/' && nextChar === '/') break;
+if (char === '"') { inDoubleQuote = true; continue; }
+if (char === "'") { inSingleQuote = true; continue; }
+if (char === '`') { inBackticks = true; continue; }
+} else {
+if (char === '"' && inDoubleQuote) inDoubleQuote = false;
+if (char === "'" && inSingleQuote) inSingleQuote = false;
+}
+}
+}
+if (changed) {
+const newBlockText = newLines.join('\n');
+this.applyEditInternal(sr, 0, er, lines[er].length, newBlockText, true);
+this.state.selectionAnchor = { row: sr, col: 0 };
+const lastLineLen = newLines[newLines.length - 1].length;
+this.state.cursor = { row: er, col: lastLineLen };
+this.finalizeUpdate();
+}
+}
 handleBackspace(wordMode = false) {
 const { cursor: c, lines, selectionAnchor } = this.state;
 if (selectionAnchor) {
@@ -1164,344 +1227,275 @@ this.state.desiredCol = this.state.cursor.col;
 }
 }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 removeEmptyLines() {
-    const lines = this.state.lines;
-    const newLines = [];
-    let inBackticks = false;
-    let inBlockComment = false;
-
-    for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        let content = line.trim();
-
-        // 1. DECISION: Keep line if it has content OR if we are in a protected state
-        // (We check this BEFORE parsing the line, using the state inherited from previous lines)
-        const isProtected = inBackticks || inBlockComment;
-        if (content.length > 0 || isProtected) {
-            newLines.push(line);
-        }
-
-        // 2. STATE UPDATE: Parse the line to set state for the NEXT iteration
-        let inSingleQuote = false;
-        let inDoubleQuote = false;
-        let charEscaped = false;
-
-        for (let j = 0; j < line.length; j++) {
-            const char = line[j];
-            const nextChar = line[j + 1];
-
-            if (charEscaped) { charEscaped = false; continue; }
-            if (char === '\\') { charEscaped = true; continue; }
-
-            // Handle Block Comments
-            if (inBlockComment) {
-                if (char === '*' && nextChar === '/') {
-                    inBlockComment = false;
-                    j++;
-                }
-                continue;
-            }
-
-            // Handle Backticks (Multi-line)
-            if (inBackticks) {
-                if (char === '`') inBackticks = false;
-                continue;
-            }
-
-            // Normal State
-            if (!inSingleQuote && !inDoubleQuote) {
-                if (char === '/' && nextChar === '*') {
-                    inBlockComment = true;
-                    j++;
-                    continue;
-                }
-                if (char === '/' && nextChar === '/') {
-                    break; // Stop parsing this line (comment)
-                }
-                if (char === '"') { inDoubleQuote = true; continue; }
-                if (char === "'") { inSingleQuote = true; continue; }
-                if (char === '`') { inBackticks = true; continue; }
-            } else {
-                if (char === '"' && inDoubleQuote) inDoubleQuote = false;
-                if (char === "'" && inSingleQuote) inSingleQuote = false;
-            }
-        }
-    }
-
-    // 3. APPLY
-    const newText = newLines.join('\n');
-    if (newText !== lines.join('\n')) {
-        this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
-        this.setStatus("Empty lines removed");
-    } else {
-        this.setStatus("No empty lines found");
-    }
+const lines = this.state.lines;
+const newLines = [];
+let inBackticks = false;
+let inBlockComment = false;
+for (let i = 0; i < lines.length; i++) {
+let line = lines[i];
+let content = line.trim();
+const isProtected = inBackticks || inBlockComment;
+if (content.length > 0 || isProtected) {
+newLines.push(line);
 }
-
-
-
-
-
-
+let inSingleQuote = false;
+let inDoubleQuote = false;
+let charEscaped = false;
+for (let j = 0; j < line.length; j++) {
+const char = line[j];
+const nextChar = line[j + 1];
+if (charEscaped) { charEscaped = false; continue; }
+if (char === '\\') { charEscaped = true; continue; }
+if (inBlockComment) {
+if (char === '*' && nextChar === '/') {
+inBlockComment = false;
+j++;
+}
+continue;
+}
+if (inBackticks) {
+if (char === '`') inBackticks = false;
+continue;
+}
+if (!inSingleQuote && !inDoubleQuote) {
+if (char === '/' && nextChar === '*') {
+inBlockComment = true;
+j++;
+continue;
+}
+if (char === '/' && nextChar === '/') {
+break;
+}
+if (char === '"') { inDoubleQuote = true; continue; }
+if (char === "'") { inSingleQuote = true; continue; }
+if (char === '`') { inBackticks = true; continue; }
+} else {
+if (char === '"' && inDoubleQuote) inDoubleQuote = false;
+if (char === "'" && inSingleQuote) inSingleQuote = false;
+}
+}
+}
+const newText = newLines.join('\n');
+if (newText !== lines.join('\n')) {
+this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+this.setStatus("Empty lines removed");
+} else {
+this.setStatus("No empty lines found");
+}
+}
 removeComments() {
-    const lines = this.state.lines;
-    const newLines = [];
-    let inBackticks = false;
-    let inBlockComment = false;
-    let inHtmlComment = false;
-
-    for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        let builtLine = "";
-        let inSingleQuote = false;
-        let inDoubleQuote = false;
-        let inRegex = false;
-        let inRegexClass = false;
-        let charEscaped = false;
-        let lastRealChar = '';
-        let lastWord = '';
-        let currentWord = '';
-
-        for (let j = 0; j < line.length; j++) {
-            const char = line[j];
-            const nextChar = line[j + 1];
-
-            if (/[a-zA-Z0-9_$]/.test(char)) {
-                currentWord += char;
-            } else {
-                if (currentWord.length > 0) lastWord = currentWord;
-                currentWord = '';
-            }
-
-            if (charEscaped) {
-                charEscaped = false;
-                if (!inBlockComment && !inHtmlComment) builtLine += char;
-                if (/\S/.test(char)) lastRealChar = char;
-                continue;
-            }
-            if (char === '\\' && !inHtmlComment) {
-                charEscaped = true;
-                if (!inBlockComment) builtLine += char;
-                continue;
-            }
-
-            if (inBackticks) {
-                builtLine += char;
-                if (char === '`') inBackticks = false;
-                continue;
-            }
-            if (inBlockComment) {
-                if (char === '*' && nextChar === '/') {
-                    inBlockComment = false;
-                    j++;
-                }
-                continue;
-            }
-            if (inHtmlComment) {
-                // Split the closing tag checks
-                if (char === '-' && nextChar === '-' && line[j + 2] === '>') {
-                    inHtmlComment = false;
-                    j += 2;
-                }
-                continue;
-            }
-
-            if (inRegex) {
-                builtLine += char;
-                if (inRegexClass) {
-                    if (char === ']') inRegexClass = false;
-                } else {
-                    if (char === '[') inRegexClass = true;
-                    else if (char === '/') {
-                        inRegex = false;
-                    }
-                }
-                if (/\S/.test(char)) lastRealChar = char;
-                continue;
-            }
-
-            if (!inSingleQuote && !inDoubleQuote) {
-                if (char === "'") { inSingleQuote = true; builtLine += char; continue; }
-                if (char === '"') { inDoubleQuote = true; builtLine += char; continue; }
-                if (char === '`') { inBackticks = true; builtLine += char; continue; }
-
-                // Split the opening tag check using concatenation
-                if (char === '<' && nextChar === '!' && line.substr(j, 4) === '<' + '!--') {
-                    inHtmlComment = true;
-                    j += 3;
-                    continue;
-                }
-
-                if (char === '/') {
-                    if (nextChar === '*') {
-                        inBlockComment = true;
-                        j++;
-                        continue;
-                    }
-                    if (nextChar === '/') {
-                        break;
-                    }
-                    
-                    const regexCharStarters = [
-                        '(', '=', ',', ':', '?', '[', '{', '!', '&', '|', ';',
-                        '+', '-', '*', '/', '%', '^', '<', '>', '~'
-                    ];
-                    const regexKeywordStarters = ['return', 'case', 'throw', 'await', 'typeof', 'void', 'yield', 'delete'];
-                    
-                    if (regexCharStarters.includes(lastRealChar) ||
-                        regexKeywordStarters.includes(lastWord) ||
-                        builtLine.trim().length === 0) {
-                        inRegex = true;
-                        builtLine += char;
-                        continue;
-                    }
-                }
-            } else {
-                if (inSingleQuote && char === "'") inSingleQuote = false;
-                if (inDoubleQuote && char === '"') inDoubleQuote = false;
-            }
-            builtLine += char;
-            if (/\S/.test(char)) lastRealChar = char;
-        }
-        newLines.push(builtLine);
-    }
-    const newText = newLines.join('\n');
-    if (newText !== lines.join('\n')) {
-        this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
-        this.setStatus("Comments removed");
-    } else {
-        this.setStatus("No comments found");
-    }
+const lines = this.state.lines;
+const newLines = [];
+let inBackticks = false;
+let inBlockComment = false;
+let inHtmlComment = false;
+for (let i = 0; i < lines.length; i++) {
+let line = lines[i];
+let builtLine = "";
+let inSingleQuote = false;
+let inDoubleQuote = false;
+let inRegex = false;
+let inRegexClass = false;
+let charEscaped = false;
+let lastRealChar = '';
+let lastWord = '';
+let currentWord = '';
+for (let j = 0; j < line.length; j++) {
+const char = line[j];
+const nextChar = line[j + 1];
+if (/[a-zA-Z0-9_$]/.test(char)) {
+currentWord += char;
+} else {
+if (currentWord.length > 0) lastWord = currentWord;
+currentWord = '';
 }
-
-
-
-
+if (charEscaped) {
+charEscaped = false;
+if (!inBlockComment && !inHtmlComment) builtLine += char;
+if (/\S/.test(char)) lastRealChar = char;
+continue;
+}
+if (char === '\\' && !inHtmlComment) {
+charEscaped = true;
+if (!inBlockComment) builtLine += char;
+continue;
+}
+if (inBackticks) {
+builtLine += char;
+if (char === '`') inBackticks = false;
+continue;
+}
+if (inBlockComment) {
+if (char === '*' && nextChar === '/') {
+inBlockComment = false;
+j++;
+}
+continue;
+}
+if (inHtmlComment) {
+if (char === '-' && nextChar === '-' && line[j + 2] === '>') {
+inHtmlComment = false;
+j += 2;
+}
+continue;
+}
+if (inRegex) {
+builtLine += char;
+if (inRegexClass) {
+if (char === ']') inRegexClass = false;
+} else {
+if (char === '[') inRegexClass = true;
+else if (char === '/') {
+inRegex = false;
+}
+}
+if (/\S/.test(char)) lastRealChar = char;
+continue;
+}
+if (!inSingleQuote && !inDoubleQuote) {
+if (char === "'") { inSingleQuote = true; builtLine += char; continue; }
+if (char === '"') { inDoubleQuote = true; builtLine += char; continue; }
+if (char === '`') { inBackticks = true; builtLine += char; continue; }
+if (char === '<' && nextChar === '!' && line.substr(j, 4) === '<' + '!--') {
+inHtmlComment = true;
+j += 3;
+continue;
+}
+if (char === '/') {
+if (nextChar === '*') {
+inBlockComment = true;
+j++;
+continue;
+}
+if (nextChar === '/') {
+break;
+}
+const regexCharStarters = [
+'(', '=', ',', ':', '?', '[', '{', '!', '&', '|', ';',
+'+', '-', '*', '/', '%', '^', '<', '>', '~'
+];
+const regexKeywordStarters = ['return', 'case', 'throw', 'await', 'typeof', 'void', 'yield', 'delete'];
+if (regexCharStarters.includes(lastRealChar) ||
+regexKeywordStarters.includes(lastWord) ||
+builtLine.trim().length === 0) {
+inRegex = true;
+builtLine += char;
+continue;
+}
+}
+} else {
+if (inSingleQuote && char === "'") inSingleQuote = false;
+if (inDoubleQuote && char === '"') inDoubleQuote = false;
+}
+builtLine += char;
+if (/\S/.test(char)) lastRealChar = char;
+}
+newLines.push(builtLine);
+}
+const newText = newLines.join('\n');
+if (newText !== lines.join('\n')) {
+this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+this.setStatus("Comments removed");
+} else {
+this.setStatus("No comments found");
+}
+}
 removeTrailingWhitespace() {
-    const lines = this.state.lines;
-    const newLines = [];
-    let inBackticks = false;
-    let inBlockComment = false;
-
-    for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        let endOfLineBackticks = inBackticks;
-        
-        let inSingleQuote = false;
-        let inDoubleQuote = false;
-        let inRegex = false;
-        let inRegexClass = false;
-        let charEscaped = false;
-        let lastRealChar = '';
-        let lastWord = '';
-        let currentWord = '';
-
-        for (let j = 0; j < line.length; j++) {
-            const char = line[j];
-            const nextChar = line[j + 1];
-
-            if (/[a-zA-Z0-9_$]/.test(char)) {
-                currentWord += char;
-            } else {
-                if (currentWord.length > 0) lastWord = currentWord;
-                currentWord = '';
-            }
-
-            if (charEscaped) {
-                charEscaped = false;
-                if (/\S/.test(char)) lastRealChar = char;
-                continue;
-            }
-            if (char === '\\') { charEscaped = true; continue; }
-
-            if (endOfLineBackticks) {
-                if (char === '`') endOfLineBackticks = false;
-                continue;
-            }
-            
-            if (inBlockComment) {
-                if (char === '*' && nextChar === '/') {
-                    inBlockComment = false;
-                    j++;
-                }
-                continue;
-            }
-
-            if (inRegex) {
-                if (inRegexClass) {
-                    if (char === ']') inRegexClass = false;
-                } else {
-                    if (char === '[') inRegexClass = true;
-                    else if (char === '/') inRegex = false;
-                }
-                if (/\S/.test(char)) lastRealChar = char;
-                continue;
-            }
-
-            if (!inSingleQuote && !inDoubleQuote) {
-                if (char === "'") { inSingleQuote = true; continue; }
-                if (char === '"') { inDoubleQuote = true; continue; }
-                if (char === '`') { endOfLineBackticks = true; continue; }
-                
-                if (char === '/' && nextChar === '*') {
-                    inBlockComment = true;
-                    j++;
-                    continue;
-                }
-                if (char === '/' && nextChar === '/') break;
-                
-                if (char === '/') {
-                    const regexCharStarters = [
-                        '(', '=', ',', ':', '?', '[', '{', '!', '&', '|', ';',
-                        '+', '-', '*', '/', '%', '^', '<', '>', '~'
-                    ];
-                    const regexKeywordStarters = ['return', 'case', 'throw', 'await', 'typeof', 'void', 'yield', 'delete'];
-
-                    if (regexCharStarters.includes(lastRealChar) || 
-                        regexKeywordStarters.includes(lastWord) || 
-                        lastRealChar === '') {
-                        inRegex = true;
-                    }
-                }
-                if (/\S/.test(char)) lastRealChar = char;
-            } else {
-                if (inSingleQuote && char === "'") inSingleQuote = false;
-                if (inDoubleQuote && char === '"') inDoubleQuote = false;
-            }
-        }
-
-        if (endOfLineBackticks) {
-            newLines.push(line);
-        } else {
-            newLines.push(line.trimEnd());
-        }
-        inBackticks = endOfLineBackticks;
-    }
-
-    const newText = newLines.join('\n');
-    if (newText !== lines.join('\n')) {
-        this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
-        this.setStatus("Trailing whitespace removed");
-    } else {
-        this.setStatus("No trailing whitespace");
-    }
+const lines = this.state.lines;
+const newLines = [];
+let inBackticks = false;
+let inBlockComment = false;
+for (let i = 0; i < lines.length; i++) {
+let line = lines[i];
+let endOfLineBackticks = inBackticks;
+let inSingleQuote = false;
+let inDoubleQuote = false;
+let inRegex = false;
+let inRegexClass = false;
+let charEscaped = false;
+let lastRealChar = '';
+let lastWord = '';
+let currentWord = '';
+for (let j = 0; j < line.length; j++) {
+const char = line[j];
+const nextChar = line[j + 1];
+if (/[a-zA-Z0-9_$]/.test(char)) {
+currentWord += char;
+} else {
+if (currentWord.length > 0) lastWord = currentWord;
+currentWord = '';
 }
-
-
-
-
+if (charEscaped) {
+charEscaped = false;
+if (/\S/.test(char)) lastRealChar = char;
+continue;
+}
+if (char === '\\') { charEscaped = true; continue; }
+if (endOfLineBackticks) {
+if (char === '`') endOfLineBackticks = false;
+continue;
+}
+if (inBlockComment) {
+if (char === '*' && nextChar === '/') {
+inBlockComment = false;
+j++;
+}
+continue;
+}
+if (inRegex) {
+if (inRegexClass) {
+if (char === ']') inRegexClass = false;
+} else {
+if (char === '[') inRegexClass = true;
+else if (char === '/') inRegex = false;
+}
+if (/\S/.test(char)) lastRealChar = char;
+continue;
+}
+if (!inSingleQuote && !inDoubleQuote) {
+if (char === "'") { inSingleQuote = true; continue; }
+if (char === '"') { inDoubleQuote = true; continue; }
+if (char === '`') { endOfLineBackticks = true; continue; }
+if (char === '/' && nextChar === '*') {
+inBlockComment = true;
+j++;
+continue;
+}
+if (char === '/' && nextChar === '/') break;
+if (char === '/') {
+const regexCharStarters = [
+'(', '=', ',', ':', '?', '[', '{', '!', '&', '|', ';',
+'+', '-', '*', '/', '%', '^', '<', '>', '~'
+];
+const regexKeywordStarters = ['return', 'case', 'throw', 'await', 'typeof', 'void', 'yield', 'delete'];
+if (regexCharStarters.includes(lastRealChar) ||
+regexKeywordStarters.includes(lastWord) ||
+lastRealChar === '') {
+inRegex = true;
+}
+}
+if (/\S/.test(char)) lastRealChar = char;
+} else {
+if (inSingleQuote && char === "'") inSingleQuote = false;
+if (inDoubleQuote && char === '"') inDoubleQuote = false;
+}
+}
+if (endOfLineBackticks) {
+newLines.push(line);
+} else {
+newLines.push(line.trimEnd());
+}
+inBackticks = endOfLineBackticks;
+}
+const newText = newLines.join('\n');
+if (newText !== lines.join('\n')) {
+this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
+this.setStatus("Trailing whitespace removed");
+} else {
+this.setStatus("No trailing whitespace");
+}
+}
 cycleNext(type) {
 const lines = this.state.lines;
 const currentLineIdx = this.state.cursor.row;
@@ -1846,13 +1840,13 @@ const indent = "  ";
 const { selectionAnchor, cursor } = this.state;
 if (selectionAnchor && (selectionAnchor.row !== cursor.row || selectionAnchor.col !== cursor.col)) {
 if (e.shiftKey) {
-this.blockEdit(l => l.replace(/^(\t| {1,2})/, ""));
+this.smartUnindent();
 } else {
 this.blockEdit(l => indent + l);
 }
 } else {
 if (e.shiftKey) {
-this.blockEdit(l => l.replace(/^(\t| {1,2})/, ""), this.state.cursor.row, this.state.cursor.row);
+this.smartUnindent();
 } else {
 this.applyChange(indent);
 }
