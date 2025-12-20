@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Demo</title>
+<style>
+:root {
+--bg-page: #1a1a1a;
+--bg-header: #0d0d0d;
+--text-color: #e0e0e0;
+--accent-color: #bb86fc;
+--header-height: 40px;
+--transition-speed: 6.6s;
+}
+body {
+margin: 0;
+font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+background-color: var(--bg-page);
+color: var(--text-color);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+height: 100vh;
+overflow: hidden;
+}
+#top-bar {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: var(--header-height);
+background: var(--bg-header);
+border-bottom: 1px solid #333;
+display: flex;
+align-items: center;
+padding: 0 20px;
+box-sizing: border-box;
+z-index: 100;
+}
+.location-icon {
+font-size: 22px;
+filter: drop-shadow(0 0 5px rgba(255,255,255,0.1));
+}
+#work-icon {
+margin-left: auto;
+}
+#actor {
+position: absolute;
+left: 50%;
+transform: translateX(-50%);
+font-size: 24px;
+transition: left var(--transition-speed) cubic-bezier(0.45, 0, 0.55, 1),
+transform 0.5s ease;
+pointer-events: none;
+}
+.controls {
+text-align: center;
+display: flex;
+gap: 20px;
+}
+button {
+padding: 14px 28px;
+font-size: 14px;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 1px;
+cursor: pointer;
+border: 1px solid var(--accent-color);
+border-radius: 4px;
+background-color: transparent;
+color: var(--accent-color);
+transition: all 0.3s ease;
+}
+button:hover:not(:disabled) {
+background-color: var(--accent-color);
+color: #000;
+}
+button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.3; cursor: not-allowed; border-color: #444; color: #444; }
+#toast {
+position: fixed;
+bottom: 40px;
+left: 50%;
+transform: translateX(-50%) translateY(150px);
+background: #333;
+color: #fff;
+padding: 12px 30px;
+border-radius: 4px;
+font-size: 14px;
+transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+border-left: 4px solid var(--accent-color);
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div id="top-bar">
+<div class="location-icon" title="Home">🏠</div>
+<div id="actor">😎</div>
+<div class="location-icon" id="work-icon" title="Work">🏪</div>
+</div>
+<h2>Idea for your LifeSim game /johnny 🤓</h2>
+<div class="controls">
+<button onclick="travel('home')">Go Home</button>
+<button onclick="travel('work')">Go to Work</button>
+</div>
+<div id="toast">Ready to travel</div>
+<script>
+const actor = document.getElementById('actor');
+const toast = document.getElementById('toast');
+const buttons = document.querySelectorAll('button');
+let currentLocation = 'center';
+function travel(destination) {
+if (currentLocation === destination) {
+showToast(`Already at ${destination.toUpperCase()}`);
+return;
+}
+buttons.forEach(btn => btn.disabled = true);
+actor.innerText = '🚍';
+if (destination === 'home') {
+actor.style.left = '45px';
+actor.style.transform = 'translateX(0)';
+} else {
+actor.style.left = 'calc(100% - 75px)';
+actor.style.transform = 'translateX(0)';
+}
+setTimeout(() => {
+actor.innerText = '😎';
+currentLocation = destination;
+buttons.forEach(btn => btn.disabled = false);
+showToast(`You are at ${destination}`);
+}, 6600);
+}
+function showToast(message) {
+toast.innerText = message;
+toast.classList.add('show');
+setTimeout(() => {
+toast.classList.remove('show');
+}, 3000);
+}
+</script>
+</body>
+</html>
