@@ -1262,7 +1262,26 @@ this.state.desiredCol = this.state.cursor.col;
 }
 }
 }
+preserveCursorPosition(action) {
+const savedRow = this.state.cursor.row;
+const savedCol = this.state.cursor.col;
+const savedScroll = this.state.scrollTop;
+action();
+const maxRow = this.state.lines.length - 1;
+const targetRow = Math.min(savedRow, maxRow);
+const maxCol = this.state.lines[targetRow].length;
+const targetCol = Math.min(savedCol, maxCol);
+this.state.cursor = { row: targetRow, col: targetCol };
+this.state.selectionAnchor = null;
+this.state.desiredCol = targetCol;
+const maxScroll = (this.state.lines.length * this.config.lineHeight) - this.state.viewportHeight;
+const safeScroll = Math.max(0, Math.min(savedScroll, maxScroll));
+this.dom.editor.scrollTop = safeScroll;
+this.state.scrollTop = safeScroll;
+this.finalizeUpdate();
+}
 removeEmptyLines() {
+this.preserveCursorPosition(() => {
 const lines = this.state.lines;
 const newLines = [];
 let inBackticks = false;
@@ -1318,8 +1337,10 @@ this.setStatus("Empty lines removed");
 } else {
 this.setStatus("No empty lines found");
 }
+});
 }
 removeComments() {
+this.preserveCursorPosition(() => {
 const lines = this.state.lines;
 const newLines = [];
 let inBackticks = false;
@@ -1435,8 +1456,10 @@ this.setStatus("Comments removed");
 } else {
 this.setStatus("No comments found");
 }
+});
 }
 removeTrailingWhitespace() {
+this.preserveCursorPosition(() => {
 const lines = this.state.lines;
 const newLines = [];
 let inBackticks = false;
@@ -1475,6 +1498,7 @@ if (inBlockComment) {
 if (char === '*' && nextChar === '/') {
 inBlockComment = false;
 j++;
+continue;
 }
 continue;
 }
@@ -1530,6 +1554,7 @@ this.setStatus("Trailing whitespace removed");
 } else {
 this.setStatus("No trailing whitespace");
 }
+});
 }
 cycleNext(type) {
 const lines = this.state.lines;
@@ -2509,7 +2534,7 @@ this.handleDroppedFile(files[0]);
 }
 handleDroppedFile(file) {
 if (this.state.lines.length > 1 || this.state.lines[0].length > 0) {
-if (!confirm(`Vil du åpne "${file.name}"?\n\nEventuelle ulagrede endringer i nåværende fil vil bli overskrevet.`)) {
+if (!confirm(`Open file? "${file.name}"?\n\nUnsaved changes will be lost.`)) {
 return;
 }
 }
@@ -2520,7 +2545,8 @@ content = content.replace(/\t/g, '  ');
 this.state.lines = content.replace(/\r\n/g, '\n').split('\n');
 this.state.cursor = { row: 0, col: 0 };
 this.state.selectionAnchor = null;
-this.state.scrollOffset = { x: 0, y: 0 };
+this.dom.editor.scrollTop = 0;
+this.state.scrollTop = 0;
 this.highlighter.analyze(this.state.lines);
 this.finalizeUpdate();
 this.setStatus(`Opened ${file.name}`);
