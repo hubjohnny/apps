@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Journey</title>
+<style>
+:root {
+--bg-page: #121212;
+--bg-header: #050505;
+--bg-side: #0a0a0a;
+--accent: #03dac6;
+--header-height: 100px;
+--side-width: 200px;
+--travel-duration: 4s;
+--item-width: 250px;
+}
+body {
+margin: 0;
+padding: 0;
+background-color: var(--bg-page);
+color: white;
+font-family: 'Inter', system-ui, sans-serif;
+overflow: hidden;
+height: 100vh;
+display: flex;
+flex-direction: column;
+}
+#viewport {
+position: relative;
+width: 100%;
+height: var(--header-height);
+background: var(--bg-header);
+border-bottom: 1px solid #222;
+overflow: hidden;
+z-index: 100;
+}
+#world-map {
+position: absolute;
+display: flex;
+align-items: center;
+height: 100%;
+padding: 0 50vw;
+transition: transform var(--travel-duration) cubic-bezier(0.4, 0, 0.2, 1);
+will-change: transform;
+}
+.location {
+min-width: var(--item-width);
+width: var(--item-width);
+text-align: center;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+}
+.loc-icon {
+font-size: 44px;
+line-height: 1;
+}
+.location span {
+font-size: 11px;
+color: #666;
+margin-top: 8px;
+text-transform: uppercase;
+font-weight: 800;
+letter-spacing: 1px;
+}
+#player-center {
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translate(-50%, -50%);
+font-size: 45px;
+z-index: 101;
+pointer-events: none;
+filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+}
+#main-container {
+display: flex;
+flex: 1;
+overflow: hidden;
+}
+#sidebar {
+width: var(--side-width);
+background: var(--bg-side);
+border-right: 1px solid #222;
+display: flex;
+flex-direction: column;
+gap: 6px;
+padding: 15px;
+overflow-y: auto;
+scrollbar-width: thin;
+}
+button {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 10px 14px;
+background: #161616;
+border: 1px solid #282828;
+color: #999;
+border-radius: 8px;
+cursor: pointer;
+font-size: 12px;
+font-weight: 600;
+transition: all 0.2s;
+white-space: nowrap;
+}
+button:hover:not(:disabled) {
+border-color: var(--accent);
+background: #202020;
+color: #fff;
+}
+button.active {
+border-color: var(--accent);
+background: rgba(3, 218, 198, 0.1);
+color: #fff;
+}
+button:disabled {
+opacity: 0.3;
+cursor: not-allowed;
+}
+#game-area {
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+background: radial-gradient(circle at center, #1e1e1e 0%, #121212 100%);
+}
+.stats-card {
+background: #1a1a1a;
+border: 1px solid #333;
+padding: 40px;
+border-radius: 20px;
+text-align: center;
+width: 85%;
+max-width: 450px;
+box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+}
+#toast {
+position: fixed;
+bottom: 30px;
+right: 30px;
+background: var(--accent);
+color: #000;
+padding: 12px 24px;
+border-radius: 10px;
+font-weight: bold;
+transform: translateY(150px);
+transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+z-index: 1000;
+}
+#toast.show { transform: translateY(0); }
+</style>
+</head>
+<body>
+<div id="viewport">
+<div id="world-map" id="map"></div>
+<div id="player-center">😎</div>
+</div>
+<div id="main-container">
+<div id="sidebar" id="btns"></div>
+<div id="game-area">
+<div class="stats-card">
+<h2 id="status-label" style="margin-top:0; color:var(--accent);">Welcome</h2>
+<p id="sub-status" style="color: #888; font-size: 14px;">Initializing world...</p>
+<div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
+<small style="color: #555;">Game Interaction Layer</small>
+</div>
+</div>
+</div>
+</div>
+<div id="toast">Arrived!</div>
+<script>
+const locations = [
+{ name: 'Home', icon: '🏠' },
+{ name: 'School', icon: '🏫' },
+{ name: 'Store', icon: '🏪' },
+{ name: 'Factory', icon: '🏭' },
+{ name: 'Construction', icon: '🏗️' },
+{ name: 'Mall', icon: '🏬' },
+{ name: 'Girlfriend', icon: '💒' },
+{ name: 'Park', icon: '⛲' },
+{ name: 'Camping', icon: '🏕️' },
+{ name: 'Beach', icon: '🏖️' },
+{ name: 'Island', icon: '🏝️' },
+{ name: 'Mountain', icon: '🗻' },
+{ name: 'Tokyo', icon: '🗼' },
+{ name: 'New York', icon: '🗽' },
+{ name: 'Airport', icon: '✈️' },
+{ name: 'Hospital', icon: '🏥' }
+];
+const map = document.getElementById('world-map');
+const sidebar = document.getElementById('sidebar');
+const player = document.getElementById('player-center');
+const statusLabel = document.getElementById('status-label');
+const subStatus = document.getElementById('sub-status');
+const ITEM_WIDTH = 250;
+const TRAVEL_TIME = 4000;
+let currentLocIndex = 0;
+locations.forEach((loc, i) => {
+const locDiv = document.createElement('div');
+locDiv.className = 'location';
+locDiv.innerHTML = `<div class="loc-icon">${loc.icon}</div><span>${loc.name}</span>`;
+map.appendChild(locDiv);
+const btn = document.createElement('button');
+btn.id = `btn-${i}`;
+btn.innerHTML = `<span style="font-size:18px">${loc.icon}</span> ${loc.name}`;
+btn.onclick = () => travel(i);
+sidebar.appendChild(btn);
+});
+function travel(index) {
+if (index === currentLocIndex && player.innerText !== '🚍') return;
+const allBtns = document.querySelectorAll('button');
+allBtns.forEach(b => {
+b.disabled = true;
+b.classList.remove('active');
+});
+player.innerText = '🚍';
+statusLabel.innerText = "Traveling...";
+subStatus.innerText = `Commuting to ${locations[index].name}...`;
+const shift = index * ITEM_WIDTH;
+map.style.transform = `translateX(-${shift}px)`;
+setTimeout(() => {
+player.innerText = '😎';
+currentLocIndex = index;
+allBtns.forEach(b => b.disabled = false);
+document.getElementById(`btn-${index}`).classList.add('active');
+statusLabel.innerText = locations[index].name;
+subStatus.innerText = `You are now at the ${locations[index].name}.`;
+showToast(`Arrived at ${locations[index].name}`);
+}, TRAVEL_TIME);
+}
+function showToast(msg) {
+const t = document.getElementById('toast');
+t.innerText = msg;
+t.classList.add('show');
+setTimeout(() => t.classList.remove('show'), 2000);
+}
+window.addEventListener('load', () => {
+map.style.transition = 'none';
+map.style.transform = 'translateX(0px)';
+currentLocIndex = 0;
+statusLabel.innerText = locations[0].name;
+subStatus.innerText = "You are currently at home.";
+document.getElementById('btn-0').classList.add('active');
+setTimeout(() => {
+map.style.transition = `transform var(--travel-duration) cubic-bezier(0.4, 0, 0.2, 1)`;
+}, 50);
+});
+</script>
+</body>
+</html>
