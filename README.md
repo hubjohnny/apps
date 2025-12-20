@@ -7,7 +7,7 @@ I build high-performance, lightweight web applications using vanilla HTML, CSS, 
 ---
 
 ### Access Games & Tools
-Visit my personal "App Store" to browse all 50+ applications:
+Visit my personal "App Store" to browse all 30+ applications:
 
 ## [hubjohnny.github.io](https://hubjohnny.github.io/)
 
