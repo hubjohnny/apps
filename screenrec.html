@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebM Screen Recorder</title>
+<meta name="description" content="Press [Start Recording], choose Tab or Window to record, switch the Audio on to record System Audio. 1080p HQ Recording from any source.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://chromebooker.com/screenrec.html">
+<script src="/stats/tracker.js" defer></script>
+<style>
+body {
+margin: 0;
+background-color: #1a1a1a;
+color: white;
+font-family: system-ui, -apple-system, sans-serif;
+height: 100vh;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+#video-container {
+flex-grow: 1;
+width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+justify-content: center;
+align-items: center;
+background: #000;
+}
+video {
+width: 100%;
+height: 100%;
+object-fit: contain;
+display: block;
+}
+#timer-display {
+display: none;
+font-size: 80px;
+font-weight: bold;
+color: #e74c3c;
+font-variant-numeric: tabular-nums;
+z-index: 5;
+text-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+.controls {
+position: absolute;
+bottom: 30px;
+z-index: 10;
+background: rgba(0, 0, 0, 0.7);
+padding: 15px 25px;
+border-radius: 50px;
+display: flex;
+gap: 15px;
+align-items: center;
+backdrop-filter: blur(5px);
+}
+button {
+padding: 12px 24px;
+border: none;
+border-radius: 25px;
+font-size: 16px;
+font-weight: 600;
+cursor: pointer;
+transition: transform 0.2s, background 0.2s;
+white-space: nowrap;
+}
+button:active {
+transform: scale(0.95);
+}
+#btn-start {
+background-color: #2ecc71;
+color: #fff;
+}
+#btn-stop {
+background-color: #e74c3c;
+color: #fff;
+display: none;
+}
+select {
+padding: 12px 15px;
+border-radius: 25px;
+border: 1px solid #444;
+background-color: #333;
+color: white;
+font-size: 16px;
+cursor: pointer;
+outline: none;
+}
+select:hover {
+background-color: #444;
+}
+#countdown-overlay {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0,0,0,0.8);
+display: none;
+justify-content: center;
+align-items: center;
+z-index: 20;
+flex-direction: column;
+}
+#countdown-text {
+font-size: 150px;
+font-weight: bold;
+color: #fff;
+}
+.status-text {
+font-size: 24px;
+margin-top: 20px;
+color: #ddd;
+}
+.recording-indicator {
+position: absolute;
+top: 20px;
+right: 20px;
+width: 20px;
+height: 20px;
+background-color: red;
+border-radius: 50%;
+display: none;
+box-shadow: 0 0 10px red;
+animation: pulse 1.5s infinite;
+z-index: 15;
+}
+@keyframes pulse {
+0% { opacity: 1; }
+50% { opacity: 0.5; }
+100% { opacity: 1; }
+}
+</style>
+</head>
+<body>
+<div id="video-container">
+<video id="preview" autoplay muted></video>
+<div id="timer-display">00:00:00</div>
+<div id="countdown-overlay">
+<div id="countdown-text">3</div>
+<div class="status-text">Get Ready...</div>
+</div>
+<div class="recording-indicator" id="rec-dot"></div>
+<div class="controls">
+<select id="quality-select">
+<option value="480">Low Quality (480p)</option>
+<option value="720">Medium Quality (720p)</option>
+<option value="1080" selected>High Quality (1080p)</option>
+</select>
+<button id="btn-start">Start Recording</button>
+<button id="btn-stop">Stop Recording</button>
+</div>
+</div>
+<script>
+const preview = document.getElementById('preview');
+const timerDisplay = document.getElementById('timer-display');
+const startBtn = document.getElementById('btn-start');
+const stopBtn = document.getElementById('btn-stop');
+const qualitySelect = document.getElementById('quality-select');
+const countdownOverlay = document.getElementById('countdown-overlay');
+const countdownText = document.getElementById('countdown-text');
+const recDot = document.getElementById('rec-dot');
+let mediaRecorder;
+let stream;
+let fileHandle;
+let writableStream;
+let timerInterval;
+let startTime;
+let currentBitrate = 5000000;
+const qualitySettings = {
+"480":  { width: 854,  height: 480,  bitrate: 1000000 },
+"720":  { width: 1280, height: 720,  bitrate: 2500000 },
+"1080": { width: 1920, height: 1080, bitrate: 6000000 }
+};
+startBtn.addEventListener('click', async () => {
+try {
+const quality = qualitySelect.value;
+const settings = qualitySettings[quality];
+currentBitrate = settings.bitrate;
+const displayMediaOptions = {
+video: {
+width: { ideal: settings.width },
+height: { ideal: settings.height },
+frameRate: { ideal: 30 },
+cursor: "always"
+},
+audio: {
+echoCancellation: false,
+noiseSuppression: false,
+autoGainControl: false,
+sampleRate: 48000
+}
+};
+const now = new Date();
+const filename = `screen-rec-${quality}p-${now.toISOString().slice(0,19).replace(/:/g,"-")}.webm`;
+fileHandle = await window.showSaveFilePicker({
+suggestedName: filename,
+types: [{
+description: 'WebM Video File',
+accept: {'video/webm': ['.webm']},
+}],
+});
+writableStream = await fileHandle.createWritable();
+stream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+preview.srcObject = stream;
+startCountdown();
+stream.getVideoTracks()[0].onended = () => {
+stopRecording();
+};
+} catch (err) {
+console.error("Error or Cancelled: " + err);
+}
+});
+function startCountdown() {
+startBtn.style.display = 'none';
+qualitySelect.style.display = 'none';
+countdownOverlay.style.display = 'flex';
+let timeLeft = 3;
+countdownText.innerText = timeLeft;
+const timer = setInterval(() => {
+timeLeft--;
+countdownText.innerText = timeLeft;
+if (timeLeft <= 0) {
+clearInterval(timer);
+countdownOverlay.style.display = 'none';
+beginRecording();
+}
+}, 1000);
+}
+function beginRecording() {
+const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+? "video/webm;codecs=vp9"
+: "video/webm";
+mediaRecorder = new MediaRecorder(stream, {
+mimeType: mimeType,
+videoBitsPerSecond: currentBitrate,
+audioBitsPerSecond: 128000
+});
+mediaRecorder.ondataavailable = handleDataAvailable;
+mediaRecorder.start(1000);
+preview.pause();
+preview.style.display = 'none';
+timerDisplay.style.display = 'block';
+startTimer();
+stopBtn.style.display = 'block';
+recDot.style.display = 'block';
+console.log(`Recording started at ${qualitySelect.value}p`);
+}
+async function handleDataAvailable(event) {
+if (event.data.size > 0 && writableStream) {
+await writableStream.write(event.data);
+}
+}
+function startTimer() {
+startTime = Date.now();
+timerInterval = setInterval(() => {
+const elapsedTime = Date.now() - startTime;
+timerDisplay.innerText = formatTime(elapsedTime);
+}, 1000);
+}
+function formatTime(ms) {
+const totalSeconds = Math.floor(ms / 1000);
+const h = Math.floor(totalSeconds / 3600);
+const m = Math.floor((totalSeconds % 3600) / 60);
+const s = totalSeconds % 60;
+return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+function pad(num) {
+return num.toString().padStart(2, '0');
+}
+stopBtn.addEventListener('click', stopRecording);
+async function stopRecording() {
+if (!mediaRecorder || mediaRecorder.state === "inactive") return;
+clearInterval(timerInterval);
+timerDisplay.style.display = 'none';
+mediaRecorder.stop();
+stream.getTracks().forEach(track => track.stop());
+if (writableStream) {
+await writableStream.close();
+writableStream = null;
+}
+recDot.style.display = 'none';
+stopBtn.style.display = 'none';
+startBtn.style.display = 'block';
+qualitySelect.style.display = 'block';
+preview.style.display = 'block';
+alert("Recording saved!");
+location.reload();
+}
+</script>
+</body>
+</html>
