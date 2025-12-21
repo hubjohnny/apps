@@ -7,6 +7,15 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-55NB91FTK3');
+document.addEventListener('click', function(event) {
+var link = event.target.closest('a');
+if (link && link.getAttribute('href')) {
+var href = link.getAttribute('href');
+gtag('event', 'apne_app', {
+'app_navn': href
+});
+}
+});
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
