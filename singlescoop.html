@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e1e1e">
 <title>Single Scoop</title>
 <style>
 @font-face {
@@ -1088,6 +1089,10 @@ this.setupDragAndDrop();
 this.isComposing = false;
 this.dom.trap = document.createElement('textarea');
 this.dom.trap.id = 'input-trap';
+this.dom.trap.setAttribute('spellcheck', 'false');
+this.dom.trap.setAttribute('autocorrect', 'off');
+this.dom.trap.setAttribute('autocapitalize', 'off');
+this.dom.trap.setAttribute('autocomplete', 'off');
 this.dom.trap.value = ' ';
 this.dom.trap.addEventListener('compositionstart', () => {
 this.isComposing = true;
