@@ -6,7 +6,7 @@
 
 **Games:**  
 
-https://hubjohnny.github.io/apps/games/100-laps-racing-game.html  
+[Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/games/100-laps-racing-game.html)s  
 https://hubjohnny.github.io/apps/games/adventure-rpg.html  
 https://hubjohnny.github.io/apps/games/amelia-x-endless-runner.html  
 https://hubjohnny.github.io/apps/games/billiards-8-ball-pool.html  
