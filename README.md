@@ -7,14 +7,6 @@
 I build high-performance, lightweight web applications using vanilla HTML, CSS, and JavaScript. My philosophy is simple: No frameworks, no bloat, just pure code that runs instantly in your browser.
 
 ---
-
-### Access Games & Tools
-Visit my personal "App Store" to browse all 30+ applications:
-
-## [hubjohnny.github.io](https://hubjohnny.github.io/)
-
-
----
 ### Legal Notice & Copyright
 **© 2025 Johnny Heggelund. All Rights Reserved.**
 
