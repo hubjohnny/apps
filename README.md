@@ -2,7 +2,7 @@
 
 **Run Online:**  
 
-**[Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/apps/tools/single-scoop-web-code-editor.html)**<br><br>
+**[Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html)**<br><br>
 
 **Games:**  
 
