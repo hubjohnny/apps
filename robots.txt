@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-# Sitemap Location
-Sitemap: https://hubjohnny.github.io/sitemap.xml
