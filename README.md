@@ -4,7 +4,7 @@
 
 **[Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html)**<br><br>
 
-**Games:**  
+Games:  
 
 [100 Laps Racing Game](https://hubjohnny.github.io/apps/games/100-laps-racing-game.html)  
 [Adventure RPG](https://hubjohnny.github.io/apps/games/adventure-rpg.html)  
@@ -27,17 +27,17 @@
 [Uno Card Game](https://hubjohnny.github.io/apps/games/uno-card-came.html)  
 [Yatzy Dice Game](https://hubjohnny.github.io/apps/games/yatzy-dice-game.html)<br><br>
 
-**Tools:** 
+Tools:  
 
-https://hubjohnny.github.io/apps/tools/base64-image-audio-converter.html  
-https://hubjohnny.github.io/apps/tools/emoji-picker-copier.html  
-https://hubjohnny.github.io/apps/tools/emoji-sprite-export.html  
-https://hubjohnny.github.io/apps/tools/image-ascii-converter.html  
-https://hubjohnny.github.io/apps/tools/image-fast-auto-compression.html  
-https://hubjohnny.github.io/apps/tools/image-pixel-retro-converter.html  
-https://hubjohnny.github.io/apps/tools/image-upscaler.html  
-https://hubjohnny.github.io/apps/tools/linux-terminal-emulator.html  
-https://hubjohnny.github.io/apps/tools/password-protected-notebook.html  
-https://hubjohnny.github.io/apps/tools/sprite-editor.html  
-https://hubjohnny.github.io/apps/tools/video-gif-converter.html  
-https://hubjohnny.github.io/apps/tools/video-player.html  
+[Bas64 Image & Audio Converter](https://hubjohnny.github.io/apps/tools/base64-image-audio-converter.html)  
+[Emoji Picker & Copier NO](https://hubjohnny.github.io/apps/tools/emoji-picker-copier.html)  
+[Emoji Sprite Exporter](https://hubjohnny.github.io/apps/tools/emoji-sprite-export.html)  
+[Image to ASCII Converter](https://hubjohnny.github.io/apps/tools/image-ascii-converter.html)  
+[Image Fast Auto Compression](https://hubjohnny.github.io/apps/tools/image-fast-auto-compression.html)  
+[Image to Retro Pixel Art Converter](https://hubjohnny.github.io/apps/tools/image-pixel-retro-converter.html)  
+[Image Upscaler](https://hubjohnny.github.io/apps/tools/image-upscaler.html)  
+[Linux Terminal Emulator](https://hubjohnny.github.io/apps/tools/linux-terminal-emulator.html)  
+[Password-Protected Notebook](https://hubjohnny.github.io/apps/tools/password-protected-notebook.html)  
+[Sprite Editor](https://hubjohnny.github.io/apps/tools/sprite-editor.html)  
+[Video to GIF Animation Converter](https://hubjohnny.github.io/apps/tools/video-gif-converter.html)  
+[Video Player](https://hubjohnny.github.io/apps/tools/video-player.html)
