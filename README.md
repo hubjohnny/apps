@@ -10,22 +10,22 @@
 [Adventure RPG](https://hubjohnny.github.io/apps/games/adventure-rpg.html)  
 [Amelia X Endless Runner](https://hubjohnny.github.io/apps/games/amelia-x-endless-runner.html)  
 [Billiards / 8-Ball Pool](https://hubjohnny.github.io/apps/games/billiards-8-ball-pool.html)  
-https://hubjohnny.github.io/apps/games/blackjack-card-game.html  
-https://hubjohnny.github.io/apps/games/championship-racing.html  
-https://hubjohnny.github.io/apps/games/city-building-simulation.html  
-https://hubjohnny.github.io/apps/games/lander-rescue.html  
-https://hubjohnny.github.io/apps/games/ludo-board-game.html  
-https://hubjohnny.github.io/apps/games/mini-golf.html  
-https://hubjohnny.github.io/apps/games/shithead-card-game.html  
-https://hubjohnny.github.io/apps/games/snake-mono.html  
-https://hubjohnny.github.io/apps/games/snake-neon.html  
-https://hubjohnny.github.io/apps/games/sokoban-ascii-logic-puzzle-game.html  
-https://hubjohnny.github.io/apps/games/sokoban-dx-logic-puzzle-game.html  
-https://hubjohnny.github.io/apps/games/sokoban-level-editor/editor.html  
-https://hubjohnny.github.io/apps/games/tetris-mono.html  
-https://hubjohnny.github.io/apps/games/tetris-neon.html  
-https://hubjohnny.github.io/apps/games/uno-card-came.html  
-https://hubjohnny.github.io/apps/games/yatzy-dice-game.html<br><br>
+[Blackjack Card Game](https://hubjohnny.github.io/apps/games/blackjack-card-game.html)  
+[Championship Racing](https://hubjohnny.github.io/apps/games/championship-racing.html)  
+[City Building Simulation](https://hubjohnny.github.io/apps/games/city-building-simulation.html)  
+[Lander Rescue](https://hubjohnny.github.io/apps/games/lander-rescue.html)  
+[Ludo Board Game](https://hubjohnny.github.io/apps/games/ludo-board-game.html)  
+[Mini Golf](https://hubjohnny.github.io/apps/games/mini-golf.html)  
+[Shithead Card Game](https://hubjohnny.github.io/apps/games/shithead-card-game.html)  
+[Snake Mono](https://hubjohnny.github.io/apps/games/snake-mono.html)  
+[Snake Neon](https://hubjohnny.github.io/apps/games/snake-neon.html)  
+[Sokoban ASCII Logic Puzzle Game](https://hubjohnny.github.io/apps/games/sokoban-ascii-logic-puzzle-game.html)  
+[Sokoban DX Logic Puzzle Game](https://hubjohnny.github.io/apps/games/sokoban-dx-logic-puzzle-game.html)  
+[Sokoban Level Editor](https://hubjohnny.github.io/apps/games/sokoban-level-editor/editor.html)  
+[Tetris Mono](https://hubjohnny.github.io/apps/games/tetris-mono.html)  
+[Tetris Neon](https://hubjohnny.github.io/apps/games/tetris-neon.html)  
+[Uno Card Game](https://hubjohnny.github.io/apps/games/uno-card-came.html)  
+[Yatzy Dice Game](https://hubjohnny.github.io/apps/games/yatzy-dice-game.html)<br><br>
 
 **Tools:** 
 
