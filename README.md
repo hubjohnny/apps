@@ -1,6 +1,1 @@
-## Specializing in fast, single-file browser games & tools for PC users.  
-### I build high-performance, lightweight web applications using vanilla HTML, CSS, and JavaScript. My philosophy is simple: No frameworks, no bloat, just pure code that runs instantly in your browser.
-
-**✨[Single Scoop Web Code Editor](https://hubjohnny.github.io/singlescoop.html)**
-**✨[Adventure RPG](https://hubjohnny.github.io/adventure.html)**
-**✨[City Builder](https://hubjohnny.github.io/citybuilder.html)**
+**Portable & Offline Ready:** All games and tools in this repository are completely self-contained within their individual HTML files. This means there are no external dependencies, assets, or internet connections required to use them. To run a project, simply download the single file to your computer and open it in any modern web browser. It functions perfectly as a standalone application, making it ideal for offline use and easy distribution.
