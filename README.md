@@ -6,10 +6,10 @@
 
 **Games:**  
 
-https://hubjohnny.github.io/apps/games/100-laps-racing-game.html  
-https://hubjohnny.github.io/apps/games/adventure-rpg.html  
-https://hubjohnny.github.io/apps/games/amelia-x-endless-runner.html  
-https://hubjohnny.github.io/apps/games/billiards-8-ball-pool.html  
+[100 Laps Racing Game](https://hubjohnny.github.io/apps/games/100-laps-racing-game.html)  
+[Adventure RPG](https://hubjohnny.github.io/apps/games/adventure-rpg.html)  
+[Amelia X Endless Runner](https://hubjohnny.github.io/apps/games/amelia-x-endless-runner.html)  
+[Billiards / 8-Ball Pool](https://hubjohnny.github.io/apps/games/billiards-8-ball-pool.html)  
 https://hubjohnny.github.io/apps/games/blackjack-card-game.html  
 https://hubjohnny.github.io/apps/games/championship-racing.html  
 https://hubjohnny.github.io/apps/games/city-building-simulation.html  
