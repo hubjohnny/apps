@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Editor</title>
+<title>Pro Image Editor (Refactored)</title>
 <style>
 :root {
 --bg-color: #1e1e1e;
@@ -12,105 +12,43 @@
 --text-color: #e0e0e0;
 --accent-color: #007acc;
 --border-color: #4a4a4a;
+--danger-color: #d94444;
 --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 html, body {
-margin: 0;
-padding: 0;
-width: 100%;
-height: 100vh;
-font-family: var(--font-family);
-background-color: var(--bg-color);
-color: var(--text-color);
-overflow: hidden;
+margin: 0; padding: 0; width: 100%; height: 100vh;
+font-family: var(--font-family); background-color: var(--bg-color);
+color: var(--text-color); overflow: hidden;
 }
-body {
-display: grid;
-grid-template-rows: auto 1fr;
-}
+body { display: grid; grid-template-rows: auto 1fr; }
 .options-bar {
-background-color: var(--primary-color);
-padding: 5px 15px;
-border-bottom: 1px solid var(--border-color);
-display: flex;
-align-items: center;
-gap: 10px;
-min-height: 40px;
-flex-wrap: wrap;
-z-index: 10;
-box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+background-color: var(--primary-color); padding: 5px 15px;
+border-bottom: 1px solid var(--border-color); display: flex;
+align-items: center; gap: 8px; min-height: 40px; flex-wrap: wrap; z-index: 10;
 }
-.options-bar label, .options-bar button, .options-bar input, .options-bar select, .options-bar span {
-margin: 0;
-font-size: 13px;
-display: flex;
-align-items: center;
+.options-bar button, .options-bar input, .options-bar select {
+background-color: var(--secondary-color); color: var(--text-color);
+border: 1px solid var(--border-color); border-radius: 3px;
+padding: 4px 8px; font-size: 13px; cursor: pointer;
 }
-.options-bar input, .options-bar select {
-background-color: var(--secondary-color);
-color: var(--text-color);
-border: 1px solid var(--border-color);
-border-radius: 3px;
-padding: 4px 6px;
-transition: border-color 0.2s;
-}
-.options-bar input[type="number"] { max-width: 60px; }
-.options-bar input[type="text"] { max-width: 150px; }
-.options-bar input:focus, .options-bar select:focus { outline: none; border-color: var(--accent-color); }
-.options-bar button {
-background-color: var(--accent-color);
-color: white;
-border: none;
-padding: 5px 12px;
-border-radius: 3px;
-cursor: pointer;
-transition: opacity 0.2s;
-}
-.options-bar button:hover { opacity: 0.9; }
-.separator {
-width: 1px;
-height: 20px;
-background-color: var(--border-color);
-margin: 0 5px;
-}
-.main-container {
-display: flex;
-overflow: hidden;
-position: relative;
-height: 100%;
-}
+.options-bar button:hover { background-color: #444; }
+.options-bar button:active { background-color: #555; }
+.options-bar button.primary { background-color: var(--accent-color); border: none; color: white; }
+.options-bar input:focus { outline: 1px solid var(--accent-color); }
+.separator { width: 1px; height: 20px; background-color: var(--border-color); margin: 0 5px; }
+.main-container { display: flex; overflow: hidden; height: 100%; position: relative; }
 .toolbar {
-background-color: var(--primary-color);
-padding: 10px;
-display: flex;
-flex-direction: column;
-gap: 10px;
-width: 50px;
-border-right: 1px solid var(--border-color);
-align-items: center;
-z-index: 5;
+background-color: var(--primary-color); padding: 10px; display: flex;
+flex-direction: column; gap: 10px; width: 50px; border-right: 1px solid var(--border-color);
+align-items: center; z-index: 5;
 }
 .tool-btn {
-background-color: var(--secondary-color);
-border: 1px solid var(--border-color);
-color: var(--text-color);
-cursor: pointer;
-width: 40px;
-height: 40px;
-font-size: 18px;
-border-radius: 4px;
-transition: all 0.2s;
-display: flex;
-align-items: center;
-justify-content: center;
+width: 40px; height: 40px; font-size: 18px; display: flex; align-items: center; justify-content: center;
+border-radius: 4px; transition: 0.2s;
 }
-.tool-btn:hover { background-color: #444; }
-.tool-btn.active { background-color: var(--accent-color); border-color: white; }
+.tool-btn.active { background-color: var(--accent-color); border-color: transparent; color: white; }
 .canvas-container {
-flex: 1;
-display: grid;
-place-items: center;
-overflow: hidden;
+flex: 1; overflow: hidden; position: relative;
 background-image:
 linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
 linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
@@ -118,168 +56,74 @@ linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
 linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
 background-size: 20px 20px;
 background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-position: relative;
-}
-canvas {
-box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
 cursor: default;
 }
 .right-panel {
-width: 240px;
-background-color: var(--primary-color);
-border-left: 1px solid var(--border-color);
-display: flex;
-flex-direction: column;
-overflow-y: auto;
-z-index: 5;
+width: 260px; background-color: var(--primary-color); border-left: 1px solid var(--border-color);
+display: flex; flex-direction: column; overflow-y: auto; z-index: 5;
 }
-.panel-section {
-padding: 12px;
-border-bottom: 1px solid var(--border-color);
-}
-.panel-section h4 {
-margin: 0 0 10px 0;
-font-size: 14px;
-text-transform: uppercase;
-color: #888;
-font-weight: 600;
-letter-spacing: 0.5px;
-}
-#layers-list {
-list-style: none;
-padding: 0;
-margin: 0;
-max-height: 250px;
-overflow-y: auto;
-}
+.panel-section { padding: 12px; border-bottom: 1px solid var(--border-color); }
+.panel-section h4 { margin: 0 0 10px 0; color: #888; font-size: 12px; text-transform: uppercase; }
+#layers-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
 #layers-list li {
-background-color: var(--secondary-color);
-padding: 8px 10px;
-margin-bottom: 4px;
-cursor: pointer;
-border: 1px solid transparent;
-border-radius: 3px;
-font-size: 13px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-user-select: none;
+background-color: var(--secondary-color); padding: 8px; margin-bottom: 4px;
+cursor: pointer; border: 1px solid transparent; border-radius: 3px;
+display: flex; justify-content: space-between; align-items: center; font-size: 13px;
 }
-#layers-list li.active {
-border-color: var(--accent-color);
-background-color: #4a4a4a;
-}
-#layers-list li .visibility-toggle {
-cursor: pointer;
-opacity: 0.6;
-margin-right: 8px;
-}
-#layers-list li .visibility-toggle:hover { opacity: 1; }
-.layer-controls {
-display: flex;
-gap: 4px;
-margin-top: 10px;
-}
-.layer-controls button {
-flex: 1;
-padding: 4px;
-font-size: 14px;
-background-color: var(--secondary-color);
-border: 1px solid var(--border-color);
-color: var(--text-color);
-cursor: pointer;
-border-radius: 3px;
-}
-.layer-controls button:hover { background-color: #555; }
-#export-preview {
-max-width: 100%;
-height: auto;
-margin-top: 10px;
-border: 1px solid var(--border-color);
-background: #000;
-}
+#layers-list li.active { border-color: var(--accent-color); background-color: #4a4a4a; }
+#layers-list li .vis-btn { cursor: pointer; opacity: 0.7; margin-right: 8px; }
+#layers-list li .vis-btn:hover { opacity: 1; }
+.layer-controls { display: flex; gap: 4px; margin-bottom: 10px; }
+.layer-controls button { flex: 1; padding: 4px; }
+.adjustment-group { margin-bottom: 10px; }
+.adjustment-group label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+input[type="range"] { width: 100%; }
 #crop-info {
-position: fixed;
-background-color: rgba(0, 122, 204, 0.9);
-color: white;
-padding: 4px 8px;
-font-size: 12px;
-border-radius: 3px;
-pointer-events: none;
-display: none;
-z-index: 1000;
-box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+position: absolute; background: var(--accent-color); color: white;
+padding: 4px 8px; font-size: 12px; border-radius: 3px; pointer-events: none; display: none;
 }
-.adjustment-slider {
-width: 100%;
-margin-bottom: 8px;
--webkit-appearance: none;
-height: 4px;
-background: #555;
-outline: none;
-border-radius: 2px;
-}
-.adjustment-slider::-webkit-slider-thumb {
--webkit-appearance: none;
-width: 14px;
-height: 14px;
-border-radius: 50%;
-background: var(--accent-color);
-cursor: pointer;
-border: 2px solid #fff;
-}
-.adjustment-group {
-margin-bottom: 12px;
-}
-.adjustment-group label {
-display: flex;
-justify-content: space-between;
-font-size: 12px;
-margin-bottom: 4px;
-}
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
 <input type="file" id="file-input" accept="image/*" style="display: none;">
+<input type="file" id="import-input" accept="image/*" style="display: none;">
 <input type="file" id="project-input" accept=".json" style="display: none;">
 <div class="options-bar">
-<button id="open-btn">Open</button>
-<button id="import-btn">Import</button>
+<button id="open-btn">📂 Open</button>
+<button id="import-btn">📥 Import Overlay</button>
 <div class="separator"></div>
-<button id="save-project-btn">Save Project</button>
-<button id="load-project-btn">Load Project</button>
+<button id="save-project-btn">💾 Save Project</button>
+<button id="load-project-btn">📂 Load Project</button>
 <div class="separator"></div>
-<button id="flatten-btn">Flatten</button>
+<button id="undo-btn" title="Undo (Ctrl+Z)">↩️</button>
+<button id="redo-btn" title="Redo (Ctrl+Y)">↪️</button>
 <div class="separator"></div>
-<span>W:</span>
-<input type="number" id="resize-width" min="1">
-<span>H:</span>
-<input type="number" id="resize-height" min="1">
-<label title="Keep Aspect Ratio"><input type="checkbox" id="keep-proportions" checked> 🔗</label>
-<button id="resize-btn">Resize</button>
+<span>W:</span> <input type="number" id="resize-width" style="width: 50px">
+<span>H:</span> <input type="number" id="resize-height" style="width: 50px">
+<label><input type="checkbox" id="keep-proportions" checked> 🔗</label>
+<button id="resize-btn">Resize Canvas</button>
 <div class="separator"></div>
-<button id="zoom-out-btn" title="Zoom out">-</button>
-<button id="fit-to-screen-btn" title="Fit to screen">[ ]</button>
-<button id="zoom-in-btn" title="Zoom in">+</button>
-<span id="zoom-display">100%</span>
-<div class="separator"></div>
-<div id="crop-options" style="display: none; align-items: center; gap: 10px;">
-<button id="apply-crop-btn">✅ Apply Crop</button>
+<button id="zoom-out-btn">-</button>
+<span id="zoom-display" style="width: 40px; text-align: center;">100%</span>
+<button id="zoom-in-btn">+</button>
+<button id="fit-screen-btn">[ ]</button>
+<div id="crop-options" class="hidden" style="display: flex; gap: 5px; margin-left: 10px;">
+<button id="apply-crop-btn" class="primary">✅ Apply Crop</button>
+<button id="cancel-crop-btn">❌</button>
 </div>
-<div id="text-options" style="display: none; align-items: center; gap: 10px;">
-<input type="text" id="text-input" placeholder="Text...">
-<input type="color" id="text-color" value="#ffffff" title="Text Color">
-<select id="font-select">
-<option>Arial</option>
-<option>Verdana</option>
-<option>Times New Roman</option>
-<option>Courier New</option>
-<option>Impact</option>
-<option>Segoe UI</option>
+<div id="text-options" class="hidden" style="display: flex; gap: 5px; margin-left: 10px;">
+<input type="text" id="text-input" placeholder="Enter text..." style="width: 120px;">
+<input type="color" id="text-color" value="#ffffff">
+<input type="number" id="text-size" value="40" min="10" max="200" style="width: 50px;">
+<select id="text-font">
+<option value="Arial">Arial</option>
+<option value="Verdana">Verdana</option>
+<option value="Times New Roman">Times</option>
+<option value="Courier New">Courier</option>
+<option value="Impact">Impact</option>
 </select>
-<input type="number" id="font-size" value="48" min="1" title="Font Size">
-<button id="add-text-btn">Add</button>
-<label><input type="checkbox" id="text-shadow"> Shadow</label>
+<button id="add-text-btn" class="primary">Add Text</button>
 </div>
 </div>
 <div class="main-container">
@@ -288,720 +132,767 @@ margin-bottom: 4px;
 <button class="tool-btn" id="tool-crop" title="Crop Tool (C)">C</button>
 <button class="tool-btn" id="tool-text" title="Text Tool (T)">T</button>
 </div>
-<div class="canvas-container" id="canvas-container">
+<div class="canvas-container" id="canvas-wrapper">
 <canvas id="canvas"></canvas>
 <div id="crop-info"></div>
 </div>
 <div class="right-panel">
 <div class="panel-section">
 <h4>Layers</h4>
-<div class="layer-controls" style="margin-bottom: 10px;">
-<button id="layer-up-btn" title="Move Up">▲</button>
-<button id="layer-down-btn" title="Move Down">▼</button>
-<button id="layer-duplicate-btn" title="Duplicate">📋</button>
-<button id="layer-delete-btn" title="Delete">🗑️</button>
+<div class="layer-controls">
+<button id="layer-up">▲</button>
+<button id="layer-down">▼</button>
+<button id="layer-dup">📋</button>
+<button id="layer-del" style="color: var(--danger-color);">🗑️</button>
 </div>
 <ul id="layers-list"></ul>
-<div style="margin-top: 15px;">
-<label style="display:flex; justify-content:space-between; font-size:12px;">Opacity <span id="layer-opacity-value">100%</span></label>
-<input type="range" id="layer-opacity" class="adjustment-slider" min="0" max="1" step="0.01" value="1">
+<button id="flatten-btn" style="width:100%; margin-top:5px;">Flatten All</button>
 </div>
-<div style="margin-top: 5px;">
-<select id="layer-blend-mode" style="width: 100%; padding: 4px;">
+<div class="panel-section">
+<h4>Properties</h4>
+<div class="adjustment-group">
+<label>Opacity <span id="opacity-val">100%</span></label>
+<input type="range" id="prop-opacity" min="0" max="1" step="0.01" value="1">
+</div>
+<div class="adjustment-group">
+<label>Blend Mode</label>
+<select id="prop-blend" style="width: 100%;">
 <option value="source-over">Normal</option>
 <option value="multiply">Multiply</option>
 <option value="screen">Screen</option>
 <option value="overlay">Overlay</option>
-<option value="darken">Darken</option>
-<option value="lighten">Lighten</option>
-<option value="hard-light">Hard Light</option>
-<option value="soft-light">Soft Light</option>
-<option value="difference">Difference</option>
-<option value="luminosity">Luminosity</option>
 </select>
 </div>
 </div>
-<div class="panel-section" id="adjustments-panel" style="display: none;">
-<h4>Adjustments</h4>
+<div class="panel-section" id="filters-panel">
+<h4>Filters (CSS)</h4>
 <div class="adjustment-group">
-<label>Brightness <span id="brightness-value">0</span></label>
-<input type="range" id="adj-brightness" class="adjustment-slider" min="-100" max="100" value="0">
-</div>
-<div class="adjustment-group">
-<label>Contrast <span id="contrast-value">0</span></label>
-<input type="range" id="adj-contrast" class="adjustment-slider" min="-100" max="100" value="0">
+<label>Brightness</label>
+<input type="range" id="filter-brightness" min="-100" max="100" value="0">
 </div>
 <div class="adjustment-group">
-<label>Saturation <span id="saturation-value">0</span></label>
-<input type="range" id="adj-saturation" class="adjustment-slider" min="-100" max="100" value="0">
+<label>Contrast</label>
+<input type="range" id="filter-contrast" min="-100" max="100" value="0">
 </div>
 <div class="adjustment-group">
-<label>Blur (px) <span id="blur-value">0</span></label>
-<input type="range" id="filter-blur" class="adjustment-slider" min="0" max="20" step="0.1" value="0">
+<label>Blur</label>
+<input type="range" id="filter-blur" min="0" max="20" step="0.5" value="0">
 </div>
-</div>
-<div class="panel-section" id="filters-panel" style="display: none;">
-<h4>Filters</h4>
-<div style="display: flex; gap: 5px;">
-<button id="filter-sharpen" style="width: 100%; padding: 6px;">Sharpen</button>
-<button id="filter-emboss" style="width: 100%; padding: 6px;">Emboss</button>
-</div>
-<div style="margin-top: 5px;">
-<button id="filter-grayscale" style="width: 100%; padding: 6px;">Grayscale</button>
+<div style="display:flex; gap: 5px;">
+<button id="filter-grayscale" style="flex:1;">Grayscale</button>
+<button id="filter-sepia" style="flex:1;">Sepia</button>
+<button id="filter-reset" style="flex:1;">Reset</button>
 </div>
 </div>
 <div class="panel-section">
 <h4>Export</h4>
-<div style="display:flex; gap:5px; margin-bottom:5px;">
-<select id="export-format" style="flex:1;">
-<option value="image/png">PNG</option>
-<option value="image/jpeg">JPEG</option>
-<option value="image/webp">WEBP</option>
-</select>
-<button id="export-btn" style="flex:1;">Download</button>
-</div>
-<div id="quality-control" style="display:none; margin-bottom: 10px;">
-<label style="font-size:11px;">Quality</label>
-<input type="range" id="export-quality" class="adjustment-slider" min="0.1" max="1" step="0.1" value="0.9">
-</div>
-<img id="export-preview" src="" alt="Preview">
-<div id="file-size-info" style="font-size: 11px; text-align: center; margin-top: 5px; color: #888;"></div>
+<button id="export-btn" class="primary" style="width: 100%;">Download PNG</button>
 </div>
 </div>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-const CONSTANTS = {
-TOOLS: { MOVE: 'move', CROP: 'crop', TEXT: 'text' },
-PAN_BUTTON: 1,
+const CONFIG = {
 DEFAULT_W: 800,
 DEFAULT_H: 600,
-DEFAULTS_ADJ: { brightness: 0, contrast: 0, saturation: 0, blur: 0 }
+ZOOM_SENSITIVITY: 0.001,
+MIN_ZOOM: 0.1,
+MAX_ZOOM: 10
 };
-const state = {
+const State = {
+width: CONFIG.DEFAULT_W,
+height: CONFIG.DEFAULT_H,
 layers: [],
-activeLayerIndex: -1,
-currentTool: CONSTANTS.TOOLS.MOVE,
-logicalWidth: CONSTANTS.DEFAULT_W,
-logicalHeight: CONSTANTS.DEFAULT_H,
-currentAspectRatio: CONSTANTS.DEFAULT_W / CONSTANTS.DEFAULT_H,
-zoom: 1.0,
+activeLayerId: null,
+tool: 'move',
+zoom: 1,
 panX: 0,
 panY: 0,
-mouse: {
-isDown: false,
-startX: 0,
-startY: 0,
-dragOffsetX: 0,
-dragOffsetY: 0,
-originalLayerState: null,
-activeHandle: null,
-},
-status: {
+history: [],
+historyIndex: -1,
+isUndoing: false,
 isDragging: false,
+isSpaceDown: false,
 isCropping: false,
-isPanning: false,
-isResizingLayer: false,
-isMovingCrop: false,
-isResizingCrop: false,
-},
-cropRect: { x: 0, y: 0, w: 0, h: 0 }
+cropRect: { x:0, y:0, w:0, h:0 },
+dragStart: { x:0, y:0 },
+dragOffset: { x:0, y:0 },
+activeHandle: null,
+tempState: null
 };
-const DOM = {
-canvas: document.getElementById('canvas'),
-container: document.getElementById('canvas-container'),
-ctx: document.getElementById('canvas').getContext('2d'),
-fileInput: document.getElementById('file-input'),
-projectInput: document.getElementById('project-input'),
-widthInput: document.getElementById('resize-width'),
-heightInput: document.getElementById('resize-height'),
-keepRatio: document.getElementById('keep-proportions'),
-layersList: document.getElementById('layers-list'),
-adjPanel: document.getElementById('adjustments-panel'),
-filtersPanel: document.getElementById('filters-panel'),
-zoomDisplay: document.getElementById('zoom-display'),
-cropInfo: document.getElementById('crop-info'),
-exportPreview: document.getElementById('export-preview'),
-fileSizeInfo: document.getElementById('file-size-info')
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const container = document.getElementById('canvas-wrapper');
+const fileInput = document.getElementById('file-input');
+const importInput = document.getElementById('import-input');
+const projectInput = document.getElementById('project-input');
+function saveHistory() {
+if (State.isUndoing) return;
+if (State.historyIndex < State.history.length - 1) {
+State.history = State.history.slice(0, State.historyIndex + 1);
+}
+const snapshot = {
+width: State.width,
+height: State.height,
+layers: State.layers.map(l => ({...l, filters: {...l.filters}}))
 };
-const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
-const getNormalizedRect = (rect) => ({
-x: rect.w < 0 ? rect.x + rect.w : rect.x,
-y: rect.h < 0 ? rect.y + rect.h : rect.y,
-w: Math.abs(rect.w),
-h: Math.abs(rect.h),
-});
-const getMousePos = (e) => {
-const rect = DOM.canvas.getBoundingClientRect();
-const mouseX = e.clientX - rect.left;
-const mouseY = e.clientY - rect.top;
-const worldX = (mouseX - rect.width / 2 - state.panX) / state.zoom + state.logicalWidth / 2;
-const worldY = (mouseY - rect.height / 2 - state.panY) / state.zoom + state.logicalHeight / 2;
-return { x: worldX, y: worldY };
-};
-const getHandles = (rect) => {
-const { x, y, w, h } = rect;
-return {
-topLeft: { x, y },
-topMiddle: { x: x + w / 2, y },
-topRight: { x: x + w, y },
-middleLeft: { x, y: y + h / 2 },
-middleRight: { x: x + w, y: y + h / 2 },
-bottomLeft: { x, y: y + h },
-bottomMiddle: { x: x + w / 2, y: y + h },
-bottomRight: { x: x + w, y: y + h },
-};
-};
-const updateCanvasSize = () => {
-const rect = DOM.container.getBoundingClientRect();
-DOM.canvas.style.width = `${rect.width}px`;
-DOM.canvas.style.height = `${rect.height}px`;
-const dpr = window.devicePixelRatio || 1;
-DOM.canvas.width = rect.width * dpr;
-DOM.canvas.height = rect.height * dpr;
-DOM.ctx.scale(dpr, dpr);
-redrawCanvas();
-};
-const drawCheckerboard = (ctx, x, y, width, height) => {
-const size = 20;
-ctx.fillStyle = '#252525';
-for (let i = 0; i < Math.ceil(width / size); i++) {
-for (let j = 0; j < Math.ceil(height / size); j++) {
-if ((i + j) % 2 === 0) ctx.fillRect(x + i * size, y + j * size, size, size);
+State.history.push(snapshot);
+State.historyIndex++;
+if (State.history.length > 50) {
+State.history.shift();
+State.historyIndex--;
+}
+updateHistoryButtons();
+}
+function undo() {
+if (State.historyIndex > 0) {
+State.isUndoing = true;
+State.historyIndex--;
+restoreState(State.history[State.historyIndex]);
+State.isUndoing = false;
+render();
+updateUI();
 }
 }
-};
-const createFlattenedCanvas = () => {
-const tempCanvas = document.createElement('canvas');
-tempCanvas.width = state.logicalWidth;
-tempCanvas.height = state.logicalHeight;
-const tempCtx = tempCanvas.getContext('2d');
-tempCtx.fillStyle = '#ffffff';
-tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-drawLayers(tempCtx);
-return tempCanvas;
-};
-const drawLayers = (targetCtx) => {
-state.layers.forEach(layer => {
-if (!layer.visible) return;
-targetCtx.save();
-targetCtx.globalAlpha = layer.opacity;
-targetCtx.globalCompositeOperation = layer.blendMode;
-let filterString = '';
-if (layer.adjustments) {
-if (layer.adjustments.brightness !== 0) filterString += `brightness(${100 + layer.adjustments.brightness}%) `;
-if (layer.adjustments.contrast !== 0) filterString += `contrast(${100 + layer.adjustments.contrast}%) `;
-if (layer.adjustments.saturation !== 0) filterString += `saturate(${100 + layer.adjustments.saturation}%) `;
-if (layer.adjustments.blur > 0) filterString += `blur(${layer.adjustments.blur}px) `;
-}
-if (filterString) targetCtx.filter = filterString;
-if (layer.type === 'image') {
-targetCtx.drawImage(layer.content, layer.x, layer.y, layer.width, layer.height);
-} else if (layer.type === 'text') {
-targetCtx.font = `${layer.fontSize}px ${layer.font}`;
-targetCtx.fillStyle = layer.color;
-targetCtx.textBaseline = 'top';
-if (layer.shadow) {
-targetCtx.shadowColor = 'rgba(0,0,0,0.5)';
-targetCtx.shadowBlur = 5;
-targetCtx.shadowOffsetX = 2;
-targetCtx.shadowOffsetY = 2;
-}
-targetCtx.fillText(layer.content, layer.x, layer.y);
-}
-targetCtx.restore();
-});
-};
-const redrawCanvas = () => {
-const dpr = window.devicePixelRatio || 1;
-const ctx = DOM.ctx;
-ctx.save();
-ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-ctx.clearRect(0, 0, DOM.canvas.width / dpr, DOM.canvas.height / dpr);
-const viewW = DOM.canvas.width / dpr;
-const viewH = DOM.canvas.height / dpr;
-ctx.translate(viewW / 2 + state.panX, viewH / 2 + state.panY);
-ctx.scale(state.zoom, state.zoom);
-ctx.translate(-state.logicalWidth / 2, -state.logicalHeight / 2);
-ctx.fillStyle = '#fff';
-ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
-drawCheckerboard(ctx, 0, 0, state.logicalWidth, state.logicalHeight);
-drawLayers(ctx);
-drawOverlays(ctx);
-ctx.restore();
-};
-const drawOverlays = (ctx) => {
-const zoom = state.zoom;
-if (state.currentTool === CONSTANTS.TOOLS.MOVE && state.activeLayerIndex !== -1) {
-const layer = state.layers[state.activeLayerIndex];
-if (layer && layer.visible) {
-ctx.strokeStyle = '#007acc';
-ctx.lineWidth = 1 / zoom;
-ctx.strokeRect(layer.x, layer.y, layer.width, layer.height);
-drawHandlePoints(ctx, getHandles({x: layer.x, y: layer.y, w: layer.width, h: layer.height}));
+function redo() {
+if (State.historyIndex < State.history.length - 1) {
+State.isUndoing = true;
+State.historyIndex++;
+restoreState(State.history[State.historyIndex]);
+State.isUndoing = false;
+render();
+updateUI();
 }
 }
-if (state.currentTool === CONSTANTS.TOOLS.CROP && (state.cropRect.w !== 0 || state.status.isCropping)) {
-const norm = getNormalizedRect(state.cropRect);
-ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-ctx.beginPath();
-ctx.rect(0, 0, state.logicalWidth, state.logicalHeight);
-ctx.rect(norm.x, norm.y, norm.w, norm.h);
-ctx.fill('evenodd');
-ctx.strokeStyle = 'white';
-ctx.lineWidth = 1 / zoom;
-ctx.setLineDash([5 / zoom, 5 / zoom]);
-ctx.strokeRect(norm.x, norm.y, norm.w, norm.h);
-ctx.setLineDash([]);
-drawHandlePoints(ctx, getHandles(norm));
+function restoreState(snapshot) {
+State.width = snapshot.width;
+State.height = snapshot.height;
+State.layers = snapshot.layers.map(l => ({...l, filters: {...l.filters}}));
+State.activeLayerId = State.layers.length ? State.layers[State.layers.length-1].id : null;
+updateCanvasSize();
 }
-};
-const drawHandlePoints = (ctx, handles) => {
-const size = 8 / state.zoom;
-ctx.fillStyle = 'white';
-ctx.strokeStyle = '#007acc';
-ctx.lineWidth = 1 / state.zoom;
-for (const key in handles) {
-const p = handles[key];
-ctx.fillRect(p.x - size/2, p.y - size/2, size, size);
-ctx.strokeRect(p.x - size/2, p.y - size/2, size, size);
+function updateHistoryButtons() {
+document.getElementById('undo-btn').disabled = State.historyIndex <= 0;
+document.getElementById('redo-btn').disabled = State.historyIndex >= State.history.length - 1;
 }
-};
-function handleMouseDown(e) {
-if (e.button === CONSTANTS.PAN_BUTTON || (e.altKey && e.button === 0)) {
-state.status.isPanning = true;
-DOM.canvas.style.cursor = 'grabbing';
-return;
-}
-if (e.button !== 0) return;
-const pos = getMousePos(e);
-state.mouse.startX = pos.x;
-state.mouse.startY = pos.y;
-state.mouse.isDown = true;
-if (checkHandleClick(pos)) return;
-if (state.currentTool === CONSTANTS.TOOLS.MOVE) {
-checkLayerClick(pos);
-} else if (state.currentTool === CONSTANTS.TOOLS.CROP) {
-state.status.isCropping = true;
-state.cropRect = { x: pos.x, y: pos.y, w: 0, h: 0 };
-document.getElementById('crop-options').style.display = 'none';
-}
-}
-function checkHandleClick(pos) {
-const handleSize = 10 / state.zoom;
-if (state.currentTool === CONSTANTS.TOOLS.CROP && state.cropRect.w !== 0) {
-const handles = getHandles(getNormalizedRect(state.cropRect));
-for (const name in handles) {
-const h = handles[name];
-if (Math.abs(pos.x - h.x) < handleSize && Math.abs(pos.y - h.y) < handleSize) {
-state.status.isResizingCrop = true;
-state.mouse.activeHandle = name;
-state.mouse.originalLayerState = { ...state.cropRect };
-return true;
-}
-}
-const norm = getNormalizedRect(state.cropRect);
-if (pos.x >= norm.x && pos.x <= norm.x + norm.w && pos.y >= norm.y && pos.y <= norm.y + norm.h) {
-state.status.isMovingCrop = true;
-state.mouse.dragOffsetX = pos.x - state.cropRect.x;
-state.mouse.dragOffsetY = pos.y - state.cropRect.y;
-return true;
-}
-}
-if (state.currentTool === CONSTANTS.TOOLS.MOVE && state.activeLayerIndex !== -1) {
-const layer = state.layers[state.activeLayerIndex];
-if (layer) {
-const handles = getHandles({x: layer.x, y: layer.y, w: layer.width, h: layer.height});
-for (const name in handles) {
-const h = handles[name];
-if (Math.abs(pos.x - h.x) < handleSize && Math.abs(pos.y - h.y) < handleSize) {
-state.status.isResizingLayer = true;
-state.mouse.activeHandle = name;
-state.mouse.originalLayerState = { ...layer };
-return true;
-}
-}
-}
-}
-return false;
-}
-function checkLayerClick(pos) {
-for (let i = state.layers.length - 1; i >= 0; i--) {
-const l = state.layers[i];
-if (l.visible && pos.x >= l.x && pos.x <= l.x + l.width && pos.y >= l.y && pos.y <= l.y + l.height) {
-state.activeLayerIndex = i;
-state.status.isDragging = true;
-state.mouse.dragOffsetX = pos.x - l.x;
-state.mouse.dragOffsetY = pos.y - l.y;
-updateLayersList();
-redrawCanvas();
-return;
-}
-}
-state.activeLayerIndex = -1;
-updateLayersList();
-redrawCanvas();
-}
-function handleMouseMove(e) {
-if (state.status.isPanning) {
-state.panX += e.movementX;
-state.panY += e.movementY;
-redrawCanvas();
-return;
-}
-const pos = getMousePos(e);
-if (!state.mouse.isDown) {
-updateCursor(pos);
-return;
-}
-if (state.status.isResizingLayer) handleLayerResize(pos, e.shiftKey, e.altKey);
-else if (state.status.isResizingCrop) handleCropResize(pos, e.clientX, e.clientY);
-else if (state.status.isMovingCrop) handleCropMove(pos);
-else if (state.status.isDragging) handleLayerDrag(pos);
-else if (state.status.isCropping) handleCropDraw(pos, e.clientX, e.clientY);
-}
-function handleMouseUp() {
-if (state.status.isCropping || state.status.isResizingCrop) {
-state.cropRect = getNormalizedRect(state.cropRect);
-if (state.cropRect.w > 5 && state.cropRect.h > 5) {
-document.getElementById('crop-options').style.display = 'flex';
-} else {
-state.cropRect = { x: 0, y: 0, w: 0, h: 0 };
-document.getElementById('crop-options').style.display = 'none';
-}
-}
-state.status.isDragging = false;
-state.status.isCropping = false;
-state.status.isPanning = false;
-state.status.isResizingLayer = false;
-state.status.isMovingCrop = false;
-state.status.isResizingCrop = false;
-state.mouse.isDown = false;
-DOM.cropInfo.style.display = 'none';
-DOM.canvas.style.cursor = 'default';
-updateExportPreview();
-redrawCanvas();
-}
-function handleCropDraw(pos, cx, cy) {
-const currentX = clamp(pos.x, 0, state.logicalWidth);
-const currentY = clamp(pos.y, 0, state.logicalHeight);
-const startX = clamp(state.mouse.startX, 0, state.logicalWidth);
-const startY = clamp(state.mouse.startY, 0, state.logicalHeight);
-state.cropRect.x = startX;
-state.cropRect.y = startY;
-state.cropRect.w = currentX - startX;
-state.cropRect.h = currentY - startY;
-updateCropInfoUI(state.cropRect, cx, cy);
-redrawCanvas();
-}
-function handleCropResize(pos, cx, cy) {
-const mouseX = clamp(pos.x, 0, state.logicalWidth);
-const mouseY = clamp(pos.y, 0, state.logicalHeight);
-const dx = mouseX - state.mouse.startX;
-const dy = mouseY - state.mouse.startY;
-let { x, y, w, h } = state.mouse.originalLayerState;
-switch (state.mouse.activeHandle) {
-case 'topLeft': w -= dx; h -= dy; x += dx; y += dy; break;
-case 'topMiddle': h -= dy; y += dy; break;
-case 'topRight': w += dx; h -= dy; y += dy; break;
-case 'middleLeft': w -= dx; x += dx; break;
-case 'middleRight': w += dx; break;
-case 'bottomLeft': w -= dx; h += dy; x += dx; break;
-case 'bottomMiddle': h += dy; break;
-case 'bottomRight': w += dx; h += dy; break;
-}
-state.cropRect = { x, y, w, h };
-updateCropInfoUI(state.cropRect, cx, cy);
-redrawCanvas();
-}
-function updateCropInfoUI(rect, cx, cy) {
-const norm = getNormalizedRect(rect);
-DOM.cropInfo.style.display = 'block';
-DOM.cropInfo.style.left = (cx + 15) + 'px';
-DOM.cropInfo.style.top = (cy + 15) + 'px';
-DOM.cropInfo.textContent = `${Math.round(norm.w)} x ${Math.round(norm.h)} px`;
-}
-function handleCropMove(pos) {
-state.cropRect.x = pos.x - state.mouse.dragOffsetX;
-state.cropRect.y = pos.y - state.mouse.dragOffsetY;
-redrawCanvas();
-}
-function handleLayerDrag(pos) {
-const layer = state.layers[state.activeLayerIndex];
-layer.x = pos.x - state.mouse.dragOffsetX;
-layer.y = pos.y - state.mouse.dragOffsetY;
-redrawCanvas();
-}
-function handleLayerResize(pos, shiftKey, altKey) {
-const layer = state.layers[state.activeLayerIndex];
-const dx = pos.x - state.mouse.startX;
-const dy = pos.y - state.mouse.startY;
-let { x, y, width, height } = state.mouse.originalLayerState;
-const aspect = width / height;
-let newW = width, newH = height, newX = x, newY = y;
-if (state.mouse.activeHandle.includes('Right')) newW = width + dx;
-if (state.mouse.activeHandle.includes('Left')) { newW = width - dx; newX = x + dx; }
-if (state.mouse.activeHandle.includes('bottom')) newH = height + dy;
-if (state.mouse.activeHandle.includes('top')) { newH = height - dy; newY = y + dy; }
-if (shiftKey) {
-if (newW / newH !== aspect) {
-newH = newW / aspect;
-if (state.mouse.activeHandle.includes('top')) newY = y + (height - newH);
-}
-}
-if (layer.type === 'text') {
-const scale = newW / width;
-layer.fontSize = Math.max(5, state.mouse.originalLayerState.fontSize * scale);
-DOM.ctx.font = `${layer.fontSize}px ${layer.font}`;
-const m = DOM.ctx.measureText(layer.content);
-layer.width = m.width;
-layer.height = layer.fontSize * 1.2;
-layer.x = newX;
-layer.y = newY;
-} else {
-if (newW > 5 && newH > 5) {
-layer.x = newX; layer.y = newY;
-layer.width = newW; layer.height = newH;
-}
-}
-redrawCanvas();
-}
-function updateCursor(pos) {
-DOM.canvas.style.cursor = 'default';
-}
-DOM.widthInput.addEventListener('input', () => {
-if (DOM.keepRatio.checked) {
-const val = parseFloat(DOM.widthInput.value);
-if (!isNaN(val)) DOM.heightInput.value = Math.round(val / state.currentAspectRatio);
-}
-});
-DOM.heightInput.addEventListener('input', () => {
-if (DOM.keepRatio.checked) {
-const val = parseFloat(DOM.heightInput.value);
-if (!isNaN(val)) DOM.widthInput.value = Math.round(val * state.currentAspectRatio);
-}
-});
-DOM.container.addEventListener('click', (e) => {
-if (e.target.id === 'resize-btn') {
-const w = Math.round(parseFloat(DOM.widthInput.value));
-const h = Math.round(parseFloat(DOM.heightInput.value));
-if (!w || !h) return alert("Invalid size");
-const flattened = createFlattenedCanvas();
-const tempCanvas = document.createElement('canvas');
-tempCanvas.width = w;
-tempCanvas.height = h;
-const tCtx = tempCanvas.getContext('2d');
-tCtx.drawImage(flattened, 0, 0, w, h);
-state.logicalWidth = w;
-state.logicalHeight = h;
-state.currentAspectRatio = w / h;
-const newImg = new Image();
-newImg.onload = () => {
-state.layers = [{
-type: 'image', name: 'Resized Image', content: newImg,
-x: 0, y: 0, width: w, height: h, visible: true, opacity: 1, blendMode: 'source-over',
-adjustments: {...CONSTANTS.DEFAULTS_ADJ}
-}];
-state.activeLayerIndex = 0;
-fitToScreen();
-updateLayersList();
-updateExportPreview();
-};
-newImg.src = tempCanvas.toDataURL();
-}
-});
-document.getElementById('apply-crop-btn').addEventListener('click', () => {
-const norm = getNormalizedRect(state.cropRect);
-if (norm.w < 1 || norm.h < 1) return;
-const flattened = createFlattenedCanvas();
-const tempCanvas = document.createElement('canvas');
-tempCanvas.width = norm.w;
-tempCanvas.height = norm.h;
-tempCanvas.getContext('2d').drawImage(flattened, norm.x, norm.y, norm.w, norm.h, 0, 0, norm.w, norm.h);
-state.logicalWidth = norm.w;
-state.logicalHeight = norm.h;
-DOM.widthInput.value = norm.w;
-DOM.heightInput.value = norm.h;
-const newImg = new Image();
-newImg.onload = () => {
-state.layers = [{
-type: 'image', name: 'Cropped Image', content: newImg,
-x: 0, y: 0, width: norm.w, height: norm.h, visible: true, opacity: 1, blendMode: 'source-over',
-adjustments: {...CONSTANTS.DEFAULTS_ADJ}
-}];
-state.activeLayerIndex = 0;
-state.cropRect = {x:0,y:0,w:0,h:0};
-switchTool(CONSTANTS.TOOLS.MOVE);
-fitToScreen();
-updateLayersList();
-updateExportPreview();
-};
-newImg.src = tempCanvas.toDataURL();
-});
-const addLayer = (layerObj) => {
-state.layers.push(layerObj);
-state.activeLayerIndex = state.layers.length - 1;
-updateLayersList();
-redrawCanvas();
-updateExportPreview();
-};
-const updateLayersList = () => {
-DOM.layersList.innerHTML = '';
-[...state.layers].reverse().forEach((layer, idx) => {
-const realIdx = state.layers.length - 1 - idx;
-const li = document.createElement('li');
-li.innerHTML = `<span class="visibility-toggle">${layer.visible ? '👁️' : '⚪'}</span> ${layer.name}`;
-if (realIdx === state.activeLayerIndex) li.classList.add('active');
-li.querySelector('.visibility-toggle').onclick = (e) => {
-e.stopPropagation();
-layer.visible = !layer.visible;
-updateLayersList();
-redrawCanvas();
-};
-li.onclick = () => {
-state.activeLayerIndex = realIdx;
-updateLayersList();
-updateAdjustmentPanel();
-redrawCanvas();
-};
-DOM.layersList.appendChild(li);
-});
-updateAdjustmentPanel();
-};
-const updateAdjustmentPanel = () => {
-const layer = state.layers[state.activeLayerIndex];
-const isImg = layer && layer.type === 'image';
-DOM.adjPanel.style.display = isImg ? 'block' : 'none';
-DOM.filtersPanel.style.display = isImg ? 'block' : 'none';
-if (layer) {
-document.getElementById('layer-opacity').value = layer.opacity;
-document.getElementById('layer-opacity-value').innerText = Math.round(layer.opacity*100)+'%';
-document.getElementById('layer-blend-mode').value = layer.blendMode;
-}
-if (isImg && layer.adjustments) {
-document.getElementById('adj-brightness').value = layer.adjustments.brightness || 0;
-document.getElementById('brightness-value').innerText = layer.adjustments.brightness || 0;
-document.getElementById('adj-contrast').value = layer.adjustments.contrast || 0;
-document.getElementById('adj-saturation').value = layer.adjustments.saturation || 0;
-document.getElementById('saturation-value').innerText = layer.adjustments.saturation || 0;
-document.getElementById('filter-blur').value = layer.adjustments.blur || 0;
-}
-};
 function init() {
 const bg = document.createElement('canvas');
 bg.width = 800; bg.height = 600;
-bg.getContext('2d').fillStyle = 'white';
-bg.getContext('2d').fillRect(0,0,800,600);
-addLayer({
-type: 'image', name: 'Background', content: bg,
-x: 0, y: 0, width: 800, height: 600, visible: true, opacity: 1, blendMode: 'source-over',
-adjustments: {...CONSTANTS.DEFAULTS_ADJ}
+const bctx = bg.getContext('2d');
+bctx.fillStyle = 'white';
+bctx.fillRect(0,0,800,600);
+const bgImg = new Image();
+bgImg.src = bg.toDataURL();
+bgImg.onload = () => {
+addLayer(bgImg, 'Background', 800, 600);
+saveHistory();
+fitToScreen();
+};
+window.addEventListener('resize', () => { updateCanvasSize(); render(); });
+updateCanvasSize();
+}
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
+function addLayer(content, name, w, h, type = 'image') {
+const layer = {
+id: generateId(),
+type: type,
+name: name || `Layer ${State.layers.length + 1}`,
+content: content,
+x: 0, y: 0, width: w, height: h,
+visible: true,
+opacity: 1,
+blendMode: 'source-over',
+filters: { brightness: 0, contrast: 0, blur: 0, sepia: 0, grayscale: 0 },
+color: '#ffffff',
+font: 'Arial',
+fontSize: type === 'text' ? 40 : 0
+};
+if (type === 'image') {
+layer.x = (State.width - w) / 2;
+layer.y = (State.height - h) / 2;
+} else {
+layer.x = State.width / 2;
+layer.y = State.height / 2;
+}
+State.layers.push(layer);
+State.activeLayerId = layer.id;
+updateUI();
+render();
+saveHistory();
+}
+function updateCanvasSize() {
+const rect = container.getBoundingClientRect();
+canvas.width = rect.width;
+canvas.height = rect.height;
+render();
+}
+function worldToScreen(x, y) {
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+return {
+x: (x - State.width/2) * State.zoom + cx + State.panX,
+y: (y - State.height/2) * State.zoom + cy + State.panY
+};
+}
+function screenToWorld(sx, sy) {
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+return {
+x: (sx - cx - State.panX) / State.zoom + State.width/2,
+y: (sy - cy - State.panY) / State.zoom + State.height/2
+};
+}
+function render() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+const tl = worldToScreen(0, 0);
+const br = worldToScreen(State.width, State.height);
+ctx.save();
+ctx.beginPath();
+ctx.rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+ctx.clip();
+drawCheckerboard(tl.x, tl.y, br.x - tl.x, br.y - tl.y, State.zoom);
+ctx.fillStyle = 'white';
+ctx.fillRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+State.layers.forEach(layer => {
+if (!layer.visible) return;
+const lx = tl.x + layer.x * State.zoom;
+const ly = tl.y + layer.y * State.zoom;
+const lw = layer.width * State.zoom;
+const lh = layer.height * State.zoom;
+ctx.globalAlpha = layer.opacity;
+ctx.globalCompositeOperation = layer.blendMode;
+let f = layer.filters;
+ctx.filter = `brightness(${100+parseInt(f.brightness)}%) contrast(${100+parseInt(f.contrast)}%) blur(${f.blur}px) grayscale(${f.grayscale}%) sepia(${f.sepia}%)`;
+if (layer.type === 'image') {
+ctx.drawImage(layer.content, lx, ly, lw, lh);
+} else if (layer.type === 'text') {
+ctx.font = `${layer.fontSize * State.zoom}px ${layer.font}`;
+ctx.fillStyle = layer.color;
+ctx.textBaseline = 'top';
+ctx.fillText(layer.content, lx, ly);
+}
+ctx.filter = 'none';
 });
-DOM.widthInput.value = 800;
-DOM.heightInput.value = 600;
+ctx.restore();
+drawOverlays();
+}
+function drawCheckerboard(x, y, w, h, zoom) {
+const size = 20 * zoom;
+if (size < 2) return;
+ctx.fillStyle = '#ccc';
+}
+function drawOverlays() {
+if (State.tool === 'move' && State.activeLayerId) {
+const layer = State.layers.find(l => l.id === State.activeLayerId);
+if (layer && layer.visible) {
+const tl = worldToScreen(layer.x, layer.y);
+const w = layer.width * State.zoom;
+const h = layer.height * State.zoom;
+ctx.strokeStyle = '#007acc';
+ctx.lineWidth = 2;
+ctx.strokeRect(tl.x, tl.y, w, h);
+drawHandles(tl.x, tl.y, w, h);
+}
+}
+if (State.tool === 'crop' && (State.isCropping || State.cropRect.w > 0)) {
+ctx.fillStyle = 'rgba(0,0,0,0.5)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const tl = worldToScreen(State.cropRect.x, State.cropRect.y);
+const w = State.cropRect.w * State.zoom;
+const h = State.cropRect.h * State.zoom;
+ctx.clearRect(tl.x, tl.y, w, h);
+ctx.save();
+ctx.beginPath();
+ctx.rect(tl.x, tl.y, w, h);
+ctx.clip();
+ctx.restore();
+ctx.strokeStyle = 'white';
+ctx.lineWidth = 2;
+ctx.strokeRect(tl.x, tl.y, w, h);
+ctx.beginPath();
+ctx.moveTo(tl.x + w/3, tl.y); ctx.lineTo(tl.x + w/3, tl.y+h);
+ctx.moveTo(tl.x + 2*w/3, tl.y); ctx.lineTo(tl.x + 2*w/3, tl.y+h);
+ctx.moveTo(tl.x, tl.y + h/3); ctx.lineTo(tl.x+w, tl.y+h/3);
+ctx.moveTo(tl.x, tl.y + 2*h/3); ctx.lineTo(tl.x+w, tl.y+2*h/3);
+ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+ctx.lineWidth = 1;
+ctx.stroke();
+drawHandles(tl.x, tl.y, w, h);
+const info = document.getElementById('crop-info');
+info.style.display = 'block';
+info.style.left = (tl.x) + 'px';
+info.style.top = (tl.y - 25) + 'px';
+info.innerText = `${Math.round(State.cropRect.w)} x ${Math.round(State.cropRect.h)}`;
+} else {
+document.getElementById('crop-info').style.display = 'none';
+}
+}
+function drawHandles(x, y, w, h) {
+const s = 8;
+ctx.fillStyle = 'white';
+ctx.strokeStyle = '#007acc';
+const coords = [
+[x-s/2, y-s/2], [x+w/2-s/2, y-s/2], [x+w-s/2, y-s/2],
+[x-s/2, y+h/2-s/2], [x+w-s/2, y+h/2-s/2],
+[x-s/2, y+h-s/2], [x+w/2-s/2, y+h-s/2], [x+w-s/2, y+h-s/2]
+];
+coords.forEach(c => {
+ctx.fillRect(c[0], c[1], s, s);
+ctx.strokeRect(c[0], c[1], s, s);
+});
+}
+function resizeCanvas() {
+const w = parseInt(document.getElementById('resize-width').value);
+const h = parseInt(document.getElementById('resize-height').value);
+if (!w || !h) return;
+const scaleX = w / State.width;
+const scaleY = h / State.height;
+State.width = w;
+State.height = h;
+State.layers.forEach(l => {
+l.x *= scaleX;
+l.y *= scaleY;
+l.width *= scaleX;
+l.height *= scaleY;
+if(l.type === 'text') l.fontSize *= scaleX;
+});
+saveHistory();
+render();
 fitToScreen();
 }
-const switchTool = (t) => {
-state.currentTool = t;
-document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-document.getElementById(`tool-${t}`).classList.add('active');
-document.getElementById('text-options').style.display = t === 'text' ? 'flex' : 'none';
-document.getElementById('crop-options').style.display = (t === 'crop' && state.cropRect.w) ? 'flex' : 'none';
-state.cropRect = {x:0, y:0, w:0, h:0};
-redrawCanvas();
-};
-const fitToScreen = () => {
-const rect = DOM.container.getBoundingClientRect();
-const scale = Math.min((rect.width - 40) / state.logicalWidth, (rect.height - 40) / state.logicalHeight);
-state.zoom = scale;
-state.panX = 0;
-state.panY = 0;
-DOM.zoomDisplay.textContent = Math.round(scale * 100) + '%';
-redrawCanvas();
-};
-const updateExportPreview = () => {
-const canvas = createFlattenedCanvas();
-const quality = parseFloat(document.getElementById('export-quality').value);
-const format = document.getElementById('export-format').value;
-DOM.exportPreview.src = canvas.toDataURL(format, quality);
-canvas.toBlob(blob => {
-DOM.fileSizeInfo.innerText = blob ? `~ ${(blob.size/1024).toFixed(1)} KB` : '';
-}, format, quality);
-};
-window.addEventListener('resize', () => { updateCanvasSize(); fitToScreen(); });
-DOM.canvas.addEventListener('mousedown', handleMouseDown);
-DOM.canvas.addEventListener('mousemove', handleMouseMove);
-window.addEventListener('mouseup', handleMouseUp);
-DOM.canvas.addEventListener('wheel', (e) => {
-e.preventDefault();
-if (e.ctrlKey) {
-const delta = e.deltaY > 0 ? 0.9 : 1.1;
-state.zoom *= delta;
-DOM.zoomDisplay.textContent = Math.round(state.zoom * 100) + '%';
-} else {
-state.panX -= e.deltaX;
-state.panY -= e.deltaY;
+function applyCrop() {
+if (State.cropRect.w <= 0) return;
+const originX = State.cropRect.x;
+const originY = State.cropRect.y;
+State.width = State.cropRect.w;
+State.height = State.cropRect.h;
+State.layers.forEach(l => {
+l.x -= originX;
+l.y -= originY;
+});
+State.tool = 'move';
+State.cropRect = {x:0, y:0, w:0, h:0};
+document.getElementById('tool-move').click();
+saveHistory();
+fitToScreen();
+updateUI();
 }
-redrawCanvas();
-}, { passive: false });
-document.getElementById('open-btn').addEventListener('click', () => DOM.fileInput.click());
-DOM.fileInput.addEventListener('change', (e) => {
+function handleMouseDown(e) {
+if (State.isSpaceDown || e.button === 1) {
+State.isDragging = true;
+State.tool = 'pan';
+State.dragStart = { x: e.clientX, y: e.clientY };
+return;
+}
+const mouse = screenToWorld(e.offsetX, e.offsetY);
+if (State.tool === 'move') {
+let hit = false;
+for (let i = State.layers.length - 1; i >= 0; i--) {
+const l = State.layers[i];
+if (!l.visible) continue;
+if (mouse.x >= l.x && mouse.x <= l.x + l.width &&
+mouse.y >= l.y && mouse.y <= l.y + l.height) {
+State.activeLayerId = l.id;
+State.isDragging = true;
+State.dragOffset = { x: mouse.x - l.x, y: mouse.y - l.y };
+hit = true;
+break;
+}
+}
+if (!hit) State.activeLayerId = null;
+updateUI();
+render();
+} else if (State.tool === 'crop') {
+State.isCropping = true;
+State.cropRect.x = mouse.x;
+State.cropRect.y = mouse.y;
+State.cropRect.w = 0;
+State.cropRect.h = 0;
+document.getElementById('crop-options').classList.add('hidden');
+}
+}
+function handleMouseMove(e) {
+if (!State.isDragging && !State.isCropping) return;
+if (State.tool === 'pan') {
+State.panX += e.movementX;
+State.panY += e.movementY;
+render();
+return;
+}
+const mouse = screenToWorld(e.offsetX, e.offsetY);
+if (State.tool === 'move' && State.activeLayerId) {
+const layer = State.layers.find(l => l.id === State.activeLayerId);
+if (layer) {
+layer.x = mouse.x - State.dragOffset.x;
+layer.y = mouse.y - State.dragOffset.y;
+render();
+}
+} else if (State.tool === 'crop') {
+State.cropRect.w = mouse.x - State.cropRect.x;
+State.cropRect.h = mouse.y - State.cropRect.y;
+render();
+}
+}
+function handleMouseUp(e) {
+if (State.isDragging) {
+if (State.tool === 'move') saveHistory();
+}
+if (State.isCropping) {
+if (State.cropRect.w < 0) { State.cropRect.x += State.cropRect.w; State.cropRect.w = Math.abs(State.cropRect.w); }
+if (State.cropRect.h < 0) { State.cropRect.y += State.cropRect.h; State.cropRect.h = Math.abs(State.cropRect.h); }
+if (State.cropRect.w > 10) {
+document.getElementById('crop-options').classList.remove('hidden');
+}
+}
+State.isDragging = false;
+State.isCropping = false;
+if (State.tool === 'pan') State.tool = document.querySelector('.tool-btn.active').id.replace('tool-', '');
+}
+function updateUI() {
+const list = document.getElementById('layers-list');
+list.innerHTML = '';
+[...State.layers].reverse().forEach(layer => {
+const li = document.createElement('li');
+if (layer.id === State.activeLayerId) li.classList.add('active');
+li.innerHTML = `
+            <span>
+                <span class="vis-btn">${layer.visible ? '👁️' : '⚪'}</span>
+                ${layer.name}
+            </span>
+        `;
+li.onclick = () => {
+State.activeLayerId = layer.id;
+updateUI();
+render();
+};
+li.querySelector('.vis-btn').onclick = (e) => {
+e.stopPropagation();
+layer.visible = !layer.visible;
+render();
+updateUI();
+};
+list.appendChild(li);
+});
+const layer = State.layers.find(l => l.id === State.activeLayerId);
+const hasLayer = !!layer;
+document.getElementById('prop-opacity').disabled = !hasLayer;
+document.getElementById('prop-blend').disabled = !hasLayer;
+if (layer) {
+document.getElementById('prop-opacity').value = layer.opacity;
+document.getElementById('opacity-val').innerText = Math.round(layer.opacity*100) + '%';
+document.getElementById('prop-blend').value = layer.blendMode;
+document.getElementById('filter-brightness').value = layer.filters.brightness;
+document.getElementById('filter-contrast').value = layer.filters.contrast;
+document.getElementById('filter-blur').value = layer.filters.blur;
+}
+}
+document.getElementById('open-btn').onclick = () => fileInput.click();
+fileInput.onchange = (e) => {
 const file = e.target.files[0];
-if(!file) return;
+if (!file) return;
 const reader = new FileReader();
 reader.onload = (ev) => {
 const img = new Image();
 img.onload = () => {
-state.layers = [];
-state.logicalWidth = img.width;
-state.logicalHeight = img.height;
-state.currentAspectRatio = img.width / img.height;
-DOM.widthInput.value = img.width;
-DOM.heightInput.value = img.height;
-addLayer({
-type: 'image', name: file.name, content: img,
-x: 0, y: 0, width: img.width, height: img.height, visible: true, opacity: 1, blendMode: 'source-over',
-adjustments: {...CONSTANTS.DEFAULTS_ADJ}
-});
+State.layers = [];
+State.width = img.width;
+State.height = img.height;
+addLayer(img, file.name, img.width, img.height);
+State.history = [];
+saveHistory();
 fitToScreen();
+updateInputs();
 };
 img.src = ev.target.result;
 };
 reader.readAsDataURL(file);
-});
-document.getElementById('tool-move').onclick = () => switchTool(CONSTANTS.TOOLS.MOVE);
-document.getElementById('tool-crop').onclick = () => switchTool(CONSTANTS.TOOLS.CROP);
-document.getElementById('tool-text').onclick = () => switchTool(CONSTANTS.TOOLS.TEXT);
-document.getElementById('zoom-in-btn').onclick = () => { state.zoom *= 1.2; redrawCanvas(); };
-document.getElementById('zoom-out-btn').onclick = () => { state.zoom /= 1.2; redrawCanvas(); };
-document.getElementById('fit-to-screen-btn').onclick = fitToScreen;
-['brightness', 'contrast', 'saturation'].forEach(adj => {
-document.getElementById(`adj-${adj}`).addEventListener('input', (e) => {
-const l = state.layers[state.activeLayerIndex];
-if(l && l.adjustments) {
-l.adjustments[adj] = parseFloat(e.target.value);
-document.getElementById(`${adj}-value`).innerText = e.target.value;
-redrawCanvas();
-}
-});
-document.getElementById(`adj-${adj}`).addEventListener('change', updateExportPreview);
-});
-document.getElementById('filter-blur').addEventListener('input', (e) => {
-const l = state.layers[state.activeLayerIndex];
-if(l && l.adjustments) {
-l.adjustments.blur = parseFloat(e.target.value);
-document.getElementById('blur-value').innerText = e.target.value;
-redrawCanvas();
-}
-});
-document.getElementById('export-btn').onclick = () => {
-const link = document.createElement('a');
-link.download = 'edited-image.png';
-link.href = DOM.exportPreview.src;
-link.click();
 };
-init();
+document.getElementById('import-btn').onclick = () => importInput.click();
+importInput.onchange = (e) => {
+const file = e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = (ev) => {
+const img = new Image();
+img.onload = () => {
+let w = img.width, h = img.height;
+if (w > State.width) { const s = State.width/w; w*=s; h*=s; }
+addLayer(img, file.name, w, h);
+};
+img.src = ev.target.result;
+};
+reader.readAsDataURL(file);
+};
+const setTool = (t) => {
+State.tool = t;
+document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+document.getElementById(`tool-${t}`).classList.add('active');
+document.getElementById('text-options').classList.toggle('hidden', t !== 'text');
+document.getElementById('crop-options').classList.toggle('hidden', t !== 'crop' || State.cropRect.w === 0);
+render();
+};
+document.getElementById('tool-move').onclick = () => setTool('move');
+document.getElementById('tool-crop').onclick = () => setTool('crop');
+document.getElementById('tool-text').onclick = () => setTool('text');
+document.getElementById('add-text-btn').onclick = () => {
+const text = document.getElementById('text-input').value;
+if (!text) return;
+const color = document.getElementById('text-color').value;
+const size = parseInt(document.getElementById('text-size').value);
+const font = document.getElementById('text-font').value;
+ctx.font = `${size}px ${font}`;
+const m = ctx.measureText(text);
+const layer = {
+id: generateId(), type: 'text', name: text.substr(0,10)+'...',
+content: text, color: color, font: font, fontSize: size,
+x: State.width/2 - m.width/2, y: State.height/2, width: m.width, height: size,
+visible: true, opacity: 1, blendMode: 'source-over',
+filters: { brightness: 0, contrast: 0, blur: 0, grayscale:0, sepia:0 }
+};
+State.layers.push(layer);
+State.activeLayerId = layer.id;
+saveHistory();
+updateUI();
+render();
+setTool('move');
+};
+const updateFilter = (key, val) => {
+const l = State.layers.find(i => i.id === State.activeLayerId);
+if(l) { l.filters[key] = val; render(); }
+};
+document.getElementById('filter-brightness').oninput = (e) => updateFilter('brightness', e.target.value);
+document.getElementById('filter-contrast').oninput = (e) => updateFilter('contrast', e.target.value);
+document.getElementById('filter-blur').oninput = (e) => updateFilter('blur', e.target.value);
+document.getElementById('filter-grayscale').onclick = () => { updateFilter('grayscale', 100); saveHistory(); };
+document.getElementById('filter-sepia').onclick = () => { updateFilter('sepia', 100); saveHistory(); };
+document.getElementById('filter-reset').onclick = () => {
+const l = State.layers.find(i => i.id === State.activeLayerId);
+if(l) {
+l.filters = { brightness: 0, contrast: 0, blur: 0, sepia: 0, grayscale: 0 };
+updateUI(); render(); saveHistory();
+}
+};
+document.getElementById('prop-opacity').oninput = (e) => {
+const l = State.layers.find(i => i.id === State.activeLayerId);
+if(l) { l.opacity = parseFloat(e.target.value); document.getElementById('opacity-val').innerText = Math.round(l.opacity*100)+'%'; render(); }
+};
+document.getElementById('prop-opacity').onchange = saveHistory;
+document.getElementById('prop-blend').onchange = (e) => {
+const l = State.layers.find(i => i.id === State.activeLayerId);
+if(l) { l.blendMode = e.target.value; render(); saveHistory(); }
+};
+const getIdx = () => State.layers.findIndex(l => l.id === State.activeLayerId);
+document.getElementById('layer-del').onclick = () => {
+const idx = getIdx();
+if(idx > -1) { State.layers.splice(idx,1); State.activeLayerId=null; updateUI(); render(); saveHistory(); }
+};
+document.getElementById('layer-up').onclick = () => {
+const idx = getIdx();
+if(idx > -1 && idx < State.layers.length-1) {
+[State.layers[idx], State.layers[idx+1]] = [State.layers[idx+1], State.layers[idx]];
+updateUI(); render(); saveHistory();
+}
+};
+document.getElementById('layer-down').onclick = () => {
+const idx = getIdx();
+if(idx > 0) {
+[State.layers[idx], State.layers[idx-1]] = [State.layers[idx-1], State.layers[idx]];
+updateUI(); render(); saveHistory();
+}
+};
+document.getElementById('layer-dup').onclick = () => {
+const l = State.layers.find(i => i.id === State.activeLayerId);
+if(l) {
+const copy = {...l, id: generateId(), x: l.x+20, y: l.y+20, filters:{...l.filters}, name: l.name+' Copy'};
+State.layers.push(copy);
+State.activeLayerId = copy.id;
+updateUI(); render(); saveHistory();
+}
+};
+document.getElementById('resize-btn').onclick = resizeCanvas;
+document.getElementById('apply-crop-btn').onclick = applyCrop;
+document.getElementById('cancel-crop-btn').onclick = () => {
+State.cropRect = {x:0, y:0, w:0, h:0};
+document.getElementById('crop-options').classList.add('hidden');
+render();
+};
+document.getElementById('undo-btn').onclick = undo;
+document.getElementById('redo-btn').onclick = redo;
+document.getElementById('save-project-btn').onclick = () => {
+const storageLayers = State.layers.map(l => {
+const sl = {...l};
+if (l.type === 'image') {
+const c = document.createElement('canvas');
+c.width = l.content.width; c.height = l.content.height;
+c.getContext('2d').drawImage(l.content,0,0);
+sl.content = c.toDataURL();
+}
+return sl;
 });
+const json = JSON.stringify({
+width: State.width,
+height: State.height,
+layers: storageLayers
+});
+const blob = new Blob([json], {type: 'application/json'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url; a.download = 'project.json';
+a.click();
+};
+document.getElementById('load-project-btn').onclick = () => projectInput.click();
+projectInput.onchange = (e) => {
+const file = e.target.files[0];
+if(!file) return;
+const reader = new FileReader();
+reader.onload = (ev) => {
+try {
+const data = JSON.parse(ev.target.result);
+State.width = data.width;
+State.height = data.height;
+State.layers = [];
+let loadedCount = 0;
+const totalImages = data.layers.filter(l => l.type === 'image').length;
+if(totalImages === 0) finishLoad();
+data.layers.forEach(l => {
+if(l.type === 'image') {
+const img = new Image();
+img.onload = () => {
+l.content = img;
+loadedCount++;
+if(loadedCount === totalImages) finishLoad();
+};
+img.src = l.content;
+}
+});
+function finishLoad() {
+State.layers = data.layers;
+State.activeLayerId = State.layers.length ? State.layers[State.layers.length-1].id : null;
+State.history = [];
+saveHistory();
+fitToScreen();
+updateUI();
+updateInputs();
+}
+} catch(err) { alert('Invalid Project File'); }
+};
+reader.readAsText(file);
+};
+document.getElementById('flatten-btn').onclick = () => {
+const tempCanvas = document.createElement('canvas');
+tempCanvas.width = State.width;
+tempCanvas.height = State.height;
+const tCtx = tempCanvas.getContext('2d');
+State.layers.forEach(layer => {
+if (!layer.visible) return;
+tCtx.save();
+tCtx.globalAlpha = layer.opacity;
+tCtx.globalCompositeOperation = layer.blendMode;
+let f = layer.filters;
+tCtx.filter = `brightness(${100+parseInt(f.brightness)}%) contrast(${100+parseInt(f.contrast)}%) blur(${f.blur}px) grayscale(${f.grayscale}%) sepia(${f.sepia}%)`;
+if (layer.type === 'image') tCtx.drawImage(layer.content, layer.x, layer.y, layer.width, layer.height);
+else if (layer.type === 'text') {
+tCtx.font = `${layer.fontSize}px ${layer.font}`;
+tCtx.fillStyle = layer.color;
+tCtx.textBaseline = 'top';
+tCtx.fillText(layer.content, layer.x, layer.y);
+}
+tCtx.restore();
+});
+const flatImg = new Image();
+flatImg.onload = () => {
+State.layers = [{
+id: generateId(), type: 'image', name: 'Flattened Image',
+content: flatImg, x: 0, y: 0, width: State.width, height: State.height,
+visible: true, opacity: 1, blendMode: 'source-over',
+filters: { brightness: 0, contrast: 0, blur: 0, sepia: 0, grayscale: 0 }
+}];
+State.activeLayerId = State.layers[0].id;
+updateUI(); render(); saveHistory();
+};
+flatImg.src = tempCanvas.toDataURL();
+};
+document.getElementById('export-btn').onclick = () => {
+const oldZoom = State.zoom;
+const oldPanX = State.panX;
+const oldPanY = State.panY;
+State.zoom = 1; State.panX = 0; State.panY = 0;
+const expC = document.createElement('canvas');
+expC.width = State.width; expC.height = State.height;
+const eCtx = expC.getContext('2d');
+eCtx.fillStyle = 'white';
+eCtx.fillRect(0,0,State.width, State.height);
+State.layers.forEach(layer => {
+if (!layer.visible) return;
+eCtx.save();
+eCtx.globalAlpha = layer.opacity;
+eCtx.globalCompositeOperation = layer.blendMode;
+let f = layer.filters;
+eCtx.filter = `brightness(${100+parseInt(f.brightness)}%) contrast(${100+parseInt(f.contrast)}%) blur(${f.blur}px) grayscale(${f.grayscale}%) sepia(${f.sepia}%)`;
+if (layer.type === 'image') eCtx.drawImage(layer.content, layer.x, layer.y, layer.width, layer.height);
+else if (layer.type === 'text') {
+eCtx.font = `${layer.fontSize}px ${layer.font}`;
+eCtx.fillStyle = layer.color;
+eCtx.textBaseline = 'top';
+eCtx.fillText(layer.content, layer.x, layer.y);
+}
+eCtx.restore();
+});
+const link = document.createElement('a');
+link.download = 'design.png';
+link.href = expC.toDataURL('image/png');
+link.click();
+State.zoom = oldZoom; State.panX = oldPanX; State.panY = oldPanY;
+};
+function fitToScreen() {
+const rect = container.getBoundingClientRect();
+const margin = 40;
+const scale = Math.min((rect.width - margin) / State.width, (rect.height - margin) / State.height);
+State.zoom = scale;
+State.panX = 0;
+State.panY = 0;
+document.getElementById('zoom-display').innerText = Math.round(State.zoom*100)+'%';
+render();
+}
+document.getElementById('fit-screen-btn').onclick = fitToScreen;
+document.getElementById('zoom-in-btn').onclick = () => { State.zoom *= 1.2; render(); document.getElementById('zoom-display').innerText = Math.round(State.zoom*100)+'%'; };
+document.getElementById('zoom-out-btn').onclick = () => { State.zoom /= 1.2; render(); document.getElementById('zoom-display').innerText = Math.round(State.zoom*100)+'%'; };
+function updateInputs() {
+document.getElementById('resize-width').value = State.width;
+document.getElementById('resize-height').value = State.height;
+}
+canvas.addEventListener('mousedown', handleMouseDown);
+window.addEventListener('mousemove', handleMouseMove);
+window.addEventListener('mouseup', handleMouseUp);
+window.addEventListener('keydown', (e) => {
+if(e.code === 'Space') { State.isSpaceDown = true; canvas.style.cursor = 'grab'; }
+if((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+if((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); }
+if(e.key === 'Delete' || e.key === 'Backspace') {
+if(document.activeElement.tagName !== 'INPUT') document.getElementById('layer-del').click();
+}
+});
+window.addEventListener('keyup', (e) => {
+if(e.code === 'Space') { State.isSpaceDown = false; canvas.style.cursor = 'default'; }
+});
+canvas.addEventListener('wheel', (e) => {
+e.preventDefault();
+if(e.ctrlKey) {
+const mouse = screenToWorld(e.offsetX, e.offsetY);
+const delta = e.deltaY > 0 ? 0.9 : 1.1;
+State.zoom *= delta;
+State.zoom = Math.max(CONFIG.MIN_ZOOM, Math.min(CONFIG.MAX_ZOOM, State.zoom));
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+State.panX = e.offsetX - cx - (mouse.x - State.width/2) * State.zoom;
+State.panY = e.offsetY - cy - (mouse.y - State.height/2) * State.zoom;
+document.getElementById('zoom-display').innerText = Math.round(State.zoom*100)+'%';
+} else {
+State.panX -= e.deltaX;
+State.panY -= e.deltaY;
+}
+render();
+}, {passive: false});
+init();
 </script>
 </body>
 </html>
