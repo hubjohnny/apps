@@ -1,4 +1,6 @@
-# ![🔆](https://img.shields.io/badge/UPDATES-Among_other_small_app_updates_Single_Scoop_Web_Editor_got_a_refresh-brightgreen?style=for-the-badge)
+🔆 Single Scoop Web Code Editor now has a thin caret. You asked for it - you got it! Added: Click a line number to mark line of code. Shift+Alt+Arrow Down now duplicates the marked code block.
+
+---
 
 **Portable & Offline Ready:** All games and tools in this repository are completely self-contained within their individual HTML files. This means there are no external dependencies, assets, or Internet connection required to use them. To run a project, simply download the single file to your computer and open it in any modern web browser. It functions perfectly as a standalone application.<br><br>
 
