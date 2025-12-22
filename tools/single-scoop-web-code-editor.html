@@ -1345,91 +1345,107 @@ removeComments() {
 this.preserveCursorPosition(() => {
 const lines = this.state.lines;
 const newLines = [];
-let inBackticks = false;
-let inBlockComment = false;
-let inHtmlComment = false;
-let insideScriptTag = false;
-for (let i = 0; i < lines.length; i++) {
-let line = lines[i];
-let builtLine = "";
-let inSingleQuote = false;
-let inDoubleQuote = false;
-let inRegex = false;
-let charEscaped = false;
+let state = {
+inScript: false,
+inStyle: false,
+inBacktick: false,
+inBlockComm: false,
+inHtmlComm: false
+};
 let lastRealChar = '';
 let lastWord = '';
 let currentWord = '';
+const isEscaped = (lineStr, idx) => {
+let count = 0;
+let i = idx - 1;
+while (i >= 0 && lineStr[i] === '\\') { count++; i--; }
+return count % 2 !== 0;
+};
+for (let i = 0; i < lines.length; i++) {
+const line = lines[i];
 const lowerLine = line.toLowerCase();
-if (lowerLine.includes('\x3Cscript')) insideScriptTag = true;
+let builtLine = "";
+if (!state.inBacktick && !state.inBlockComm && !state.inHtmlComm) {
+if (lowerLine.includes('\x3Cscript')) { state.inScript = true; lastRealChar = '{'; }
+if (lowerLine.includes('\x3Cstyle')) { state.inStyle = true; }
+}
+let inString = false;
+let quoteChar = '';
+let inRegex = false;
 for (let j = 0; j < line.length; j++) {
 const char = line[j];
 const nextChar = line[j + 1];
+if (state.inScript && !state.inBacktick && !state.inBlockComm && !state.inHtmlComm && !inString && !inRegex) {
 if (/[a-zA-Z0-9_$]/.test(char)) {
 currentWord += char;
 } else {
 if (currentWord.length > 0) lastWord = currentWord;
 currentWord = '';
+if (char.trim() !== '') lastRealChar = char;
 }
-if (charEscaped) {
-charEscaped = false;
-if (!inBlockComment && !inHtmlComment) builtLine += char;
+}
+if (state.inHtmlComm) {
+if (char === '-' && nextChar === '-' && line[j+2] === '>') {
+state.inHtmlComm = false; j += 2;
+}
 continue;
 }
-if (char === '\\' && !inHtmlComment) {
-charEscaped = true;
-if (!inBlockComment) builtLine += char;
+if (state.inBlockComm) {
+if (char === '*' && nextChar === '/') {
+state.inBlockComm = false; j++;
+}
 continue;
 }
-if (inBackticks) {
+if (state.inBacktick) {
 builtLine += char;
-if (char === '`') inBackticks = false;
+if (char === '`' && !isEscaped(line, j)) state.inBacktick = false;
 continue;
 }
-if (inBlockComment) {
-if (char === '*' && nextChar === '/') { inBlockComment = false; j++; }
-continue;
-}
-if (inHtmlComment) {
-const htmlEnd = '--' + '>';
-if (char === '-' && nextChar === '-' && line.substr(j, 3) === htmlEnd) {
-inHtmlComment = false;
-j += 2;
-}
+if (inString) {
+builtLine += char;
+if (char === quoteChar && !isEscaped(line, j)) inString = false;
 continue;
 }
 if (inRegex) {
 builtLine += char;
-if (char === '/') inRegex = false;
+if (char === '/' && !isEscaped(line, j)) inRegex = false;
 continue;
 }
-if (!inSingleQuote && !inDoubleQuote) {
-if (char === "'") { inSingleQuote = true; builtLine += char; continue; }
-if (char === '"') { inDoubleQuote = true; builtLine += char; continue; }
-if (char === '`') { inBackticks = true; builtLine += char; continue; }
-const htmlStart = '<' + '!--';
-if (char === '<' && nextChar === '!' && line.substr(j, 4) === htmlStart) {
-inHtmlComment = true;
+if (!state.inScript && !state.inStyle && char === '<' && nextChar === '!' && line.substr(j, 4) === '\x3C!--') {
+state.inHtmlComm = true;
 j += 3;
 continue;
 }
-if (char === '/') {
-if (nextChar === '*') {
-inBlockComment = true;
+if ((state.inScript || state.inStyle) && char === '/' && nextChar === '*') {
+state.inBlockComm = true;
 j++;
 continue;
 }
-if (nextChar === '/' && insideScriptTag) {
+if (state.inScript && char === '/' && nextChar === '/') {
 break;
 }
+if (state.inScript || state.inStyle) {
+if (char === '`' && !isEscaped(line, j)) {
+state.inBacktick = true; builtLine += char; continue;
 }
-} else {
-if (inSingleQuote && char === "'") inSingleQuote = false;
-if (inDoubleQuote && char === '"') inDoubleQuote = false;
+if ((char === '"' || char === "'") && !isEscaped(line, j)) {
+inString = true; quoteChar = char; builtLine += char; continue;
+}
+if (state.inScript && char === '/' && !isEscaped(line, j)) {
+if (nextChar !== '/' && nextChar !== '*') {
+if ("/=,:[({!&|?;+-*~^%".includes(lastRealChar) ||
+['return', 'case', 'throw', 'typeof', 'void', 'delete', 'await'].includes(lastWord)) {
+inRegex = true; builtLine += char; continue;
+}
+}
+}
 }
 builtLine += char;
-if (/\S/.test(char)) lastRealChar = char;
 }
-if (lowerLine.includes('\x3C/script' + '>')) insideScriptTag = false;
+if (!state.inBacktick && !state.inBlockComm && !state.inHtmlComm) {
+if (lowerLine.includes('\x3C/script>')) { state.inScript = false; lastRealChar = ''; }
+if (lowerLine.includes('\x3C/style>')) state.inStyle = false;
+}
 newLines.push(builtLine);
 }
 const newText = newLines.join('\n');
@@ -1647,10 +1663,26 @@ let colStart = 0;
 let colEnd = lines[i].length;
 if (i === selStart.row) colStart = selStart.col;
 if (i === selEnd.row) colEnd = selEnd.col;
-let width = (colEnd - colStart) * charWidth;
-if (i < selEnd.row) width += charWidth * 0.5;
-selectionDiv.style.left = `calc(${xOffset}px + ${colStart * charWidth}px)`;
-selectionDiv.style.width = `${Math.max(0, width)}px`;
+const getGridWidth = (str) => {
+let w = 0;
+for(let k=0; k<str.length; k++) {
+if (this.isSurrogatePair(str, k)) {
+w += charWidth * 2;
+k++;
+} else {
+w += charWidth;
+}
+}
+return w;
+};
+const textBefore = lines[i].substring(0, colStart);
+const startPixel = Math.ceil(getGridWidth(textBefore));
+const textSel = lines[i].substring(colStart, colEnd);
+const selWidth = Math.round(getGridWidth(textSel));
+let finalWidth = selWidth;
+if (i < selEnd.row) finalWidth += Math.round(charWidth * 0.5);
+selectionDiv.style.left = `calc(${xOffset}px + ${startPixel}px)`;
+selectionDiv.style.width = `${Math.max(0, finalWidth)}px`;
 selectionDiv.classList.add('is-selected');
 }
 lineDiv.appendChild(numSpan);
@@ -2155,31 +2187,38 @@ const targetPixel = x - this.config.xOffset;
 if (targetPixel <= 0) return { row, col: 0 };
 let col = Math.floor(targetPixel / this.config.charWidth);
 col = Math.min(col, line.length);
+if (col > 0 && this.isSurrogatePair(line, col - 1)) col--;
 let currentWidth = this.measureTextWidth(line.substring(0, col));
 if (currentWidth < targetPixel) {
 while (col < line.length) {
-const nextCharLen = (col + 1 < line.length && this.isSurrogatePair(line, col)) ? 2 : 1;
-const nextWidth = this.measureTextWidth(line.substring(0, col + nextCharLen));
-if (nextWidth > targetPixel) {
+const charLen = this.isSurrogatePair(line, col) ? 2 : 1;
+const nextWidth = this.measureTextWidth(line.substring(0, col + charLen));
+if (targetPixel < nextWidth) {
 const charMiddle = currentWidth + (nextWidth - currentWidth) / 2;
-if (targetPixel > charMiddle) col += nextCharLen;
-break;
+if (targetPixel > charMiddle) {
+return { row, col: col + charLen };
+} else {
+return { row, col: col };
 }
-col += nextCharLen;
+}
 currentWidth = nextWidth;
+col += charLen;
 }
 }
-else if (currentWidth > targetPixel) {
+else {
 while (col > 0) {
 const prevCharLen = (col - 2 >= 0 && this.isSurrogatePair(line, col - 2)) ? 2 : 1;
 const prevWidth = this.measureTextWidth(line.substring(0, col - prevCharLen));
-if (prevWidth <= targetPixel) {
+if (targetPixel > prevWidth) {
 const charMiddle = prevWidth + (currentWidth - prevWidth) / 2;
-if (targetPixel <= charMiddle) col -= prevCharLen;
-break;
+if (targetPixel > charMiddle) {
+return { row, col: col };
+} else {
+return { row, col: col - prevCharLen };
 }
-col -= prevCharLen;
+}
 currentWidth = prevWidth;
+col -= prevCharLen;
 }
 }
 return { row, col };
