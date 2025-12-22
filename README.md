@@ -29,9 +29,8 @@ Game Archive:
 
 Tool Archive:  
 
-[Bas64 Image & Audio Converter](https://hubjohnny.github.io/apps/tools/base64-image-audio-converter.html)  
-[Emoji Picker & Copier NO](https://hubjohnny.github.io/apps/tools/emoji-picker-copier.html)  
-[Emoji Sprite Exporter](https://hubjohnny.github.io/apps/tools/emoji-sprite-export.html)  
+[Bas64 Image & Audio Converter](https://hubjohnny.github.io/apps/tools/base64-image-audio-converter.html)   
+[Emoji Copier & Sprite Exporter](https://hubjohnny.github.io/apps/tools/emoji-copier-sprite-export.html)  
 [Image to ASCII Converter](https://hubjohnny.github.io/apps/tools/image-ascii-converter.html)  
 [Image Fast Auto Compression](https://hubjohnny.github.io/apps/tools/image-fast-auto-compression.html)  
 [Image to Retro Pixel Art Converter](https://hubjohnny.github.io/apps/tools/image-pixel-retro-converter.html)  
