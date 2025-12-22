@@ -4,7 +4,7 @@
 
 **✨ [Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html)**  
 **✨ [Adventure RPG](https://hubjohnny.github.io/apps/games/adventure-rpg.html)**  
-**✨ [City Building Simulation](https://hubjohnny.github.io/apps/games/city-building-simulation.html)**<br><br> 
+**✨ [City Builder Sim.](https://hubjohnny.github.io/apps/games/city-building-simulation.html)**<br><br> 
 
 Game Archive:  
 
