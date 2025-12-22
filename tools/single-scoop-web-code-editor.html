@@ -1853,6 +1853,27 @@ const alt = e.altKey;
 const nav = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'];
 if (nav.includes(k)) {
 e.preventDefault();
+if (e.shiftKey && alt && k === 'ArrowDown') {
+const selectedText = this.getSelectionText();
+if (selectedText) {
+const s = this.state.selectionAnchor;
+const c = this.state.cursor;
+let endRow, endCol;
+if (c.row > s.row || (c.row === s.row && c.col > s.col)) {
+endRow = c.row; endCol = c.col;
+} else {
+endRow = s.row; endCol = s.col;
+}
+this.applyEditInternal(endRow, endCol, endRow, endCol, selectedText, true);
+} else {
+const { row } = this.state.cursor;
+const lineContent = this.state.lines[row];
+this.applyEditInternal(row, lineContent.length, row, lineContent.length, '\n' + lineContent, true);
+this.state.cursor.row++;
+}
+this.finalizeUpdate();
+return;
+}
 if (e.shiftKey) {
 if (!this.state.selectionAnchor) this.state.selectionAnchor = { ...this.state.cursor };
 } else {
@@ -1862,7 +1883,31 @@ this.handleNavigation(k, ctrl);
 this.render();
 return;
 }
-if (ctrl && !['z', 'y', 'a'].includes(k.toLowerCase())) return;
+if (ctrl) {
+if (!['z', 'y', 'a'].includes(k.toLowerCase())) return;
+if (k.toLowerCase() === 'z') {
+e.preventDefault();
+e.shiftKey ? this.history.redo() : this.history.undo();
+this.setStatus(e.shiftKey ? "Redo" : "Undo");
+return;
+}
+if (k.toLowerCase() === 'y') {
+e.preventDefault();
+this.history.redo();
+this.setStatus("Redo");
+return;
+}
+if (k.toLowerCase() === 'a') {
+e.preventDefault();
+this.state.selectionAnchor = { row: 0, col: 0 };
+this.state.cursor = {
+row: this.state.lines.length - 1,
+col: this.state.lines[this.state.lines.length - 1].length
+};
+this.render();
+return;
+}
+}
 if (k === 'Enter') {
 e.preventDefault();
 const { cursor: c, lines } = this.state;
@@ -1900,8 +1945,7 @@ if (k === 'Backspace') {
 if (ctrl) {
 e.preventDefault();
 this.handleBackspace(true);
-}
-else {
+} else {
 e.preventDefault();
 this.handleBackspace();
 }
@@ -2043,12 +2087,22 @@ handleMouseDown(e) {
 if (e.target === this.dom.editor && e.offsetX > this.dom.editor.clientWidth) return;
 if (e.button === 2) return;
 e.preventDefault();
-e.preventDefault();
 const now = Date.now();
 this.state.clickCount = (now - this.state.lastClickTime < 300) ? this.state.clickCount + 1 : 1;
 this.state.lastClickTime = now;
 const p = this.getPosFromMouse(e);
 const lineText = this.state.lines[p.row];
+const rect = this.dom.editor.getBoundingClientRect();
+const mouseX = e.clientX - rect.left;
+if (mouseX < this.config.xOffset) {
+this.state.selectionAnchor = { row: p.row, col: 0 };
+this.state.cursor = { row: p.row, col: lineText.length };
+this.state.isDragging = true;
+this.state.desiredCol = lineText.length;
+this.dom.trap.focus({ preventScroll: true });
+this.render();
+return;
+}
 let startCol, endCol, startRow, endRow;
 if (this.state.clickCount === 2) {
 let foundString = false;
@@ -2096,11 +2150,8 @@ this.state.isDragging = true;
 }
 if (this.state.clickCount > 1) {
 this.state.isDragging = false;
-this.state.selectionAnchor = null;
 this.state.selectionAnchor = { row: startRow, col: startCol };
 this.state.cursor = { row: endRow, col: endCol };
-} else {
-this.state.cursor = { row: startRow, col: startCol };
 }
 this.state.desiredCol = this.state.cursor.col;
 this.dom.trap.focus({ preventScroll: true });
