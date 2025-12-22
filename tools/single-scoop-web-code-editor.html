@@ -524,7 +524,7 @@ user-select: none;
 <div class="modal-box">
 <div class="modal-header">
 <h1><span style="font-size: 1.2em;">🍧</span> Single Scoop</h1>
-<span class="version-badge">20251220</span>
+<span class="version-badge">20251222</span>
 </div>
 <div class="modal-body">
 <div class="intro-text">
@@ -1360,7 +1360,6 @@ let lastRealChar = '';
 let lastWord = '';
 let currentWord = '';
 const lowerLine = line.toLowerCase();
-// 1. Sjekk om vi går INN i script (før vi tolker tegnene på linjen)
 if (lowerLine.includes('\x3Cscript')) insideScriptTag = true;
 for (let j = 0; j < line.length; j++) {
 const char = line[j];
