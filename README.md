@@ -2,17 +2,17 @@
 
 **Run Online:**  
 
-**[Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html)**<br><br>
+**✨ [Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html)**  
+**✨ [Adventure RPG](https://hubjohnny.github.io/apps/games/adventure-rpg.html)**  
+**✨ [City Building Simulation](https://hubjohnny.github.io/apps/games/city-building-simulation.html)**<br><br> 
 
-Games:  
+Game Archive:  
 
 [100 Laps Racing Game](https://hubjohnny.github.io/apps/games/100-laps-racing-game.html)  
-[Adventure RPG](https://hubjohnny.github.io/apps/games/adventure-rpg.html)  
 [Amelia X Endless Runner](https://hubjohnny.github.io/apps/games/amelia-x-endless-runner.html)  
 [Billiards / 8-Ball Pool](https://hubjohnny.github.io/apps/games/billiards-8-ball-pool.html)  
 [Blackjack Card Game](https://hubjohnny.github.io/apps/games/blackjack-card-game.html)  
 [Championship Racing](https://hubjohnny.github.io/apps/games/championship-racing.html)  
-[City Building Simulation](https://hubjohnny.github.io/apps/games/city-building-simulation.html)  
 [Lander Rescue](https://hubjohnny.github.io/apps/games/lander-rescue.html)  
 [Ludo Board Game](https://hubjohnny.github.io/apps/games/ludo-board-game.html)  
 [Mini Golf](https://hubjohnny.github.io/apps/games/mini-golf.html)  
@@ -27,7 +27,7 @@ Games:
 [Uno Card Game](https://hubjohnny.github.io/apps/games/uno-card-came.html)  
 [Yatzy Dice Game](https://hubjohnny.github.io/apps/games/yatzy-dice-game.html)<br><br>
 
-Tools:  
+Tool Archive:  
 
 [Bas64 Image & Audio Converter](https://hubjohnny.github.io/apps/tools/base64-image-audio-converter.html)  
 [Emoji Picker & Copier NO](https://hubjohnny.github.io/apps/tools/emoji-picker-copier.html)  
