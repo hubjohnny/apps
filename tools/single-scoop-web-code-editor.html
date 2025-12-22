@@ -2079,12 +2079,20 @@ endRow = p.row;
 startCol = (lineText.match(/^\s*/) || [''])[0].length;
 endCol = lineText.length;
 } else {
-this.state.selectionAnchor = null;
+if (e.shiftKey) {
+if (!this.state.selectionAnchor) {
+this.state.selectionAnchor = { ...this.state.cursor };
+}
 this.state.cursor = { ...p };
-startRow = p.row; startCol = p.col;
-endRow = p.row; endCol = p.col;
-this.state.isDragging = true;
+} else {
 this.state.selectionAnchor = { ...p };
+this.state.cursor = { ...p };
+}
+startRow = this.state.cursor.row;
+startCol = this.state.cursor.col;
+endRow = this.state.cursor.row;
+endCol = this.state.cursor.col;
+this.state.isDragging = true;
 }
 if (this.state.clickCount > 1) {
 this.state.isDragging = false;
