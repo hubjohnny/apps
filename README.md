@@ -24,7 +24,7 @@ Game Archive:
 [Sokoban Level Editor](https://hubjohnny.github.io/apps/games/sokoban-level-editor/editor.html)  
 [Tetris Mono](https://hubjohnny.github.io/apps/games/tetris-mono.html)  
 [Tetris Neon](https://hubjohnny.github.io/apps/games/tetris-neon.html)  
-[Uno Card Game](https://hubjohnny.github.io/apps/games/uno-card-came.html)  
+[Uno Card Game](https://hubjohnny.github.io/apps/games/uno-card-game.html)  
 [Yatzy Dice Game](https://hubjohnny.github.io/apps/games/yatzy-dice-game.html)<br><br>
 
 Tool Archive:  
