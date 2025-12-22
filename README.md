@@ -1,6 +1,6 @@
 **Portable & Offline Ready:** All games and tools in this repository are completely self-contained within their individual HTML files. This means there are no external dependencies, assets, or Internet connection required to use them. To run a project, simply download the single file to your computer and open it in any modern web browser. It functions perfectly as a standalone application. 💾<br><br>
 
-**Run Online:**  
+**Run Online or Right-Click to Download:**  
 
 **✨ [Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html)**  
 **✨ [Adventure RPG](https://hubjohnny.github.io/apps/games/adventure-rpg.html)**  
