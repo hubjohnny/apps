@@ -1,4 +1,4 @@
-✅ Single Scoop Web Code Editor now has a thin caret. You asked for it - you got it! Added: Click a line number to mark a line of code. Shift+Alt+Arrow Down now duplicates the marked code block.
+✅ <small>*Single Scoop Web Code Editor now has a thin caret. You asked for it - you got it! Added: Click a line number to mark a line of code. Shift+Alt+Arrow Down now duplicates the marked code block.*</small>
 
 ---
 
