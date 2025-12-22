@@ -1348,17 +1348,20 @@ const newLines = [];
 let inBackticks = false;
 let inBlockComment = false;
 let inHtmlComment = false;
+let insideScriptTag = false;
 for (let i = 0; i < lines.length; i++) {
 let line = lines[i];
 let builtLine = "";
 let inSingleQuote = false;
 let inDoubleQuote = false;
 let inRegex = false;
-let inRegexClass = false;
 let charEscaped = false;
 let lastRealChar = '';
 let lastWord = '';
 let currentWord = '';
+const lowerLine = line.toLowerCase();
+// 1. Sjekk om vi går INN i script (før vi tolker tegnene på linjen)
+if (lowerLine.includes('\x3Cscript')) insideScriptTag = true;
 for (let j = 0; j < line.length; j++) {
 const char = line[j];
 const nextChar = line[j + 1];
@@ -1371,7 +1374,6 @@ currentWord = '';
 if (charEscaped) {
 charEscaped = false;
 if (!inBlockComment && !inHtmlComment) builtLine += char;
-if (/\S/.test(char)) lastRealChar = char;
 continue;
 }
 if (char === '\\' && !inHtmlComment) {
@@ -1385,14 +1387,12 @@ if (char === '`') inBackticks = false;
 continue;
 }
 if (inBlockComment) {
-if (char === '*' && nextChar === '/') {
-inBlockComment = false;
-j++;
-}
+if (char === '*' && nextChar === '/') { inBlockComment = false; j++; }
 continue;
 }
 if (inHtmlComment) {
-if (char === '-' && nextChar === '-' && line[j + 2] === '>') {
+const htmlEnd = '--' + '>';
+if (char === '-' && nextChar === '-' && line.substr(j, 3) === htmlEnd) {
 inHtmlComment = false;
 j += 2;
 }
@@ -1400,22 +1400,15 @@ continue;
 }
 if (inRegex) {
 builtLine += char;
-if (inRegexClass) {
-if (char === ']') inRegexClass = false;
-} else {
-if (char === '[') inRegexClass = true;
-else if (char === '/') {
-inRegex = false;
-}
-}
-if (/\S/.test(char)) lastRealChar = char;
+if (char === '/') inRegex = false;
 continue;
 }
 if (!inSingleQuote && !inDoubleQuote) {
 if (char === "'") { inSingleQuote = true; builtLine += char; continue; }
 if (char === '"') { inDoubleQuote = true; builtLine += char; continue; }
 if (char === '`') { inBackticks = true; builtLine += char; continue; }
-if (char === '<' && nextChar === '!' && line.substr(j, 4) === '<' + '!--') {
+const htmlStart = '<' + '!--';
+if (char === '<' && nextChar === '!' && line.substr(j, 4) === htmlStart) {
 inHtmlComment = true;
 j += 3;
 continue;
@@ -1426,20 +1419,8 @@ inBlockComment = true;
 j++;
 continue;
 }
-if (nextChar === '/') {
+if (nextChar === '/' && insideScriptTag) {
 break;
-}
-const regexCharStarters = [
-'(', '=', ',', ':', '?', '[', '{', '!', '&', '|', ';',
-'+', '-', '*', '/', '%', '^', '<', '>', '~'
-];
-const regexKeywordStarters = ['return', 'case', 'throw', 'await', 'typeof', 'void', 'yield', 'delete'];
-if (regexCharStarters.includes(lastRealChar) ||
-regexKeywordStarters.includes(lastWord) ||
-builtLine.trim().length === 0) {
-inRegex = true;
-builtLine += char;
-continue;
 }
 }
 } else {
@@ -1449,15 +1430,12 @@ if (inDoubleQuote && char === '"') inDoubleQuote = false;
 builtLine += char;
 if (/\S/.test(char)) lastRealChar = char;
 }
+if (lowerLine.includes('\x3C/script' + '>')) insideScriptTag = false;
 newLines.push(builtLine);
 }
 const newText = newLines.join('\n');
-if (newText !== lines.join('\n')) {
 this.applyEditInternal(0, 0, lines.length - 1, lines[lines.length - 1].length, newText, true);
-this.setStatus("Comments removed");
-} else {
-this.setStatus("No comments found");
-}
+this.setStatus(newText !== lines.join('\n') ? "Comments removed" : "No comments found");
 });
 }
 removeTrailingWhitespace() {
@@ -1485,76 +1463,125 @@ this.setStatus("No trailing whitespace");
 }
 cycleNext(type) {
 const lines = this.state.lines;
-const currentLineIdx = this.state.cursor.row;
-let found = null;
-const check = (r) => {
+const cursor = this.state.cursor;
+let state = {
+inScript: false,
+inStyle: false,
+inBacktick: false,
+inBlockComm: false,
+inHtmlComm: false
+};
+let lastRealChar = '';
+let lastWord = '';
+let currentWord = '';
+let firstMatch = null;
+let nextMatch = null;
+const isEscaped = (lineStr, idx) => {
+let count = 0;
+let i = idx - 1;
+while (i >= 0 && lineStr[i] === '\\') { count++; i--; }
+return count % 2 !== 0;
+};
+for (let r = 0; r < lines.length; r++) {
 const line = lines[r];
-const mode = (this.highlighter.lineModes && this.highlighter.lineModes[r]) ? this.highlighter.lineModes[r] : 'html';
-if (type === 'comment') {
-let lineComMatch = null;
+const lowerLine = line.toLowerCase();
+if (!state.inBacktick && !state.inBlockComm && !state.inHtmlComm) {
+if (lowerLine.includes('\x3Cscript')) { state.inScript = true; lastRealChar = '{'; }
+if (lowerLine.includes('\x3Cstyle')) { state.inStyle = true; }
+}
+if (type === 'function' && state.inScript && !state.inBacktick && !state.inBlockComm) {
+const fnRegex = /(?:^|\s)(?:export\s+)?(?:async\s+)?(?:function|class)\s+\w+|^\s*(?:static\s+|async\s+|get\s+|set\s+)?(?!if|for|while|switch|catch|return|await)\w+\s*\(.*?\)\s*\{/;
+const m = line.match(fnRegex);
+if (m) {
+const match = { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
+if (!firstMatch) firstMatch = match;
+if (r > cursor.row || (r === cursor.row && m.index > cursor.col)) { nextMatch = match; break; }
+}
+}
+else if (type === 'comment') {
 let inString = false;
-let stringChar = '';
-for (let i = 0; i < line.length - 1; i++) {
+let quoteChar = '';
+let inRegex = false;
+for (let i = 0; i < line.length; i++) {
 const char = line[i];
-if (inString) {
-if (char === stringChar && line[i - 1] !== '\\') {
-inString = false;
-}
+const nextChar = line[i+1];
+if (state.inScript && !state.inBacktick && !state.inBlockComm && !state.inHtmlComm && !inString && !inRegex) {
+if (/[a-zA-Z0-9_$]/.test(char)) {
+currentWord += char;
 } else {
-if (char === '"' || char === "'" || char === '`') {
-inString = true;
-stringChar = char;
+if (currentWord.length > 0) lastWord = currentWord;
+currentWord = '';
+if (char.trim() !== '') lastRealChar = char;
 }
-else if (char === '/' && line[i + 1] === '/') {
-lineComMatch = { index: i, 0: line.substring(i) };
+}
+if (state.inHtmlComm) {
+if (char === '-' && nextChar === '-' && line[i+2] === '>') {
+state.inHtmlComm = false; i += 2;
+}
+continue;
+}
+if (state.inBlockComm) {
+if (char === '*' && nextChar === '/') {
+state.inBlockComm = false; i++;
+}
+continue;
+}
+if (state.inBacktick) {
+if (char === '`' && !isEscaped(line, i)) state.inBacktick = false;
+continue;
+}
+if (inString) {
+if (char === quoteChar && !isEscaped(line, i)) inString = false;
+continue;
+}
+if (inRegex) {
+if (char === '/' && !isEscaped(line, i)) inRegex = false;
+continue;
+}
+if (!state.inScript && !state.inStyle && char === '<' && nextChar === '!' && line.substr(i, 4) === '\x3C!--') {
+const match = { start: { r, c: i }, end: { r, c: i + 4 }, select: true };
+state.inHtmlComm = true; i += 3;
+if (!firstMatch) firstMatch = match;
+if (r > cursor.row || (r === cursor.row && i > cursor.col)) { nextMatch = match; break; }
+continue;
+}
+if (state.inScript || state.inStyle) {
+if (char === '`' && !isEscaped(line, i)) { state.inBacktick = true; continue; }
+if ((char === '"' || char === "'") && !isEscaped(line, i)) {
+inString = true; quoteChar = char; continue;
+}
+if (state.inScript && char === '/' && !isEscaped(line, i)) {
+if (nextChar !== '/' && nextChar !== '*') {
+if ("/=,:[({!&|?;+-*~^%".includes(lastRealChar) ||
+['return', 'case', 'throw', 'typeof', 'void', 'delete', 'await'].includes(lastWord)) {
+inRegex = true;
+continue;
+}
+}
+}
+}
+if ((state.inScript || state.inStyle) && char === '/' && nextChar === '*') {
+const match = { start: { r, c: i }, end: { r, c: i + 2 }, select: true };
+state.inBlockComm = true; i++;
+if (!firstMatch) firstMatch = match;
+if (r > cursor.row || (r === cursor.row && i > cursor.col)) { nextMatch = match; break; }
+continue;
+}
+if (state.inScript && char === '/' && nextChar === '/') {
+const match = { start: { r, c: i }, end: { r, c: line.length }, select: true };
+if (!firstMatch) firstMatch = match;
+if (r > cursor.row || (r === cursor.row && i > cursor.col)) { nextMatch = match; }
 break;
 }
 }
 }
-const blockComMatch = line.match(/\/\*/);
-if (lineComMatch && (!blockComMatch || lineComMatch.index < blockComMatch.index)) {
-return {
-start: { r, c: lineComMatch.index },
-end: { r, c: lineComMatch.index + lineComMatch[0].length },
-select: true
-};
-}
-if (blockComMatch) {
-const startCol = blockComMatch.index;
-for (let k = r; k < lines.length; k++) {
-const offset = (k === r) ? startCol + 2 : 0;
-const closeIdx = lines[k].indexOf('*/', offset);
-if (closeIdx !== -1) {
-return {
-start: { r, c: startCol },
-end: { r: k, c: closeIdx + 2 },
-select: true
-};
+if (nextMatch) break;
+if (!state.inBacktick && !state.inBlockComm && !state.inHtmlComm) {
+if (lowerLine.includes('\x3C/script>')) { state.inScript = false; lastRealChar = ''; }
+if (lowerLine.includes('\x3C/style>')) state.inStyle = false;
 }
 }
-return { start: { r, c: startCol }, end: { r, c: line.length }, select: true };
-}
-}
-else if (type === 'function') {
-if (mode !== 'javascript') return null;
-const functionRegex = /(?:^|\s)(?:export\s+)?(?:async\s+)?(?:function|class)\s+\w+|^\s*(?:static\s+|async\s+|get\s+|set\s+)?(?!if|for|while|switch|catch|return|await)\w+\s*\(.*?\)\s*\{/;
-const m = line.match(functionRegex);
-if (m) {
-return { start: { r, c: m.index }, end: { r, c: m.index }, select: false };
-}
-}
-return null;
-};
-for (let i = currentLineIdx + 1; i < lines.length; i++) {
-found = check(i);
-if (found) break;
-}
-if (!found) {
-for (let i = 0; i <= currentLineIdx; i++) {
-found = check(i);
-if (found) break;
-}
-}
+const found = nextMatch || firstMatch;
 if (found) {
 if (found.select) {
 this.state.selectionAnchor = { row: found.start.r, col: found.start.c };
@@ -1569,9 +1596,7 @@ const targetRow = this.state.cursor.row;
 const desiredBottomPixel = (targetRow + 9) * lh;
 let newScrollTop = desiredBottomPixel - this.state.viewportHeight;
 newScrollTop = Math.max(0, newScrollTop);
-if (newScrollTop > targetRow * lh) {
-newScrollTop = targetRow * lh;
-}
+if (newScrollTop > targetRow * lh) newScrollTop = targetRow * lh;
 this.dom.editor.scrollTop = newScrollTop;
 this.finalizeUpdate();
 this.setStatus(`Found ${type}`);
