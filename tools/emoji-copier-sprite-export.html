@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Emojis</title>
+<title>Emoji Sprite Generator</title>
 <style>
 :root {
 --emoji-font: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
@@ -55,20 +55,12 @@ border-radius: 6px;
 font-size: 16px;
 cursor: pointer;
 }
-#font-select {
-min-width: 160px;
-}
 #size-select {
 width: 120px;
 }
 #search:focus, select:focus {
 outline: none;
 border-color: #007bff;
-}
-select:disabled {
-color: #888;
-cursor: wait;
-background-color: #2a2a2a;
 }
 #emoji-grid {
 display: grid;
@@ -85,7 +77,7 @@ cursor: pointer;
 text-align: center;
 padding: 5px;
 border-radius: 5px;
-transition: background-color 0.4s, transform 0.2s;
+transition: background-color 0.2s, transform 0.2s;
 user-select: none;
 font-family: var(--emoji-font);
 }
@@ -93,19 +85,26 @@ font-family: var(--emoji-font);
 background-color: rgba(255, 255, 255, 0.1);
 transform: scale(1.1);
 }
-.tooltip {
+.toast {
 position: fixed;
+bottom: 30px;
+left: 50%;
+transform: translateX(-50%) translateY(20px);
 background-color: #333;
 color: white;
-padding: 6px 12px;
-border-radius: 5px;
+padding: 10px 20px;
+border-radius: 25px;
 font-size: 14px;
 opacity: 0;
-transition: opacity 0.1s;
 pointer-events: none;
 z-index: 1000;
-box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 border: 1px solid #444;
+transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.toast.visible {
+opacity: 1;
+transform: translateX(-50%) translateY(0);
 }
 </style>
 </head>
@@ -114,10 +113,6 @@ border: 1px solid #444;
 <p>Left-click: Copy emoji to clipboard 📋 <br> <strong>Right-click: Download cropped sprite 💾</strong></p>
 <div class="controls">
 <input type="text" id="search" placeholder="Search emojis...">
-<select id="font-select" title="Choose Font Style">
-<option value="system">System Default</option>
-<option value="noto">Noto Color Emoji</option>
-</select>
 <select id="size-select" title="Select sprite size">
 <option value="16">16 px</option>
 <option value="32">32 px</option>
@@ -128,17 +123,16 @@ border: 1px solid #444;
 </div>
 <div id="emoji-grid"></div>
 </div>
-<div class="tooltip" id="tooltip">Copied!</div>
+<div class="toast" id="toast">Copied!</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 const grid = document.getElementById('emoji-grid');
 const searchInput = document.getElementById('search');
 const sizeSelect = document.getElementById('size-select');
-const fontSelect = document.getElementById('font-select');
-const tooltip = document.getElementById('tooltip');
+const toast = document.getElementById('toast');
 let emojis = [];
-let currentFontStack = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-let notoFontLoaded = false;
+const SYSTEM_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+let toastTimeout;
 fetch('https://cdn.jsdelivr.net/npm/@emoji-mart/data')
 .then(response => response.json())
 .then(data => {
@@ -153,39 +147,6 @@ displayEmojis(emojis);
 console.error('Error fetching emoji data:', error);
 grid.innerHTML = '<p style="color: #ff8a80;">Could not load emojis. Check connection.</p>';
 });
-fontSelect.addEventListener('change', async (e) => {
-if (e.target.value === 'noto') {
-if (!notoFontLoaded) {
-const originalText = e.target.options[e.target.selectedIndex].text;
-e.target.options[e.target.selectedIndex].text = "Loading font set... (25MB)";
-fontSelect.disabled = true;
-document.body.style.cursor = "wait";
-try {
-const font = new FontFace('CustomNoto', 'url(NotoColorEmoji-Regular.ttf)');
-await font.load();
-document.fonts.add(font);
-notoFontLoaded = true;
-currentFontStack = '"CustomNoto"';
-document.documentElement.style.setProperty('--emoji-font', currentFontStack);
-showTooltip("Noto Color Emoji loaded!");
-} catch (err) {
-console.error("Font loading failed:", err);
-showTooltip("Failed to load font file.");
-fontSelect.value = "system";
-} finally {
-e.target.options[1].text = "Noto Color Emoji";
-fontSelect.disabled = false;
-document.body.style.cursor = "default";
-}
-} else {
-currentFontStack = '"CustomNoto"';
-document.documentElement.style.setProperty('--emoji-font', currentFontStack);
-}
-} else {
-currentFontStack = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-document.documentElement.style.setProperty('--emoji-font', currentFontStack);
-}
-});
 function displayEmojis(emojiList) {
 grid.innerHTML = '';
 const fragment = document.createDocumentFragment();
@@ -199,7 +160,7 @@ emojiSpan.title = `Left-click: Copy text\nRight-click: Download ${size}x${size} 
 });
 emojiSpan.addEventListener('click', () => {
 navigator.clipboard.writeText(emoji.native).then(() => {
-showTooltip('Emoji copied!');
+showToast('Emoji copied!');
 });
 });
 emojiSpan.addEventListener('contextmenu', (e) => {
@@ -225,25 +186,24 @@ const ctx = canvas.getContext('2d');
 canvas.width = baseSize;
 canvas.height = baseSize;
 const fontSize = Math.floor(baseSize * 0.85);
-ctx.font = `${fontSize}px ${currentFontStack}`;
+ctx.font = `${fontSize}px ${SYSTEM_FONT_STACK}`;
 ctx.textAlign = 'center';
 ctx.textBaseline = 'middle';
 ctx.fillText(emojiChar, baseSize / 2, baseSize / 2 + (fontSize * 0.1));
 const trimmedData = trimCanvas(canvas);
 if (!trimmedData) {
-showTooltip('Could not generate image');
+showToast('Could not generate image');
 return;
 }
 const finalCanvas = resizeToMax(trimmedData, targetSize);
 const dataUrl = finalCanvas.toDataURL('image/png');
 const link = document.createElement('a');
-const fontSuffix = fontSelect.value === 'noto' ? '_noto' : '';
-link.download = `${filename}${fontSuffix}_${targetSize}px.png`;
+link.download = `${filename}_${targetSize}px.png`;
 link.href = dataUrl;
 document.body.appendChild(link);
 link.click();
 document.body.removeChild(link);
-showTooltip(`Saved ${targetSize}px sprite! 👾`);
+showToast(`Saved ${targetSize}px sprite! 💾`);
 }
 function trimCanvas(c) {
 const ctx = c.getContext('2d');
@@ -295,17 +255,14 @@ ctx.imageSmoothingQuality = 'high';
 ctx.drawImage(canvas, 0, 0, width, height);
 return newCanvas;
 }
-function showTooltip(message) {
-tooltip.textContent = message;
-tooltip.style.opacity = '1';
-setTimeout(() => {
-tooltip.style.opacity = '0';
-}, 2500);
+function showToast(message) {
+toast.textContent = message;
+toast.classList.add('visible');
+if (toastTimeout) clearTimeout(toastTimeout);
+toastTimeout = setTimeout(() => {
+toast.classList.remove('visible');
+}, 2000);
 }
-document.addEventListener('mousemove', (e) => {
-tooltip.style.left = `${e.pageX + 10}px`;
-tooltip.style.top = `${e.pageY + 10}px`;
-});
 });
 </script>
 </body>
