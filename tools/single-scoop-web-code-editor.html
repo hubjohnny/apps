@@ -2824,7 +2824,7 @@ modal.innerHTML = `
 
                 <div class="modal-footer">
                     <button class="modal-btn" style="background: transparent; color: #888;" onclick="document.getElementById('github-modal').remove()">Cancel</button>
-                    <button class="modal-btn" id="gh-save-btn">Save & Connect</button>
+                    <button class="modal-btn" id="gh-save-btn">Save Settings</button>
                 </div>
             </div>`;
 document.body.appendChild(modal);
@@ -2837,7 +2837,9 @@ const path = document.getElementById('gh-path').value.trim();
 if (token && owner && repo && path) {
 this.setup(token, owner, repo, path);
 document.getElementById('github-modal').remove();
-this.editor.setStatus("Setup ready! Try Pull/Push now.");
+if (confirm(`Settings saved. Pull content from "${path}" now?`)) {
+this.pull();
+}
 } else {
 alert("Please fill in all fields.");
 }
