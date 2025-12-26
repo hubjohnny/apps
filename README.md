@@ -1,4 +1,4 @@
-✅ <small>*[Single Scoop](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html) Web Code Editor now has a thin caret. You asked for it - you got it! Added: Click a line number to mark a line of code. Shift+Alt+Arrow Down now duplicates the marked code block.*</small>
+✅ <small>*[Single Scoop](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html) Web Code Editor now has full GitHub Support (Pull, Push & File Browser).*</small>
 
 ---
 
