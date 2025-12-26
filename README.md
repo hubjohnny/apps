@@ -1,4 +1,4 @@
-✅ <small>*[Single Scoop](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html) Web Code Editor now has full GitHub Support (Pull, Push & File Browser).*</small>
+✅ <small>*[Single Scoop](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html) Web Code Editor now has GitHub Support (Pull, Push & File Browser).*</small>
 
 ---
 
