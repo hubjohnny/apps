@@ -1320,64 +1320,43 @@ this.highlighter.analyze(this.state.lines, this.state.fileName);
 this.finalizeUpdate();
 this.dom.trap.focus();
 }
-
-
-
-
 openPreviewModal() {
-
 const html = this.state.lines.join('\n');
-
 if (!html.trim()) {
 alert("Empty canvas! Write some code first. 🎨");
 return;
 }
-
 try {
 const blob = new Blob([html], { type: 'text/html' });
 const url = URL.createObjectURL(blob);
-
 const modal = document.createElement('div');
 modal.className = 'modal-overlay';
 modal.style.display = 'flex';
 modal.style.zIndex = '9999';
-
-
+modal.style.padding = '0';
 modal.innerHTML = `
-                <div class="modal-box" style="width: 100%; height: 100%; max-width: none; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <div class="modal-box" style="width: 100vw; height: 100vh; max-width: none; max-height: none; border-radius: 0; display: flex; flex-direction: column; border: none; margin: 0;">
+                    
+                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding: 10px; background: #252526;">
                         <h1 style="margin:0; font-size: 18px;">👀 Live Preview</h1>
                         <button class="modal-btn" id="prev-close-btn" style="background: #d32f2f; color: white;">Close</button>
                     </div>
+
                     <div class="modal-body" style="flex-grow: 1; padding: 0; overflow: hidden; background: white; position: relative;">
                         <iframe sandbox="allow-scripts allow-same-origin allow-forms allow-modals" src="${url}" style="width: 100%; height: 100%; border: none;"></iframe>
                     </div>
                 </div>`;
-
 document.body.appendChild(modal);
-
 const cleanup = () => {
 modal.remove();
 URL.revokeObjectURL(url);
 };
-
 document.getElementById('prev-close-btn').onclick = cleanup;
-
-modal.addEventListener('click', (e) => {
-if (e.target === modal) cleanup();
-});
-
 } catch (e) {
 console.error("Preview failed:", e);
 alert("Something went wrong with the preview.");
 }
 }
-
-
-
-
-
-
 showLoading(msg = "Thinking...") {
 const toast = document.getElementById('ai-loading-toast');
 const txt = document.getElementById('ai-loading-msg');
