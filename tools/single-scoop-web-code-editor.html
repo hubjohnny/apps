@@ -153,7 +153,9 @@ font-size: 13px;
 gap: 10px;
 }
 #toolbar-right {
-position: absolute;
+position: relative;
+z-index: 9999;
+overflow: visible;
 right: 10px;
 top: 0;
 height: 100%;
@@ -602,12 +604,34 @@ height: 21px;
 display: block;
 transition: transform 0.2s ease, filter 0.2s;
 position: relative;
-top: 2px;
+top: 1px;
+left: 10px;
 border-radius: 4px;
 }
 .gemini-btn:hover img {
 transform: scale(1.2);
 filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+}
+#model-selector {
+background: #252526;
+color: #cccccc;
+border: 1px solid #3c3c3c;
+border-radius: 4px;
+padding: 4px 8px;
+margin-right: 10px;
+font-family: 'Consolas', monospace;
+font-size: 12px;
+outline: none;
+cursor: pointer;
+z-index: 99999;
+position: relative;
+}
+#model-selector:hover {
+border-color: #007acc;
+}
+#model-selector option {
+background: #1e1e1e;
+color: #cccccc;
 }
 </style>
 </head>
@@ -680,6 +704,15 @@ Handcrafted by one dev. &copy; 2025 Johnny Heggelund
 <button onclick="editor.ai.ask()" class="gemini-btn" title="Ask AI (Ctrl+I)">
 <img src="data:image/jpeg;base64,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">
 </button>
+<select id="model-selector"
+title="Choose AI Model"
+onchange="editor.ai.saveModelPreference();"
+onmousedown="event.stopPropagation();"
+onmouseup="event.stopPropagation();"
+onclick="event.stopPropagation(); return false;"
+onfocus="event.stopPropagation();">
+<option value="" disabled selected>Laster modeller...</option>
+</select>
 <button onclick="editor.insertSkeleton()" title="Insert HTML5 Template">🧩</button>
 <button id="color-btn" onclick="toggleColorPicker()" title="Color Picker">🎨</button>
 <button onclick="editor.previewFile()" title="Preview (Alt+P)">👁️</button>
@@ -3060,101 +3093,74 @@ this.editor.setStatus("Network Error ❌");
 class GeminiBrain {
 constructor(editor) {
 this.editor = editor;
-this.apiKey = localStorage.getItem('singlescoop_gemini_key') || '';
-this.modelName = localStorage.getItem('singlescoop_gemini_model') || 'gemini-1.5-flash';
-}
-showSetupModal() {
-let modal = document.getElementById('ai-modal');
-if (!modal) {
-modal = document.createElement('div');
-modal.id = 'ai-modal';
-modal.className = 'modal-overlay';
-modal.style.display = 'flex';
-modal.innerHTML = `
-            <div class="modal-box" style="width: 500px;">
-                <div class="modal-header">
-                    <h1>🧠 AI Copilot Setup</h1>
-                </div>
-                <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px;">
-                    <div class="intro-text" style="font-size: 0.9rem;">
-                        Connect to Google Gemini to fix bugs, write code, and explain logic.
-                    </div>
-                    <div style="background: #252526; padding: 15px; border-radius: 6px; border: 1px solid #333;">
-                        <strong style="color: #fff; display: block; margin-bottom: 10px;">How to get a Key (It's free):</strong>
-                        <ol style="margin: 0; padding-left: 20px; color: #ccc; font-size: 0.9rem; line-height: 1.6;">
-                            <li>Click the button below to open Google AI Studio.</li>
-                            <li>Click <strong>"Get API Key"</strong> (top left).</li>
-                            <li>Click <strong>"Create API Key"</strong>.</li>
-                            <li>Copy the key and paste it below.</li>
-                        </ol>
-                    </div>
-                    <button class="modal-btn" style="background: #2d2d2d; border: 1px solid #454545;" 
-                        onclick="window.open('https://aistudio.google.com/app/apikey', '_blank')">
-                        🔑 Open Google AI Studio
-                    </button>
-                    <hr style="width: 100%; border: 0; border-top: 1px solid #333; margin: 5px 0;">
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <label style="color: #888; font-size: 12px;">Paste API Key Here</label>
-                        <input id="ai-key-input" type="password" value="${this.apiKey}" placeholder="AIzaSy..." style="background: #1e1e1e; border: 1px solid #333; color: white; padding: 10px; border-radius: 4px; font-family: monospace;">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="modal-btn" style="background: transparent; color: #888;" onclick="document.getElementById('ai-modal').remove()">Cancel</button>
-                    <button class="modal-btn" id="ai-save-btn">Save Key</button>
-                </div>
-            </div>`;
-document.body.appendChild(modal);
-setTimeout(() => document.getElementById('ai-key-input').focus(), 100);
-document.getElementById('ai-save-btn').onclick = () => {
-const key = document.getElementById('ai-key-input').value.trim();
-if (key) {
-this.apiKey = key;
-localStorage.setItem('singlescoop_gemini_key', this.apiKey);
-this.modelName = 'gemini-1.5-flash';
-localStorage.removeItem('singlescoop_gemini_model');
-document.getElementById('ai-modal').remove();
-this.editor.setStatus("AI Connected! 🧠");
-this.editor.dom.trap.focus();
-} else {
-alert("Please paste a key.");
-}
-};
+this.apiKey = localStorage.getItem('singlescoop_gemini_key');
+this.isBusy = false;
+if (this.apiKey) {
+this.fetchAndPopulateModels();
 }
 }
-promptUser(defaultValue) {
-return new Promise((resolve) => {
-const modal = document.createElement('div');
-modal.className = 'modal-overlay';
-modal.style.display = 'flex';
-modal.innerHTML = `
-            <div class="modal-box" style="width: 450px;">
-                <div class="modal-header">
-                    <h1>💬 AI Command</h1>
-                </div>
-                <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="font-size: 0.9rem; color: #ccc;">What should Gemini do with the code?</div>
-                    <input id="ai-prompt-input" type="text" value="${defaultValue}" style="background: #1e1e1e; border: 1px solid #454545; color: white; padding: 12px; border-radius: 4px; font-size: 16px; width: 100%; box-sizing: border-box;" placeholder="e.g. Fix bugs, Add comments...">
-                </div>
-                <div class="modal-footer">
-                    <button class="modal-btn" style="background: transparent; color: #888;" id="ai-cancel-btn">Cancel</button>
-                    <button class="modal-btn" id="ai-go-btn">✨ Go</button>
-                </div>
-            </div>`;
-document.body.appendChild(modal);
-const input = document.getElementById('ai-prompt-input');
-setTimeout(() => { input.focus(); input.select(); }, 50);
-const close = (val) => {
-modal.remove();
-resolve(val);
-this.editor.dom.trap.focus();
-};
-document.getElementById('ai-go-btn').onclick = () => close(input.value);
-document.getElementById('ai-cancel-btn').onclick = () => close(null);
-input.onkeydown = (e) => {
-if(e.key === 'Enter') close(input.value);
-if(e.key === 'Escape') close(null);
-};
+async fetchAndPopulateModels() {
+const selector = document.getElementById('model-selector');
+if (!selector || !this.apiKey) return;
+try {
+const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`);
+const data = await response.json();
+if (data.error) {
+console.warn("Kunne ikke hente modeller:", data.error.message);
+return;
+}
+const chatModels = data.models
+.filter(m => m.supportedGenerationMethods.includes("generateContent"))
+.map(m => m.name.replace('models/', ''))
+.filter(name => {
+if (!name.startsWith('gemini')) return false;
+if (name.includes('gemma')) return false;
+if (name.includes('nano')) return false;
+return true;
+})
+.sort((a, b) => {
+return b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' });
 });
+selector.innerHTML = '';
+chatModels.forEach(modelName => {
+const option = document.createElement('option');
+option.value = modelName;
+let label = modelName;
+if (modelName.includes('2.0')) label = `🚀 ${label}`;
+else if (modelName.includes('exp')) label = `🧪 ${label}`;
+else if (modelName.includes('pro')) label = `🧠 ${label}`;
+else if (modelName.includes('flash')) label = `⚡ ${label}`;
+option.text = label;
+selector.appendChild(option);
+});
+const savedModel = localStorage.getItem('singlescoop_selected_model');
+if (savedModel && chatModels.includes(savedModel)) {
+selector.value = savedModel;
+} else {
+const bestModel = chatModels.find(m => m.includes('2.0-flash')) || chatModels[0];
+selector.value = bestModel;
+}
+console.log("Renset liste fra Google:", chatModels);
+} catch (e) {
+console.error("Feil ved henting av modell-liste:", e);
+selector.innerHTML = `<option value="gemini-1.5-flash">⚡ Flash (Offline)</option>`;
+}
+}
+saveModelPreference() {
+const selector = document.getElementById('model-selector');
+if (selector) {
+localStorage.setItem('singlescoop_selected_model', selector.value);
+}
+}
+async promptUser(text) { return prompt(text); }
+showSetupModal() {
+const key = prompt("Lim inn API-nøkkelen din:");
+if (key) {
+localStorage.setItem('singlescoop_gemini_key', key);
+this.apiKey = key;
+this.fetchAndPopulateModels();
+alert("Nøkkel lagret! Henter tilgjengelige modeller...");
+}
 }
 async ask(task = null) {
 if (this.isBusy) return;
@@ -3168,138 +3174,45 @@ try {
 const selection = this.editor.getSelectionText();
 let codeContext = selection ? selection : this.editor.state.lines.join('\n');
 codeContext = codeContext.replace(/src="data:image\/[^;]+;base64,[^"]+"/g, 'src="[...Base64 Image Data...]"');
-const userPrompt = task || await this.promptUser("Fix this bug");
+const userPrompt = task || await this.promptUser("Hva skal jeg kode?");
 if (!userPrompt) {
 this.isBusy = false;
 return;
 }
-this.editor.showLoading("Gemini is coding... 🧠");
-const fullPrompt = `
-            You are an expert coding assistant inside a code editor.
-            TASK: ${userPrompt}
-            CODE CONTEXT:
-            ${codeContext}
-            IMPORTANT: Return ONLY the code block. No markdown backticks, no explanations. Just the raw code to replace the selection with.
-            `;
-const model = 'gemini-1.5-flash';
-const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
+this.editor.showLoading("Kobler til Google... 📡");
+const selector = document.getElementById('model-selector');
+const selectedModel = selector ? selector.value : 'gemini-1.5-flash';
+const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${this.apiKey}`;
 const response = await fetch(url, {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+body: JSON.stringify({ contents: [{ parts: [{ text: `
+                You are an expert coding assistant.
+                TASK: ${userPrompt}
+                CODE CONTEXT: ${codeContext}
+                IMPORTANT: Return ONLY raw code.
+                ` }] }] })
 });
+if (!response.ok) {
+const err = await response.json().catch(() => ({}));
+if (response.status === 404) this.fetchAndPopulateModels();
+throw new Error(err.error?.message || response.status);
+}
 const data = await response.json();
-if (data.error) {
-throw new Error(data.error.message);
-}
 let aiText = data.candidates[0].content.parts[0].text;
-if (this.cleanAIResponse) {
-aiText = this.cleanAIResponse(aiText);
-} else {
 aiText = aiText.replace(/^```[a-z]*\n/i, '').replace(/```$/, '').trim();
-}
-if (selection) {
-this.editor.handleBackspace();
+if (selection) this.editor.handleBackspace();
 this.editor.applyChange(aiText);
-} else {
-this.editor.applyChange(aiText);
-}
 this.editor.hideLoading();
-this.editor.setStatus(`Done! ⚡`);
-setTimeout(() => {
-this.editor.removeEmptyLines();
-}, 50);
+this.editor.setStatus(`Done! (${selectedModel}) ✨`);
+setTimeout(() => this.editor.removeEmptyLines(), 50);
 } catch (e) {
 this.editor.hideLoading();
 console.error(e);
-if (e.message.includes("429") || e.message.includes("Quota")) {
-alert("⏳ Quota Limit Reached.\nVent 1-2 minutter før du prøver igjen.");
-} else {
-alert("Gemini Error: " + e.message);
-}
+alert("Gemini Feil: " + e.message);
 this.editor.setStatus("Error ❌");
 } finally {
 this.isBusy = false;
-}
-}
-cleanAIResponse(text) {
-if (text.includes('```')) {
-const parts = text.split('```');
-if (parts.length >= 2) {
-text = parts[1];
-}
-}
-text = text.replace(/^[a-z]+\n/i, '');
-text = text.replace(/`/g, '');
-text = text.replace(/^\s+/, '');
-return text.trimEnd();
-}
-async ask(task = null) {
-if (!this.apiKey) {
-this.showSetupModal();
-return;
-}
-const selection = this.editor.getSelectionText();
-const codeContext = selection ? selection : this.editor.state.lines.join('\n');
-const userPrompt = task || await this.promptUser("Fix this bug");
-if (!userPrompt) return;
-this.editor.showLoading("Gemini is coding... 🧠");
-const fullPrompt = `
-        You are an expert coding assistant inside a code editor.
-        TASK: ${userPrompt}
-        
-        CODE CONTEXT:
-        ${codeContext}
-        
-        IMPORTANT: Return ONLY the code block. No markdown backticks, no explanations. Just the raw code to replace the selection with.
-        `;
-const doCall = async (model) => {
-const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
-const response = await fetch(url, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
-});
-return await response.json();
-};
-try {
-let data = await doCall(this.modelName);
-if (data.error && (data.error.code === 404 || data.error.message.includes("not found") || data.error.message.includes("not supported"))) {
-this.editor.showLoading("Finding new model... 🔎");
-console.warn(`Model ${this.modelName} failed. auto-detecting new model...`);
-const newModel = await this.findWorkingModel();
-if (newModel) {
-this.editor.showLoading("Retrying... 🔄");
-data = await doCall(newModel);
-} else {
-this.editor.hideLoading();
-this.editor.setStatus("AI Setup Failed ❌");
-return;
-}
-}
-if (data.error) {
-this.editor.hideLoading();
-console.error(data.error);
-alert("Gemini Error: " + data.error.message);
-return;
-}
-let aiText = data.candidates[0].content.parts[0].text;
-aiText = this.cleanAIResponse(aiText);
-if (selection) {
-this.editor.handleBackspace();
-this.editor.applyChange(aiText);
-} else {
-this.editor.applyChange(aiText);
-}
-this.editor.hideLoading();
-this.editor.setStatus(`Done! (${this.modelName}) ✨`);
-setTimeout(() => {
-this.editor.removeEmptyLines();
-}, 50);
-} catch (e) {
-this.editor.hideLoading();
-console.error(e);
-this.editor.setStatus("Network Error ❌");
 }
 }
 }
