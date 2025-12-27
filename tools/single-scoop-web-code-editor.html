@@ -2980,13 +2980,44 @@ class GeminiBrain {
 constructor(editor) {
 this.editor = editor;
 this.apiKey = localStorage.getItem('singlescoop_gemini_key') || '';
+this.modelName = localStorage.getItem('singlescoop_gemini_model') || 'gemini-1.5-flash';
 }
 setKey() {
 const key = prompt("Paste your Google Gemini API Key:\n(Get one at aistudio.google.com)", this.apiKey);
 if (key) {
 this.apiKey = key.trim();
 localStorage.setItem('singlescoop_gemini_key', this.apiKey);
+this.modelName = 'gemini-1.5-flash';
+localStorage.removeItem('singlescoop_gemini_model');
 this.editor.setStatus("Gemini Key Saved! 🧠");
+}
+}
+async findWorkingModel() {
+this.editor.setStatus("Finding available AI models... 🔎");
+try {
+const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`;
+const req = await fetch(listUrl);
+const data = await req.json();
+if (data.error) throw new Error(data.error.message);
+const models = data.models || [];
+const validModels = models.filter(m =>
+m.supportedGenerationMethods &&
+m.supportedGenerationMethods.includes("generateContent") &&
+m.name.includes("gemini")
+);
+if (validModels.length === 0) throw new Error("No Gemini models found for this key.");
+let bestModel = validModels.find(m => m.name.includes("1.5-flash")) ||
+validModels.find(m => m.name.includes("1.5-pro")) ||
+validModels[0];
+const cleanName = bestModel.name.replace('models/', '');
+console.log("Auto-detected best model:", cleanName);
+this.modelName = cleanName;
+localStorage.setItem('singlescoop_gemini_model', cleanName);
+return cleanName;
+} catch (e) {
+console.error(e);
+alert("Could not find any working Gemini models. Check your API Key.");
+return null;
 }
 }
 async ask(task = null) {
@@ -3008,32 +3039,42 @@ const fullPrompt = `
         
         IMPORTANT: Return ONLY the code block. No markdown backticks, no explanations. Just the raw code to replace the selection with.
         `;
-try {
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`;
+const doCall = async (model) => {
+const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
 const response = await fetch(url, {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({
-contents: [{ parts: [{ text: fullPrompt }] }]
-})
+body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
 });
-const data = await response.json();
+return await response.json();
+};
+try {
+let data = await doCall(this.modelName);
+if (data.error && (data.error.code === 404 || data.error.message.includes("not found") || data.error.message.includes("not supported"))) {
+console.warn(`Model ${this.modelName} failed. auto-detecting new model...`);
+const newModel = await this.findWorkingModel();
+if (newModel) {
+data = await doCall(newModel);
+} else {
+this.editor.setStatus("AI Setup Failed ❌");
+return;
+}
+}
 if (data.error) {
 console.error(data.error);
-this.editor.setStatus("AI Error ❌");
 alert("Gemini Error: " + data.error.message);
+this.editor.setStatus("AI Error ❌");
 return;
 }
 let aiText = data.candidates[0].content.parts[0].text;
 aiText = aiText.replace(/^```[a-z]*\n/i, '').replace(/```$/, '').trim();
 if (selection) {
-const { cursor, selectionAnchor } = this.editor.state;
 this.editor.handleBackspace();
 this.editor.applyChange(aiText);
 } else {
 this.editor.applyChange(aiText);
 }
-this.editor.setStatus("Done! ✨");
+this.editor.setStatus(`Done! (${this.modelName}) ✨`);
 this.editor.dom.trap.focus();
 } catch (e) {
 console.error(e);
