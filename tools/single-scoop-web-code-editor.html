@@ -1321,7 +1321,7 @@ this.finalizeUpdate();
 this.dom.trap.focus();
 }
 openPreviewModal() {
-const html = this.dom.editor.value || this.dom.editor.innerText || "";
+const html = this.state.lines.join('\n');
 if (!html.trim()) {
 alert("Empty canvas! Write some code first. 🎨");
 return;
