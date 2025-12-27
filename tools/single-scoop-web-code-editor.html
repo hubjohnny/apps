@@ -547,9 +547,50 @@ font-weight: bold;
 .file-icon {
 opacity: 0.7;
 }
+#ai-loading-toast {
+position: fixed;
+top: 40%;
+left: 50%;
+transform: translate(-50%, -50%);
+background: rgba(30, 30, 30, 0.95);
+border: 1px solid #c586c0;
+box-shadow: 0 0 30px rgba(197, 134, 192, 0.25);
+padding: 20px 40px;
+border-radius: 12px;
+z-index: 20000;
+text-align: center;
+display: none;
+backdrop-filter: blur(5px);
+animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#ai-loading-toast .brain-icon {
+font-size: 40px;
+display: block;
+margin-bottom: 10px;
+animation: brainPulse 1.5s infinite ease-in-out;
+}
+#ai-loading-toast .loading-text {
+font-size: 16px;
+color: #fff;
+font-weight: bold;
+letter-spacing: 0.5px;
+}
+@keyframes brainPulse {
+0% { transform: scale(1); opacity: 1; text-shadow: 0 0 0 rgba(197, 134, 192, 0); }
+50% { transform: scale(1.15); opacity: 0.8; text-shadow: 0 0 20px rgba(197, 134, 192, 0.8); }
+100% { transform: scale(1); opacity: 1; text-shadow: 0 0 0 rgba(197, 134, 192, 0); }
+}
+@keyframes popIn {
+from { transform: translate(-50%, -40%) scale(0.8); opacity: 0; }
+to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
 </style>
 </head>
 <body>
+<div id="ai-loading-toast">
+<span class="brain-icon">🧠</span>
+<div class="loading-text" id="ai-loading-msg">Gemini is thinking...</div>
+</div>
 <div id="intro-modal" class="modal-overlay">
 <div class="modal-box">
 <div class="modal-header">
@@ -1186,6 +1227,19 @@ document.addEventListener('keydown', (e) => this.handleGlobalShortcuts(e));
 this.restoreSession();
 this.highlighter.analyze(this.state.lines, this.state.fileName);
 this.finalizeUpdate();
+this.dom.trap.focus();
+}
+showLoading(msg = "Thinking...") {
+const toast = document.getElementById('ai-loading-toast');
+const txt = document.getElementById('ai-loading-msg');
+if (toast && txt) {
+txt.textContent = msg;
+toast.style.display = 'block';
+}
+}
+hideLoading() {
+const toast = document.getElementById('ai-loading-toast');
+if (toast) toast.style.display = 'none';
 this.dom.trap.focus();
 }
 measureTextWidth(text) {
@@ -3029,7 +3083,7 @@ const selection = this.editor.getSelectionText();
 const codeContext = selection ? selection : this.editor.state.lines.join('\n');
 const userPrompt = task || prompt("What should Gemini do with this code?", "Fix this bug");
 if (!userPrompt) return;
-this.editor.setStatus("Gemini is thinking... 🧠");
+this.editor.showLoading("Gemini is coding... 🧠");
 const fullPrompt = `
         You are an expert coding assistant inside a code editor.
         TASK: ${userPrompt}
@@ -3051,19 +3105,22 @@ return await response.json();
 try {
 let data = await doCall(this.modelName);
 if (data.error && (data.error.code === 404 || data.error.message.includes("not found") || data.error.message.includes("not supported"))) {
+this.editor.showLoading("Finding new model... 🔎");
 console.warn(`Model ${this.modelName} failed. auto-detecting new model...`);
 const newModel = await this.findWorkingModel();
 if (newModel) {
+this.editor.showLoading("Retrying... 🔄");
 data = await doCall(newModel);
 } else {
+this.editor.hideLoading();
 this.editor.setStatus("AI Setup Failed ❌");
 return;
 }
 }
 if (data.error) {
+this.editor.hideLoading();
 console.error(data.error);
 alert("Gemini Error: " + data.error.message);
-this.editor.setStatus("AI Error ❌");
 return;
 }
 let aiText = data.candidates[0].content.parts[0].text;
@@ -3074,9 +3131,10 @@ this.editor.applyChange(aiText);
 } else {
 this.editor.applyChange(aiText);
 }
+this.editor.hideLoading();
 this.editor.setStatus(`Done! (${this.modelName}) ✨`);
-this.editor.dom.trap.focus();
 } catch (e) {
+this.editor.hideLoading();
 console.error(e);
 this.editor.setStatus("Network Error ❌");
 }
