@@ -3009,7 +3009,7 @@ const fullPrompt = `
         IMPORTANT: Return ONLY the code block. No markdown backticks, no explanations. Just the raw code to replace the selection with.
         `;
 try {
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`;
 const response = await fetch(url, {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
