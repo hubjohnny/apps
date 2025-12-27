@@ -3156,32 +3156,70 @@ if(e.key === 'Escape') close(null);
 };
 });
 }
-async findWorkingModel() {
-this.editor.showLoading("Finding available AI models... 🔎");
+async ask(task = null) {
+if (this.isBusy) return;
+this.isBusy = true;
+if (!this.apiKey) {
+this.showSetupModal();
+this.isBusy = false;
+return;
+}
 try {
-const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`;
-const req = await fetch(listUrl);
-const data = await req.json();
-if (data.error) throw new Error(data.error.message);
-const models = data.models || [];
-const validModels = models.filter(m =>
-m.supportedGenerationMethods &&
-m.supportedGenerationMethods.includes("generateContent") &&
-m.name.includes("gemini")
-);
-if (validModels.length === 0) throw new Error("No Gemini models found for this key.");
-let bestModel = validModels.find(m => m.name.includes("1.5-flash")) ||
-validModels.find(m => m.name.includes("1.5-pro")) ||
-validModels[0];
-const cleanName = bestModel.name.replace('models/', '');
-console.log("Auto-detected best model:", cleanName);
-this.modelName = cleanName;
-localStorage.setItem('singlescoop_gemini_model', cleanName);
-return cleanName;
+const selection = this.editor.getSelectionText();
+let codeContext = selection ? selection : this.editor.state.lines.join('\n');
+codeContext = codeContext.replace(/src="data:image\/[^;]+;base64,[^"]+"/g, 'src="[...Base64 Image Data...]"');
+const userPrompt = task || await this.promptUser("Fix this bug");
+if (!userPrompt) {
+this.isBusy = false;
+return;
+}
+this.editor.showLoading("Gemini is coding... 🧠");
+const fullPrompt = `
+            You are an expert coding assistant inside a code editor.
+            TASK: ${userPrompt}
+            CODE CONTEXT:
+            ${codeContext}
+            IMPORTANT: Return ONLY the code block. No markdown backticks, no explanations. Just the raw code to replace the selection with.
+            `;
+const model = 'gemini-1.5-flash';
+const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
+const response = await fetch(url, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+});
+const data = await response.json();
+if (data.error) {
+throw new Error(data.error.message);
+}
+let aiText = data.candidates[0].content.parts[0].text;
+if (this.cleanAIResponse) {
+aiText = this.cleanAIResponse(aiText);
+} else {
+aiText = aiText.replace(/^```[a-z]*\n/i, '').replace(/```$/, '').trim();
+}
+if (selection) {
+this.editor.handleBackspace();
+this.editor.applyChange(aiText);
+} else {
+this.editor.applyChange(aiText);
+}
+this.editor.hideLoading();
+this.editor.setStatus(`Done! ⚡`);
+setTimeout(() => {
+this.editor.removeEmptyLines();
+}, 50);
 } catch (e) {
+this.editor.hideLoading();
 console.error(e);
-alert("Could not find any working Gemini models. Check your API Key.");
-return null;
+if (e.message.includes("429") || e.message.includes("Quota")) {
+alert("⏳ Quota Limit Reached.\nVent 1-2 minutter før du prøver igjen.");
+} else {
+alert("Gemini Error: " + e.message);
+}
+this.editor.setStatus("Error ❌");
+} finally {
+this.isBusy = false;
 }
 }
 cleanAIResponse(text) {
