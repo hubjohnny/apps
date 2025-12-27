@@ -1,0 +1,16 @@
+{
+  "name": "Single Scoop Editor",
+  "short_name": "Single Scoop",
+  "start_url": "./single-scoop-web-code-editor.html",
+  "display": "standalone",
+  "background_color": "#1e1e1e",
+  "theme_color": "#1e1e1e",
+  "description": "AI-Powered Web Code Editor",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
