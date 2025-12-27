@@ -2575,6 +2575,9 @@ this.state.lines = [""];
 this.state.cursor = { row: 0, col: 0 };
 this.state.selectionAnchor = null;
 this.state.fileName = 'Untitled.txt';
+if (this.github) {
+this.github.config.path = "";
+}
 this.state.fileHandle = null;
 this.highlighter.analyze(this.state.lines, this.state.fileName);
 this.setDirty(false);
@@ -3079,7 +3082,16 @@ this.editor.setStatus("Network Error ❌");
 }
 async push() {
 if (!this.ensureConfig()) return;
-this.editor.setStatus("GitHub: Pushing... ⏳");
+if (!this.config.path || this.config.path === "" || this.config.path === "new_file.txt") {
+const newPath = prompt("Enter filename for GitHub (e.g. index.html):", this.config.path || "new_file.txt");
+if (!newPath) {
+this.editor.setStatus("Push cancelled 🛑");
+return;
+}
+this.config.path = newPath;
+localStorage.setItem('singlescoop_github_path', newPath);
+}
+this.editor.setStatus(`GitHub: Pushing to ${this.config.path}... ⏳`);
 const url = `https://api.github.com/repos/${this.config.owner}/${this.config.repo}/contents/${this.config.path}`;
 const headers = {
 'Authorization': `token ${this.config.token}`,
@@ -3104,13 +3116,17 @@ headers: headers,
 body: JSON.stringify(payload)
 });
 if (pushReq.ok) {
-this.editor.setStatus("Pushed to GitHub! ☁️");
+this.editor.setStatus(`Pushed ${this.config.path}! ☁️`);
 this.editor.setDirty(false);
+document.title = this.config.path;
 } else {
+const err = await pushReq.json();
 this.editor.setStatus("Push Error ❌");
+alert("GitHub Error: " + err.message);
 }
 } catch (e) {
 this.editor.setStatus("Network Error ❌");
+console.error(e);
 }
 }
 }
