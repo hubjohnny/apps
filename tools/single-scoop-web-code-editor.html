@@ -638,7 +638,7 @@ color: #cccccc;
 <body>
 <div id="ai-loading-toast">
 <span class="brain-icon">🧠</span>
-<div class="loading-text" id="ai-loading-msg">Gemini is thinking...</div>
+<div class="loading-text" id="ai-loading-msg">Gemini is coding, please wait... 🧠</div>
 </div>
 <div id="intro-modal" class="modal-overlay">
 <div class="modal-box">
@@ -3227,7 +3227,7 @@ if (!userPrompt) {
 this.isBusy = false;
 return;
 }
-this.editor.showLoading("Connecting to Google... 📡");
+this.editor.showLoading("Gemini is coding, please wait...");
 const selector = document.getElementById('model-selector');
 const selectedModel = selector ? selector.value : 'gemini-1.5-flash';
 const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${this.apiKey}`;
