@@ -2267,7 +2267,7 @@ const p = this.getPosFromMouse(e);
 const lineText = this.state.lines[p.row];
 const rect = this.dom.editor.getBoundingClientRect();
 const mouseX = e.clientX - rect.left;
-if (mouseX < this.config.xOffset) {
+if (mouseX < 60) {
 this.state.selectionAnchor = { row: p.row, col: 0 };
 this.state.cursor = { row: p.row, col: lineText.length };
 this.state.isDragging = true;
