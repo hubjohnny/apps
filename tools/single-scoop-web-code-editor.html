@@ -611,6 +611,7 @@ Handcrafted by one dev. &copy; 2025 Johnny Heggelund
 <span id="search-stats"></span>
 </div>
 <div id="toolbar-right">
+<button onclick="editor.ai.ask()" title="Ask AI to write/fix code (Ctrl+I)" style="color: #c586c0;">✨</button>
 <button onclick="editor.insertSkeleton()" title="Insert HTML5 Template">🧩</button>
 <button id="color-btn" onclick="toggleColorPicker()" title="Color Picker">🎨</button>
 <button onclick="editor.previewFile()" title="Preview (Alt+P)">👁️</button>
@@ -1123,6 +1124,7 @@ this.history = new HistoryManager(this);
 this.search = new SearchManager(this);
 this.highlighter = new SyntaxHighlighter();
 this.github = new GitHubSync(this);
+this.ai = new GeminiBrain(this);
 this.ticking = false;
 this.init();
 }
@@ -2970,6 +2972,71 @@ this.editor.setDirty(false);
 this.editor.setStatus("Push Error ❌");
 }
 } catch (e) {
+this.editor.setStatus("Network Error ❌");
+}
+}
+}
+class GeminiBrain {
+constructor(editor) {
+this.editor = editor;
+this.apiKey = localStorage.getItem('singlescoop_gemini_key') || '';
+}
+setKey() {
+const key = prompt("Paste your Google Gemini API Key:\n(Get one at aistudio.google.com)", this.apiKey);
+if (key) {
+this.apiKey = key.trim();
+localStorage.setItem('singlescoop_gemini_key', this.apiKey);
+this.editor.setStatus("Gemini Key Saved! 🧠");
+}
+}
+async ask(task = null) {
+if (!this.apiKey) {
+if(confirm("Missing Gemini API Key. Set one now?")) this.setKey();
+return;
+}
+const selection = this.editor.getSelectionText();
+const codeContext = selection ? selection : this.editor.state.lines.join('\n');
+const userPrompt = task || prompt("What should Gemini do with this code?", "Fix this bug");
+if (!userPrompt) return;
+this.editor.setStatus("Gemini is thinking... 🧠");
+const fullPrompt = `
+        You are an expert coding assistant inside a code editor.
+        TASK: ${userPrompt}
+        
+        CODE CONTEXT:
+        ${codeContext}
+        
+        IMPORTANT: Return ONLY the code block. No markdown backticks, no explanations. Just the raw code to replace the selection with.
+        `;
+try {
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`;
+const response = await fetch(url, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+contents: [{ parts: [{ text: fullPrompt }] }]
+})
+});
+const data = await response.json();
+if (data.error) {
+console.error(data.error);
+this.editor.setStatus("AI Error ❌");
+alert("Gemini Error: " + data.error.message);
+return;
+}
+let aiText = data.candidates[0].content.parts[0].text;
+aiText = aiText.replace(/^```[a-z]*\n/i, '').replace(/```$/, '').trim();
+if (selection) {
+const { cursor, selectionAnchor } = this.editor.state;
+this.editor.handleBackspace();
+this.editor.applyChange(aiText);
+} else {
+this.editor.applyChange(aiText);
+}
+this.editor.setStatus("Done! ✨");
+this.editor.dom.trap.focus();
+} catch (e) {
+console.error(e);
 this.editor.setStatus("Network Error ❌");
 }
 }
