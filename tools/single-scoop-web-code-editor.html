@@ -731,17 +731,21 @@ onfocus="event.stopPropagation();">
 <div id="statusbar">
 <span id="cursor-pos" style="flex: 1; font-size: 12px; color: #858585; font-variant-numeric: tabular-nums; padding-left: 5px;">Ln 1, Col 1</span>
 <div id="shortcuts" style="display: flex; align-items: center;">
+<strong>Local:</strong>
 <button onclick="editor.openFile()" title="Open File (Alt+O)">📂</button>
 <button onclick="editor.saveFile()" title="Save File (Alt+S)">💾</button>
-<button onclick="editor.newFile()" style="margin-right: 0;" title="New File (Alt+N)">📄</button>
-<button onclick="editor.github.pull()" title="Pull from GitHub (Overwrite local)" style="margin-left: 10px;">📥</button>
-<button onclick="editor.github.showLoginModal()" title="GitHub Settings / Change File">⚙️</button>
-<button onclick="editor.github.push()" title="Push to GitHub">☁️</button>
-<button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)" style="margin-left: 10px;">↻ Comm</button>
-<button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)">↻ Func</button>
-<button onclick="editor.removeComments()" title="Remove Comments (Alt+R)" style="margin-left: 10px;">🗑️ Comm</button>
-<button onclick="editor.removeEmptyLines()" title="Remove Empty Lines (Alt+E)">🗑️ Empty</button>
-<button onclick="editor.removeTrailingWhitespace()" title="Remove Trailing Whitespace (Alt+T)">🗑️ Trail</button>
+<button onclick="editor.newFile()" style="margin-right: 10px;" title="New File (Alt+N)">📄</button>
+<strong>GitHub:</strong>
+<button onclick="editor.github.pull()" title="Pull from GitHub (Overwrite local)">📥 Pull</button>
+<button onclick="editor.github.showLoginModal()" title="GitHub Settings / Change File">⚙️ Files</button>
+<button onclick="editor.github.push()" title="Push to GitHub" style="margin-right: 10px;">☁️ Push</button>
+<strong>Find:</strong>
+<button onclick="editor.cycleNext('comment')" title="Jump to next comment (Alt+C)">↻ Comment</button>
+<button onclick="editor.cycleNext('function')" title="Jump to next function definition (Alt+.)" style="margin-right: 10px;">↻ Function</button>
+<strong>Clean:</strong>
+<button onclick="editor.removeComments()" title="Remove Comments (Alt+R)">🗑️ Comments</button>
+<button onclick="editor.removeEmptyLines()" title="Remove Empty Lines (Alt+E)">🗑️ Empty Lines</button>
+<button onclick="editor.removeTrailingWhitespace()" title="Remove Trailing Whitespace (Alt+T)">🗑️ Trailing Whitespace</button>
 </div>
 <span id="message-area" style="flex: 1; text-align: right; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Single Scoop</span>
 </div>
