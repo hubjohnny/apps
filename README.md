@@ -2,11 +2,11 @@
 
 ---
 
-**Portable & Offline Ready:** Most of the games and tools in this repository are completely self-contained within their individual HTML files. This means there are no external dependencies, assets, or Internet connection required to use them. To run a project, simply download the single file to your computer and open it in any modern web browser. It functions perfectly as a standalone application.<br><br>
+**Portable & Offline Ready:** Most of the games and tools in this repository are completely self-contained within their individual HTML files. This means there are no external dependencies, assets, or Internet connection required to use them. To run a project, simply download the single file to your computer and open it in any modern web browser. It functions perfectly as a standalone application. Apps that require or works best Online has this 🛜 symbol.<br><br>
 
 **Run Online or Right-Click to Download 💾**  
 
-**✨ [Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html)**  
+**✨ [Single Scoop Web Code Editor](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html) 🛜**  
 **✨ [Adventure RPG](https://hubjohnny.github.io/apps/games/adventure-rpg.html)**  
 **✨ [City Builder Sim.](https://hubjohnny.github.io/apps/games/city-building-simulation.html)**<br><br> 
 
@@ -34,12 +34,12 @@ Game Archive:
 Tool Archive:  
 
 [Bas64 Image & Audio Converter](https://hubjohnny.github.io/apps/tools/base64-image-audio-converter.html)   
-[Emoji Copier & Sprite Exporter](https://hubjohnny.github.io/apps/tools/emoji-copier-sprite-export.html)  
+[Emoji Copier & Sprite Exporter](https://hubjohnny.github.io/apps/tools/emoji-copier-sprite-export.html) 🛜  
 [Image to ASCII Converter](https://hubjohnny.github.io/apps/tools/image-ascii-converter.html)  
 [Image Fast Auto Compression](https://hubjohnny.github.io/apps/tools/image-fast-auto-compression.html)  
 [Image to Retro Pixel Art Converter](https://hubjohnny.github.io/apps/tools/image-pixel-retro-converter.html)  
 [Image Upscaler](https://hubjohnny.github.io/apps/tools/image-upscaler.html)  
-[Linux Terminal Emulator](https://hubjohnny.github.io/apps/tools/linux-terminal-emulator.html)  
+[Linux Terminal Emulator](https://hubjohnny.github.io/apps/tools/linux-terminal-emulator.html) 🛜  
 [Password-Protected Notebook](https://hubjohnny.github.io/apps/tools/password-protected-notebook.html)  
 [Sprite Editor](https://hubjohnny.github.io/apps/tools/sprite-editor.html)  
 [Video to GIF Animation Converter](https://hubjohnny.github.io/apps/tools/video-gif-converter.html)  
