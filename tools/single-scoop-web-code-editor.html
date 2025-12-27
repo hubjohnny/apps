@@ -697,6 +697,7 @@ Handcrafted by one dev. &copy; 2025 Johnny Heggelund
 <button onclick="editor.search.findNext()">Next</button>
 <button onclick="editor.search.replace()">Replace</button>
 <button onclick="editor.search.replaceAll()">All</button>
+<button onclick="editor.search.reset()" title="Clear search and highlights">Reset</button>
 <div class="stats-anchor">
 <span id="search-stats"></span>
 </div>
@@ -1106,8 +1107,27 @@ statEl.textContent = `Found ${this.matches.length}`;
 this.findNext();
 }
 }
+reset() {
+const findInput = document.getElementById('find-input');
+const replaceInput = document.getElementById('replace-input');
+if (findInput) findInput.value = '';
+if (replaceInput) replaceInput.value = '';
+this.lastQuery = "";
+this.matches = [];
+this.currentIndex = -1;
+const stats = document.getElementById('search-stats');
+if (stats) stats.textContent = '';
+this.editor.setStatus('Search cleared');
+this.editor.state.searchResults = [];
+this.editor.finalizeUpdate();
+if (findInput) findInput.focus();
+}
 findNext() {
 const inputVal = document.getElementById('find-input').value;
+if (!inputVal) {
+this.reset();
+return;
+}
 const lineMatch = inputVal.match(/^:(\d+)$/);
 if (lineMatch) {
 const lineNum = parseInt(lineMatch[1], 10);
