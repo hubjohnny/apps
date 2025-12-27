@@ -3269,8 +3269,16 @@ throw new Error(err.error?.message || response.status);
 const data = await response.json();
 let aiText = data.candidates[0].content.parts[0].text;
 aiText = aiText.replace(/^```[a-z]*\n/i, '').replace(/```$/, '').trim();
-if (selection) this.editor.handleBackspace();
+if (selection) {
+this.editor.handleBackspace();
 this.editor.applyChange(aiText);
+} else {
+this.editor.state.lines = [""];
+this.editor.state.cursor = { row: 0, col: 0 };
+this.editor.applyChange(aiText);
+this.editor.dom.editor.scrollTop = 0;
+if (this.editor.render) this.editor.render();
+}
 this.editor.hideLoading();
 this.editor.setStatus(`Done! (${selectedModel}) ✨`);
 setTimeout(() => this.editor.removeEmptyLines(), 50);
