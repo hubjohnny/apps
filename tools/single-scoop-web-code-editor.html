@@ -3226,10 +3226,15 @@ const modal = document.createElement('div');
 modal.className = 'modal-overlay';
 modal.style.display = 'flex';
 modal.innerHTML = `
-            <div class="modal-box" style="width: 450px;">
+            <div class="modal-box" style="width: 640px;">
                 <div class="modal-header"><h1>💬 AI Command</h1></div>
                 <div class="modal-body">
-                    <input id="ai-prompt-input" type="text" value="${defaultValue}" style="background: #1e1e1e; border: 1px solid #454545; color: white; padding: 12px; width: 100%;" placeholder="e.g. Fix this bug, Add comments...">
+                    <textarea id="ai-prompt-input" 
+                        style="background: #1e1e1e; border: 1px solid #454545; color: white; padding: 12px; width: 95%; height: 150px; resize: vertical; font-family: sans-serif; outline: none;" 
+                        placeholder="e.g. Fix this bug, Add comments...">${defaultValue || ''}</textarea>
+                    <div style="text-align: right; font-size: 11px; color: #666; margin-top: 5px;">
+                        Tip: Press Ctrl+Enter to submit
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="modal-btn" id="ai-cancel-btn">Cancel</button>
@@ -3238,13 +3243,19 @@ modal.innerHTML = `
             </div>`;
 document.body.appendChild(modal);
 const input = document.getElementById('ai-prompt-input');
-setTimeout(() => { input.focus(); input.select(); }, 50);
+setTimeout(() => {
+input.focus();
+input.setSelectionRange(input.value.length, input.value.length);
+}, 50);
 const close = (val) => { modal.remove(); resolve(val); this.editor.dom.trap.focus(); };
 document.getElementById('ai-go-btn').onclick = () => close(input.value);
 document.getElementById('ai-cancel-btn').onclick = () => close(null);
 input.onkeydown = (e) => {
-if(e.key === 'Enter') close(input.value);
-if(e.key === 'Escape') close(null);
+if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+e.preventDefault();
+close(input.value);
+}
+if (e.key === 'Escape') close(null);
 };
 });
 }
