@@ -3288,14 +3288,13 @@ const data = await response.json();
 let aiText = data.candidates[0].content.parts[0].text;
 aiText = aiText.replace(/^```[a-z]*\n/i, '').replace(/```$/, '').trim();
 if (selection) {
-this.editor.handleBackspace();
 this.editor.applyChange(aiText);
 } else {
-this.editor.state.lines = [""];
-this.editor.state.cursor = { row: 0, col: 0 };
-this.editor.applyChange(aiText);
+const lines = this.editor.state.lines;
+const lastRow = lines.length - 1;
+const lastCol = lines[lastRow].length;
+this.editor.applyEditInternal(0, 0, lastRow, lastCol, aiText, true);
 this.editor.dom.editor.scrollTop = 0;
-if (this.editor.render) this.editor.render();
 }
 this.editor.hideLoading();
 this.editor.setStatus(`Done! (${selectedModel}) ✨`);
