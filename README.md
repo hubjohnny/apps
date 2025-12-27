@@ -1,4 +1,4 @@
-✅ <small>*[Single Scoop](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html) Web Code Editor now has GitHub Sync (Pull, Push & File Browser).*</small>
+✅ <small>*[Single Scoop](https://hubjohnny.github.io/apps/tools/single-scoop-web-code-editor.html) Web Code Editor now has GitHub Sync (Pull, Push & File Browser). Oh, and I almost forgot: Built-in Gemini AI including the Preview Models. 😉*</small>
 
 ---
 
