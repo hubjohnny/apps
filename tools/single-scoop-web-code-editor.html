@@ -1320,49 +1320,64 @@ this.highlighter.analyze(this.state.lines, this.state.fileName);
 this.finalizeUpdate();
 this.dom.trap.focus();
 }
+
+
+
+
 openPreviewModal() {
+
 const html = this.state.lines.join('\n');
+
 if (!html.trim()) {
 alert("Empty canvas! Write some code first. 🎨");
 return;
 }
+
 try {
 const blob = new Blob([html], { type: 'text/html' });
 const url = URL.createObjectURL(blob);
+
 const modal = document.createElement('div');
 modal.className = 'modal-overlay';
 modal.style.display = 'flex';
 modal.style.zIndex = '9999';
+
+
 modal.innerHTML = `
-                    <div class="modal-box" style="width: 98%; height: 98%; max-width: none; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                <div class="modal-box" style="width: 98%; height: 98%; max-width: none; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
                     <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px;">
                         <h1 style="margin:0; font-size: 18px;">👀 Live Preview</h1>
-                        <div>
-                            <button class="modal-btn" id="prev-external-btn" title="Open in new tab">🔗 New Tab</button>
-                            <button class="modal-btn" id="prev-close-btn" style="background: #d32f2f; color: white;">Close</button>
-                        </div>
+                        <button class="modal-btn" id="prev-close-btn" style="background: #d32f2f; color: white;">Close</button>
                     </div>
                     <div class="modal-body" style="flex-grow: 1; padding: 0; overflow: hidden; background: white; position: relative;">
                         <iframe sandbox="allow-scripts allow-same-origin allow-forms allow-modals" src="${url}" style="width: 100%; height: 100%; border: none;"></iframe>
                     </div>
                 </div>`;
+
 document.body.appendChild(modal);
+
 const cleanup = () => {
 modal.remove();
 URL.revokeObjectURL(url);
 };
+
 document.getElementById('prev-close-btn').onclick = cleanup;
-document.getElementById('prev-external-btn').onclick = () => {
-window.open(url, '_blank');
-};
+
 modal.addEventListener('click', (e) => {
 if (e.target === modal) cleanup();
 });
+
 } catch (e) {
 console.error("Preview failed:", e);
-alert("Something went wrong with the preview. Check the console.");
+alert("Something went wrong with the preview.");
 }
 }
+
+
+
+
+
+
 showLoading(msg = "Thinking...") {
 const toast = document.getElementById('ai-loading-toast');
 const txt = document.getElementById('ai-loading-msg');
