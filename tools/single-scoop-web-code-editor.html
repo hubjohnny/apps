@@ -3036,18 +3036,101 @@ this.editor = editor;
 this.apiKey = localStorage.getItem('singlescoop_gemini_key') || '';
 this.modelName = localStorage.getItem('singlescoop_gemini_model') || 'gemini-1.5-flash';
 }
-setKey() {
-const key = prompt("Paste your Google Gemini API Key:\n(Get one at aistudio.google.com)", this.apiKey);
+showSetupModal() {
+let modal = document.getElementById('ai-modal');
+if (!modal) {
+modal = document.createElement('div');
+modal.id = 'ai-modal';
+modal.className = 'modal-overlay';
+modal.style.display = 'flex';
+modal.innerHTML = `
+            <div class="modal-box" style="width: 500px;">
+                <div class="modal-header">
+                    <h1>🧠 AI Copilot Setup</h1>
+                </div>
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div class="intro-text" style="font-size: 0.9rem;">
+                        Connect to Google Gemini to fix bugs, write code, and explain logic.
+                    </div>
+                    <div style="background: #252526; padding: 15px; border-radius: 6px; border: 1px solid #333;">
+                        <strong style="color: #fff; display: block; margin-bottom: 10px;">How to get a Key (It's free):</strong>
+                        <ol style="margin: 0; padding-left: 20px; color: #ccc; font-size: 0.9rem; line-height: 1.6;">
+                            <li>Click the button below to open Google AI Studio.</li>
+                            <li>Click <strong>"Get API Key"</strong> (top left).</li>
+                            <li>Click <strong>"Create API Key"</strong>.</li>
+                            <li>Copy the key and paste it below.</li>
+                        </ol>
+                    </div>
+                    <button class="modal-btn" style="background: #2d2d2d; border: 1px solid #454545;" 
+                        onclick="window.open('https://aistudio.google.com/app/apikey', '_blank')">
+                        🔑 Open Google AI Studio
+                    </button>
+                    <hr style="width: 100%; border: 0; border-top: 1px solid #333; margin: 5px 0;">
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="color: #888; font-size: 12px;">Paste API Key Here</label>
+                        <input id="ai-key-input" type="password" value="${this.apiKey}" placeholder="AIzaSy..." style="background: #1e1e1e; border: 1px solid #333; color: white; padding: 10px; border-radius: 4px; font-family: monospace;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn" style="background: transparent; color: #888;" onclick="document.getElementById('ai-modal').remove()">Cancel</button>
+                    <button class="modal-btn" id="ai-save-btn">Save Key</button>
+                </div>
+            </div>`;
+document.body.appendChild(modal);
+setTimeout(() => document.getElementById('ai-key-input').focus(), 100);
+document.getElementById('ai-save-btn').onclick = () => {
+const key = document.getElementById('ai-key-input').value.trim();
 if (key) {
-this.apiKey = key.trim();
+this.apiKey = key;
 localStorage.setItem('singlescoop_gemini_key', this.apiKey);
 this.modelName = 'gemini-1.5-flash';
 localStorage.removeItem('singlescoop_gemini_model');
-this.editor.setStatus("Gemini Key Saved! 🧠");
+document.getElementById('ai-modal').remove();
+this.editor.setStatus("AI Connected! 🧠");
+this.editor.dom.trap.focus();
+} else {
+alert("Please paste a key.");
 }
+};
+}
+}
+promptUser(defaultValue) {
+return new Promise((resolve) => {
+const modal = document.createElement('div');
+modal.className = 'modal-overlay';
+modal.style.display = 'flex';
+modal.innerHTML = `
+            <div class="modal-box" style="width: 450px;">
+                <div class="modal-header">
+                    <h1>💬 AI Command</h1>
+                </div>
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="font-size: 0.9rem; color: #ccc;">What should Gemini do with the code?</div>
+                    <input id="ai-prompt-input" type="text" value="${defaultValue}" style="background: #1e1e1e; border: 1px solid #454545; color: white; padding: 12px; border-radius: 4px; font-size: 16px; width: 100%; box-sizing: border-box;" placeholder="e.g. Fix bugs, Add comments...">
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn" style="background: transparent; color: #888;" id="ai-cancel-btn">Cancel</button>
+                    <button class="modal-btn" id="ai-go-btn">✨ Go</button>
+                </div>
+            </div>`;
+document.body.appendChild(modal);
+const input = document.getElementById('ai-prompt-input');
+setTimeout(() => { input.focus(); input.select(); }, 50);
+const close = (val) => {
+modal.remove();
+resolve(val);
+this.editor.dom.trap.focus();
+};
+document.getElementById('ai-go-btn').onclick = () => close(input.value);
+document.getElementById('ai-cancel-btn').onclick = () => close(null);
+input.onkeydown = (e) => {
+if(e.key === 'Enter') close(input.value);
+if(e.key === 'Escape') close(null);
+};
+});
 }
 async findWorkingModel() {
-this.editor.setStatus("Finding available AI models... 🔎");
+this.editor.showLoading("Finding available AI models... 🔎");
 try {
 const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`;
 const req = await fetch(listUrl);
@@ -3074,14 +3157,26 @@ alert("Could not find any working Gemini models. Check your API Key.");
 return null;
 }
 }
+cleanAIResponse(text) {
+if (text.includes('```')) {
+const parts = text.split('```');
+if (parts.length >= 2) {
+text = parts[1];
+}
+}
+text = text.replace(/^[a-z]+\n/i, '');
+text = text.replace(/`/g, '');
+text = text.replace(/^\s+/, '');
+return text.trimEnd();
+}
 async ask(task = null) {
 if (!this.apiKey) {
-if(confirm("Missing Gemini API Key. Set one now?")) this.setKey();
+this.showSetupModal();
 return;
 }
 const selection = this.editor.getSelectionText();
 const codeContext = selection ? selection : this.editor.state.lines.join('\n');
-const userPrompt = task || prompt("What should Gemini do with this code?", "Fix this bug");
+const userPrompt = task || await this.promptUser("Fix this bug");
 if (!userPrompt) return;
 this.editor.showLoading("Gemini is coding... 🧠");
 const fullPrompt = `
@@ -3124,7 +3219,7 @@ alert("Gemini Error: " + data.error.message);
 return;
 }
 let aiText = data.candidates[0].content.parts[0].text;
-aiText = aiText.replace(/^```[a-z]*\n/i, '').replace(/```$/, '').trim();
+aiText = this.cleanAIResponse(aiText);
 if (selection) {
 this.editor.handleBackspace();
 this.editor.applyChange(aiText);
@@ -3133,6 +3228,9 @@ this.editor.applyChange(aiText);
 }
 this.editor.hideLoading();
 this.editor.setStatus(`Done! (${this.modelName}) ✨`);
+setTimeout(() => {
+this.editor.removeEmptyLines();
+}, 50);
 } catch (e) {
 this.editor.hideLoading();
 console.error(e);
